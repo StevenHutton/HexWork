@@ -1,3 +1,4 @@
 *.dll
 *.xnb
-HexWork/HexWork/Bin/*
+HexWork/obj
+HexWork/Bin/*
