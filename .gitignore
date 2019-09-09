@@ -2,3 +2,6 @@
 *.xnb
 HexWork/obj
 HexWork/Bin/*
+HexWork/Content/obj
+HexWork/Content/bin
+.vs/
