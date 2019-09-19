@@ -6,6 +6,7 @@ using HexWork.Gameplay;
 using HexWork.Interfaces;
 using HexWork.UI;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Screens
 {
@@ -24,7 +25,8 @@ namespace HexWork.Screens
             : base(_screenManager)
         {
             var game = (HexWork)_screenManager.Game;
-            _gameState = game.GameState;
+            _gameState = new GameState();
+            GameStateManager.SetGameState(_gameState);
 
             _ui = new UserInterface(game);
         }

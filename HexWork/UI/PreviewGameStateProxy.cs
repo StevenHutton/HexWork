@@ -18,7 +18,8 @@ namespace HexWork.UI
 	    private Texture2D _invalidTexture;
 	    private Texture2D _blankTexture;
 	    private Texture2D _damageTexture;
-	    private Texture2D _arrowTexture;
+        private Texture2D _healingTexture;
+        private Texture2D _arrowTexture;
 
 	    private Texture2D _fireIconTexture;
 
@@ -71,7 +72,8 @@ namespace HexWork.UI
 
 	        _invalidTexture = game.Content.Load<Texture2D>("Cross");
 	        _damageTexture = game.Content.Load<Texture2D>("Damage");
-	        _arrowTexture = game.Content.Load<Texture2D>("Arrow");
+            _healingTexture = game.Content.Load<Texture2D>("Healing");
+            _arrowTexture = game.Content.Load<Texture2D>("Arrow");
 
 	        _fireIconTexture = game.Content.Load<Texture2D>("FireIcon");
 
@@ -166,9 +168,16 @@ namespace HexWork.UI
         public int ApplyDamage(Character character, int power, string message = null)
         {
 	        var position = GetHexScreenPosition(character.Position);
-			_spriteBatch.Draw(_damageTexture, position, null, Color.White, 0.0f, new Vector2(128), _hexScaleV, SpriteEffects.None, 0.0f );
+            _spriteBatch.Draw(_damageTexture, position, null, Color.Red, 0.0f, new Vector2(128), _hexScaleV, SpriteEffects.None, 0.0f );
 	        return power;
-	        //throw new System.NotImplementedException();
+        }
+
+        public void ApplyHealing(Character character, int power)
+        {
+            var position = GetHexScreenPosition(character.Position);
+
+            _spriteBatch.Draw(_healingTexture, position, null, Color.Green, 0.0f, new Vector2(128), _hexScaleV,
+                SpriteEffects.None, 0.0f);
         }
 
         public void ApplyStatus(Character character, StatusEffect effect)
@@ -186,9 +195,6 @@ namespace HexWork.UI
                     break;
                 case StatusEffectType.Rooted:
                     statusTexture = _hexGame.Content.Load<Texture2D>("StopIcon");
-                    break;
-                case StatusEffectType.Marked:
-                    statusTexture = _hexGame.Content.Load<Texture2D>("MarkedIcon");
                     break;
                 case StatusEffectType.Bleeding:
                     statusTexture = _hexGame.Content.Load<Texture2D>("BloodIcon");

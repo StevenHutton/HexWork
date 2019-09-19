@@ -52,8 +52,19 @@ namespace HexWork.Gameplay
         public Guid TargetCharacterId;
 
         public HexCoordinate TargetPosition;
+        
 
-        public HexCoordinate StartPosition;
+    }
+
+    public class SpawnChracterEventArgs
+    {
+        public Guid CharacterId;
+
+        public HexCoordinate TargetPosition;
+
+        public MonsterType MonsterType;
+
+        public int MaxHealth;
     }
 
     public class EndTurnEventArgs : EventArgs
@@ -129,13 +140,24 @@ namespace HexWork.Gameplay
         /// </summary>
         private Character _activeCharacter = null;
 
+        #region Gameplay Actions
+
+        private HexAction _moveAction;
+        private HexAction _moveActionEx;
+
+        private HexAction _zombieGrab;
+
+        private HexAction _zombieBite;
+
+        #endregion 
+
         #endregion
 
         #region Events
 
         public event EventHandler<MoveEventArgs> CharacterMoveEvent;
         
-        public event EventHandler<InteractionRequestEventArgs> SpawnCharacterEvent;
+        public event EventHandler<SpawnChracterEventArgs> SpawnCharacterEvent;
 
         public event EventHandler<DamageTakenEventArgs> TakeDamageEvent;
 
@@ -207,7 +229,37 @@ namespace HexWork.Gameplay
 
         #region Methods
 
-        public GameState() { }
+        #region Initialisation
+
+        public GameState()
+        {
+            _moveAction = new MoveAction("Move", TargettingHelper.GetDestinationTargetTiles) { Range = 0 };
+            _moveActionEx = new MoveAction("Nimble Move! (1)", TargettingHelper.GetDestinationTargetTiles)
+                { PotentialCost = 1, Range = 2 };
+
+            _zombieGrab = new HexAction(name: "Zombie Grab",
+                statusEffect: new ImmobalisedEffect()
+                {
+                    StatusEffectType = StatusEffectType.Rooted
+                },
+                combo: null,
+                targetDelegate: TargettingHelper.GetValidTargetTilesNoLos)
+            {
+                Range = 1,
+                Power = 10
+            };
+
+            _zombieBite = new HexAction(name: "Zombie Bite",
+                combo: new ComboAction() { Power = 15 },
+                targetDelegate: TargettingHelper.GetValidTargetTilesNoLos)
+            {
+                Range = 1,
+                Power = 10
+            };
+
+            InitialiseEnemies();
+            InitialiseHeroes();
+        }
         
         public void StartGame()
         {
@@ -222,7 +274,7 @@ namespace HexWork.Gameplay
                 }
 
                 character.SpawnAt(coordinate);
-                SpawnCharacterEvent?.Invoke(this, new InteractionRequestEventArgs { ActiveCharacterId = character.Id, TargetPosition = coordinate });
+                SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs() { CharacterId = character.Id, TargetPosition = coordinate });
             }
 
             var spawnPoint = new HexCoordinate(-2, -2, 4);
@@ -249,6 +301,320 @@ namespace HexWork.Gameplay
 
             NextTurn();
         }
+
+        #region Create Characters
+
+        private void InitialiseEnemies()
+        {
+            var zombieKing = new Character("Zom-boy King", 160, 140, 2, 1)
+            {
+                MonsterType = MonsterType.ZombieKing
+            };
+            zombieKing.AddAction(_moveAction);
+            zombieKing.AddAction(_zombieGrab);
+            zombieKing.AddAction(_zombieBite);
+            Characters.Add(zombieKing);
+
+            for (var i = 0; i < 4; i++)
+            {
+                var zombie = new Character($"Zom-boy {i}", 60, 100, 1, 0);
+                zombie.AddAction(_moveAction);
+                zombie.AddAction(_zombieGrab);
+                zombie.AddAction(_zombieBite);
+
+                Characters.Add(zombie);
+            }
+        }
+
+        public Character CreateZombie()
+        {
+            var zombie = new Character($"Zom-boy Summon", 60, 100, 1, 0);
+            zombie.AddAction(_moveAction);
+            zombie.AddAction(_zombieGrab);
+            zombie.AddAction(_zombieBite);
+
+            return zombie;
+        }
+
+        private void InitialiseHeroes()
+        {
+            CreateMajin();
+
+            CreateGunner();
+
+            CreateNinja();
+
+            CreateIronSoul();
+
+            CreateBarbarian();
+
+            Characters = Characters.OrderByDescending(c => c.TurnTimer).ToList();
+        }
+
+        private void CreateMajin()
+        {
+            var burningBolt = new HexAction("Fire Bolt",
+                TargettingHelper.GetValidAxisTargetTilesLos,
+                new DotEffect())
+            {
+                Range = 3
+            };
+
+            var linePattern = new TargetPattern(new HexCoordinate(0, 0),
+                new HexCoordinate(1, 0),
+                new HexCoordinate(-1, 0));
+
+            var exBurningBoltAction = new HexAction("Fire Wall! (2)",
+                TargettingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
+                new DotEffect(), null,
+                linePattern)
+            {
+                PotentialCost = 2,
+                Range = 3
+            };
+
+            var lightningBolt = new HexAction("Lightning Bolt (1)", TargettingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo())
+            {
+                Range = 3,
+                Power = 15,
+                PotentialCost = 1
+            };
+
+            var whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
+                new HexCoordinate(1, -1, 0),
+                new HexCoordinate(0, -1, 1),
+                new HexCoordinate(-1, 0, 1),
+                new HexCoordinate(-1, 1, 0),
+                new HexCoordinate(0, 1, -1));
+
+            //create majin hero
+            var majinCharacter = new Character("Majin", 100, 100, 3, 5)
+            {
+                IsHero = true,
+                MovementType = MovementType.MoveThroughHeroes
+            };
+            majinCharacter.AddAction(_moveAction);
+            majinCharacter.AddAction(_moveActionEx);
+            majinCharacter.AddAction(burningBolt);
+            majinCharacter.AddAction(exBurningBoltAction);
+            majinCharacter.AddAction(lightningBolt);
+
+            Characters.Add(majinCharacter);
+            Commander = majinCharacter;
+        }
+
+        private void CreateGunner()
+        {
+            var shovingSnipeAction = new PushAction(name: "Shoving Snipe",
+                targetDelegate: TargettingHelper.GetValidAxisTargetTilesLos,
+                combo: null)
+            {
+                Power = 5,
+                Range = 5,
+                PushForce = 1
+            };
+
+            var detonatingSnipeActionEx = new HexAction("Perfect Snipe! (1)",
+                TargettingHelper.GetValidAxisTargetTilesLos,
+                null,
+                new ComboAction() { Power = 55 })
+            {
+                PotentialCost = 1,
+                Power = 5,
+                Range = 5
+            };
+
+            //create gunner hero
+            var gunnerCharacter = new Character("Gunner", 60, 100, 3, 4)
+            {
+                IsHero = true,
+                MovementType = MovementType.MoveThroughHeroes
+            };
+
+            gunnerCharacter.AddAction(_moveAction);
+            gunnerCharacter.AddAction(_moveActionEx);
+
+            gunnerCharacter.AddAction(shovingSnipeAction);
+            gunnerCharacter.AddAction(detonatingSnipeActionEx);
+            Characters.Add(gunnerCharacter);
+        }
+
+        private void CreateNinja()
+        {
+            var shurikenPattern = new TargetPattern(new HexCoordinate(-1, 1), new HexCoordinate(0, -1),
+                new HexCoordinate(1, 0));
+
+            var shurikenHailAction = new HexAction("Shuriken",
+                TargettingHelper.GetValidTargetTilesLos,
+                new DotEffect()
+                {
+                    Name = "Bleeding",
+                    Damage = 5,
+                    Duration = 3,
+                    StatusEffectType = StatusEffectType.Bleeding
+                })
+            {
+                Range = 3
+            };
+
+            var shurikenHailActionEx = new HexAction("Shuriken Hail! (1)",
+                TargettingHelper.GetValidTargetTilesLosIgnoreUnits,
+                new DotEffect()
+                {
+                    Name = "Bleeding",
+                    Damage = 5,
+                    Duration = 3,
+                    StatusEffectType = StatusEffectType.Bleeding
+                },
+                null, shurikenPattern)
+            {
+                PotentialCost = 1,
+                Range = 3
+            };
+
+            //create ninja hero
+            var ninjaCharacter = new Character("Ninja", 80, 80, 3, 4)
+            {
+                IsHero = true,
+                MovementType = MovementType.MoveThroughHeroes
+            };
+
+            ninjaCharacter.AddAction(_moveAction);
+            ninjaCharacter.AddAction(_moveActionEx);
+
+            ninjaCharacter.AddAction(shurikenHailAction);
+            ninjaCharacter.AddAction(shurikenHailActionEx);
+
+            Characters.Add(ninjaCharacter);
+        }
+
+        private void CreateIronSoul()
+        {
+            var pushingFist = new PushAction("Pushing Fist", TargettingHelper.GetValidTargetTilesLos)
+            {
+                Range = 1,
+                Power = 10,
+                PushForce = 2
+            };
+
+            var overwhelmingStrike = new PushAction("Overwhelming Strike! (1)", TargettingHelper.GetValidTargetTilesLos,
+                null, new StatusCombo()
+                {
+                    Effect = new ImmobalisedEffect()
+                    {
+                        StatusEffectType = StatusEffectType.Rooted
+                    }
+                })
+            {
+                Range = 1,
+                Power = 10,
+                PushForce = 3,
+                PotentialCost = 1
+            };
+
+            var vampiricStrike = new VampiricAction("Vampiric Strike", TargettingHelper.GetValidAxisTargetTilesLos)
+            {
+                Range = 1,
+            };
+
+            //create Iron Soul hero
+            var ironSoulCharacter = new Character("Iron Soul", 200, 120, 2, 3)
+            {
+                IsHero = true,
+                MovementType = MovementType.MoveThroughHeroes
+            };
+            ironSoulCharacter.AddAction(_moveAction);
+            ironSoulCharacter.AddAction(_moveActionEx);
+            ironSoulCharacter.AddAction(pushingFist);
+            ironSoulCharacter.AddAction(overwhelmingStrike);
+            ironSoulCharacter.AddAction(vampiricStrike);
+
+            //ironSoulCharacter.AddAction(detonatingSlash);
+            //ironSoulCharacter.AddAction(exDetonatingSlash);
+            Characters.Add(ironSoulCharacter);
+        }
+
+        private void CreateBarbarian()
+        {
+            //var targetPattern =
+            //    new TargetPattern(new HexCoordinate(0, 0), new HexCoordinate(1, 0), new HexCoordinate(2, 0));
+            //var burningStrikeEx = new LineAction("Burning Wave", GetValidTargetTilesLos,
+            //	new DotEffect(), null, targetPattern)
+            //{
+            //	Power = 15,
+            //	Range = 1,
+            //	PotentialCost = 1
+            //};
+
+            //var burningStrike = new HexAction("Burning Strike", GetValidTargetTilesLos,
+            //	new DotEffect())
+            //{
+            //	Power = 20,
+            //	Range = 1
+            //};
+
+            var whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
+                new HexCoordinate(1, -1, 0),
+                new HexCoordinate(0, -1, 1),
+                new HexCoordinate(-1, 0, 1),
+                new HexCoordinate(-1, 1, 0),
+                new HexCoordinate(0, 1, -1));
+
+            var detonatingSlash =
+              new HexAction("Detonating Strike! (1)", TargettingHelper.GetValidTargetTilesLos, null, new SpreadStatusCombo() { AllySafe = false }) { Range = 1, PotentialCost = 1 };
+
+            var exDetonatingSlash =
+            new HexAction("Massive Detonation! (1)", TargettingHelper.GetValidTargetTilesLos, null,
+              new ExploderCombo
+              {
+                  Power = 25,
+                  Pattern = whirlWindTargetPattern
+              })
+            {
+                Range = 1,
+                PotentialCost = 1,
+                Power = 25
+            };
+
+
+            var whirlwindAttack = new HexAction("Spin Attack", TargettingHelper.GetValidTargetTilesLos, null, new ComboAction(),
+                whirlWindTargetPattern)
+            {
+                Power = 15,
+                PotentialCost = 0,
+                Range = 0
+            };
+
+            var whirlwindAttackEx = new RepeatingAction("Whirlwind Attack (2)", TargettingHelper.GetValidTargetTilesLos, null, null,
+                whirlWindTargetPattern)
+            {
+                Power = 10,
+                PotentialCost = 2,
+                Range = 0,
+                AllySafe = true
+            };
+
+
+            //create Barbarian hero
+            var barbarianCharacter = new Character("Barbarian", 150, 100, 3, 2)
+            {
+                IsHero = true,
+                MovementType = MovementType.MoveThroughHeroes
+            };
+            barbarianCharacter.AddAction(_moveAction);
+            barbarianCharacter.AddAction(_moveActionEx);
+            //barbarianCharacter.AddAction(burningStrike);
+            //barbarianCharacter.AddAction(burningStrikeEx);
+            barbarianCharacter.AddAction(whirlwindAttack);
+            barbarianCharacter.AddAction(detonatingSlash);
+            barbarianCharacter.AddAction(exDetonatingSlash);
+            //barbarianCharacter.AddAction(whirlwindAttackEx);
+            Characters.Add(barbarianCharacter);
+        }
+
+        #endregion
+
+        #endregion
 
         public void Update(GameTime gameTime)
         {
@@ -408,6 +774,19 @@ namespace HexWork.Gameplay
             return damage;
         }
 
+        public void ApplyHealing(Character character, int healing)
+        {
+            character.Health += healing;
+            if (character.Health >= character.MaxHealth)
+                character.Health = character.MaxHealth;
+
+            TakeDamageEvent?.Invoke(this, new DamageTakenEventArgs()
+            {
+                DamageTaken = -healing,
+                TargetCharacterId = character.Id
+            });
+        }
+
         #region Private Update Methods
 
         private void ZombieTurn(Character character)
@@ -489,24 +868,97 @@ namespace HexWork.Gameplay
 
         private void ZombieKingTurn(Character character)
         {
-            ZombieTurn(character);
+            var position = character.Position;
+            List<HexCoordinate> shortestPath = null;
+            int shortestPathLength = int.MaxValue;
+            Character closestHero = null;
 
-            var zombies = _characters.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
+            //find the closest hero
+            foreach (var hero in Heroes)
+            {
+                var nearestNeighbour = GetNearestWalkableNeighbor(position, hero.Position);
+
+                if (nearestNeighbour == null)
+                    continue;
+
+                var path = FindShortestPath(position, nearestNeighbour);
+
+                if (path == null) continue;
+
+                if (path.Count >= shortestPathLength) continue;
+
+                shortestPathLength = path.Count;
+                shortestPath = path;
+                closestHero = hero;
+            }
+
+            if (closestHero != null)
+            {
+                //if the closest hero is close then move away.
+                if (shortestPathLength <= 3)
+                {
+                    //get all the tiles to which the zombie COULD move
+                    var tilesInRange = GetValidDestinations(character, character.Movement);
+
+                    float greatestDistance = 0;
+                    HexCoordinate destination = null;
+
+                    //look at all the possible destinations and get the one which is the furthest average distance away from heroes
+                    foreach (var tile in tilesInRange)
+                    {
+                        var distanceToHeroes = Heroes.Select(data => _map.DistanceBetweenPoints(tile, data.Position));
+
+                        var distance = (float)distanceToHeroes.Sum() / (float)Heroes.Count();
+                        if (distance > greatestDistance)
+                        {
+                            greatestDistance = distance;
+                            destination = tile;
+                        }
+                    }
+                    if(destination != null)
+                        MoveCharacterTo(character, destination);
+                }
+            }
+
 
             var rand = new Random(DateTime.Now.Millisecond);
 
-            var zombie = zombies[rand.Next(0, zombies.Count)];
+            if (rand.Next(2) == 0)
+            {
+                //spawn zombie
+                var zombie = CreateZombie();
 
-            var zombie2 = zombies[rand.Next(0, zombies.Count)];
+                MessageEvent?.Invoke(this, new MessageEventArgs("Zombie Summon"));
+                
+                foreach (var tile in _map.GetNeighborCoordinates(character.Position))
+                {
+                    //one unit per tile and only deploy to walkable spaces.
+                    if(IsHexPassable(tile))
+                    {
+                        zombie.SpawnAt(tile);
+                        _characters.Add(zombie);
+                        SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs(){ CharacterId = zombie.Id, TargetPosition = tile, MaxHealth = zombie.MaxHealth, MonsterType = MonsterType.Zombie});
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                var zombies = _characters.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
+                if (zombies.Count == 0) return;
 
-            MessageEvent?.Invoke(this, new MessageEventArgs("Zombie Rush!"));
+                var zombie = zombies[rand.Next(0, zombies.Count)];
+                var zombie2 = zombies[rand.Next(0, zombies.Count)];
 
-            zombie.StartTurn();
-            ZombieTurn(zombie);
-            zombie.EndTurn();
-            zombie2.StartTurn();
-            ZombieTurn(zombie2);
-            zombie2.EndTurn();
+                MessageEvent?.Invoke(this, new MessageEventArgs("Zombie Rush!"));
+
+                zombie.StartTurn();
+                ZombieTurn(zombie);
+                zombie.EndTurn();
+                zombie2.StartTurn();
+                ZombieTurn(zombie2);
+                zombie2.EndTurn();
+            }
         }
 
         public void ApplyStatus(Character targetCharacter, StatusEffect effect)
@@ -585,7 +1037,7 @@ namespace HexWork.Gameplay
 
             hero.SpawnAt(position);
 
-            SpawnCharacterEvent?.Invoke(this, new InteractionRequestEventArgs { ActiveCharacterId = hero.Id, TargetPosition = position });
+            SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs() { CharacterId = hero.Id, TargetPosition = position });
         }
 
         public void GainPotential(int potential = 1)
@@ -796,7 +1248,7 @@ namespace HexWork.Gameplay
         /// </summary>
         public List<HexCoordinate> GetTilesInRange(Character objectCharacter, int range)
         {
-            var result = new List<HexCoordinate>();
+            var result = new List<HexCoordinate>(){ objectCharacter.Position };
 
             GetTilesInRangeRecursive(result, objectCharacter.Position, range);
 
@@ -1138,7 +1590,7 @@ namespace HexWork.Gameplay
 
             return nearest;
         }
-
+        
         #endregion
 
         #endregion

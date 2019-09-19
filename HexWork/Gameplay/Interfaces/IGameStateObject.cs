@@ -18,9 +18,9 @@ namespace HexWork.Gameplay.Interfaces
 
 	public interface IGameStateObject
     {
-        void MoveCharacterTo(Character character, HexCoordinate targetPosition);
-
         void NotifyAction(HexAction action, Character character);
+
+        void MoveCharacterTo(Character character, HexCoordinate targetPosition);
 
         Character GetCharacterAtCoordinate(HexCoordinate coordinate);
 
@@ -31,6 +31,8 @@ namespace HexWork.Gameplay.Interfaces
         void ApplyCombo(Character character, ComboAction combo);
 
         void ApplyPush(Character character, HexCoordinate direction, int pushForce);
+
+        void ApplyHealing(Character character, int healingAmount);
 
         void LosePotential(int potentialCost);
 		
@@ -64,6 +66,8 @@ namespace HexWork.Gameplay.Interfaces
 	    /// </summary>
 	    bool IsValidDestination(Character objectCharacter, HexCoordinate targetPosition, int range);
 
+	    bool IsValidTarget(Character objectCharacter, HexCoordinate targetPosition, int range, GetValidTargetsDelegate targetDelegate);
+
 	    /// <summary>
 	    /// Get the shortest traversable path between two points on the map.
 	    /// If no path can be found returns null
@@ -73,12 +77,9 @@ namespace HexWork.Gameplay.Interfaces
 	    /// Rad as shit.
 	    /// </summary>
 	    List<HexCoordinate> FindShortestPath(HexCoordinate start, HexCoordinate destination, MovementType movementType = MovementType.NormalMove);
-
-
+        
 	    List<HexCoordinate> GetAxisTilesInRange(Character objectCharacter, int range);
-
-	    bool IsValidTarget(Character objectCharacter, HexCoordinate targetPosition, int range, GetValidTargetsDelegate targetDelegate);
-
+        
 	    HexCoordinate GetNearestNeighbor(HexCoordinate start, HexCoordinate end);
 
         bool IsHexPassable(HexCoordinate coordinate);

@@ -9,11 +9,16 @@ namespace HexWork.Gameplay.Actions
 {
     public class SpreadStatusCombo : ComboAction
     {
-
         public SpreadStatusCombo()
         {
             Name = "Chain Combo";
-            Pattern = new TargetPattern(new HexCoordinate(1,0), new HexCoordinate(0, -1), new HexCoordinate(-1, 1));
+            Pattern = new TargetPattern(new HexCoordinate(1,0), 
+                new HexCoordinate(-1, 0),
+                new HexCoordinate(0, 1),
+                new HexCoordinate(0, -1),
+                new HexCoordinate(-1, 1),
+                new HexCoordinate(1, -1));
+            Power = 10;
         }
 
         public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
@@ -49,9 +54,14 @@ namespace HexWork.Gameplay.Actions
                 if (newTargetCharacter == null)
                     continue;
 
+                if (AllySafe && targetCharacter.IsHero == character.IsHero)
+                    continue;
+
                 gameState.ApplyStatus(newTargetCharacter, targetCharacter.StatusEffects.FirstOrDefault());
-                gameState.ApplyDamage(targetCharacter, Power);
+                gameState.ApplyDamage(newTargetCharacter, Power);
             }
+
+            gameState.ApplyDamage(targetCharacter, Power);
         }
     }
 }

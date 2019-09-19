@@ -7,7 +7,6 @@ namespace HexWork.Gameplay
 		Burning,
 		Frozen,
 		Rooted,
-		Marked,
 		Bleeding
 	}
 
@@ -100,7 +99,7 @@ namespace HexWork.Gameplay
 
     public class DotEffect : StatusEffect
     {
-        public int Damage = 15; 
+        public int Damage = 15;
 
         public DotEffect()
         {

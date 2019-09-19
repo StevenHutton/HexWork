@@ -95,6 +95,9 @@ namespace HexWork.UI
 
         public void TakeDamage(int damage)
         {
+            if (_targetHealth - damage > MaxHealth)
+                return;
+
             _targetHealth -= damage;
         }
 

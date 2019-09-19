@@ -44,12 +44,15 @@
   <ItemGroup>
     <Compile Include="Game1.cs" />
     <Compile Include="Gameplay\Actions\ExploderCombo.cs" />
+    <Compile Include="Gameplay\Actions\HealingCombo.cs" />
     <Compile Include="Gameplay\Actions\LineAction.cs" />
     <Compile Include="Gameplay\Actions\MoveAction.cs" />
     <Compile Include="Gameplay\Actions\PushAction.cs" />
     <Compile Include="Gameplay\Actions\ComboAction.cs" />
     <Compile Include="Gameplay\Actions\RepeatingAction.cs" />
     <Compile Include="Gameplay\Actions\SpreadStatusCombo.cs" />
+    <Compile Include="Gameplay\Actions\StatusCombo.cs" />
+    <Compile Include="Gameplay\Actions\VampiricAction.cs" />
     <Compile Include="Gameplay\GameStateManager.cs" />
     <Compile Include="Gameplay\Actions\HexAction.cs" />
     <Compile Include="Gameplay\Character.cs" />
@@ -59,6 +62,7 @@
     <Compile Include="Gameplay\RulesEngine.cs" />
     <Compile Include="Gameplay\StatusEffect.cs" />
     <Compile Include="Gameplay\TargetPattern.cs" />
+    <Compile Include="Gameplay\TargettingHelper.cs" />
     <Compile Include="Gameplay\Tile.cs" />
     <Compile Include="InputManager.cs" />
     <Compile Include="Interfaces\IInputManager.cs" />
