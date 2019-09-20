@@ -919,12 +919,12 @@ namespace HexWork.Gameplay
                         MoveCharacterTo(character, destination);
                 }
             }
+	        var zombies = _characters.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
 
+			var rand = new Random(DateTime.Now.Millisecond);
 
-            var rand = new Random(DateTime.Now.Millisecond);
-
-            if (rand.Next(2) == 0)
-            {
+            if (rand.Next(0, 8) >= zombies.Count)
+			{
                 //spawn zombie
                 var zombie = CreateZombie();
 
@@ -944,7 +944,7 @@ namespace HexWork.Gameplay
             }
             else
             {
-                var zombies = _characters.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
+                
                 if (zombies.Count == 0) return;
 
                 var zombie = zombies[rand.Next(0, zombies.Count)];
