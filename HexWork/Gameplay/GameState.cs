@@ -268,7 +268,7 @@ namespace HexWork.Gameplay
                 var coordinate = _map.GetRandomCoordinateInMap();
 
                 //one unit per tile and only deploy to walkable spaces.
-                while (Characters.Select(cha => cha.Position).Contains(coordinate) || !_map.Map[coordinate].IsWalkable || !IsInTopHalf(coordinate))
+                while (Characters.Select(cha => cha.Position).Contains(coordinate) || !_map.Map[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
                 {
                     coordinate = _map.GetRandomCoordinateInMap();
                 }
@@ -1406,9 +1406,9 @@ namespace HexWork.Gameplay
             MessageEvent?.Invoke(this, new MessageEventArgs(message, targetCharacter));
         }
 
-        private bool IsInTopHalf(HexCoordinate coord)
+        private bool IsInEnemySpawnArea(HexCoordinate coord)
         {
-            return coord.Z <= 0;
+            return coord.Z <= 0 && coord.Z >= -3 && coord.X >= -4 && coord.X <= 4;
         }
 
 	    private bool IsHexWalkable(HexCoordinate co)
