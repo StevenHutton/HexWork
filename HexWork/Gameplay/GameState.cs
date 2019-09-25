@@ -536,23 +536,6 @@ namespace HexWork.Gameplay
 
         private void CreateBarbarian()
         {
-            //var targetPattern =
-            //    new TargetPattern(new HexCoordinate(0, 0), new HexCoordinate(1, 0), new HexCoordinate(2, 0));
-            //var burningStrikeEx = new LineAction("Burning Wave", GetValidTargetTilesLos,
-            //	new DotEffect(), null, targetPattern)
-            //{
-            //	Power = 15,
-            //	Range = 1,
-            //	PotentialCost = 1
-            //};
-
-            //var burningStrike = new HexAction("Burning Strike", GetValidTargetTilesLos,
-            //	new DotEffect())
-            //{
-            //	Power = 20,
-            //	Range = 1
-            //};
-
             var whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
                 new HexCoordinate(1, -1, 0),
                 new HexCoordinate(0, -1, 1),
@@ -568,7 +551,8 @@ namespace HexWork.Gameplay
               new ExploderCombo
               {
                   Power = 25,
-                  Pattern = whirlWindTargetPattern
+                  Pattern = whirlWindTargetPattern,
+				  AllySafe = false
               })
             {
                 Range = 1,

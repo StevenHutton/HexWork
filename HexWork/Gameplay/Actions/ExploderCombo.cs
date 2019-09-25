@@ -13,8 +13,13 @@ namespace HexWork.Gameplay.Actions
         public ExploderCombo()
         {
             Name = "Exploder Combo";
-            _targetPattern = new TargetPattern(new HexCoordinate(1, 0), new HexCoordinate(0, -1), new HexCoordinate(-1, 1));
-            Power = 25;
+            _targetPattern = new TargetPattern(new HexCoordinate(1, 0),
+	            new HexCoordinate(-1, 0),
+	            new HexCoordinate(0, 1),
+	            new HexCoordinate(0, -1),
+	            new HexCoordinate(-1, 1),
+	            new HexCoordinate(1, -1));
+			Power = 25;
         }
 
         public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
@@ -50,7 +55,10 @@ namespace HexWork.Gameplay.Actions
                 if (newTargetCharacter == null)
                     continue;
 
-                gameState.ApplyDamage(newTargetCharacter, Power);
+	            if (AllySafe && targetCharacter.IsHero == character.IsHero)
+		            continue;
+
+				gameState.ApplyDamage(newTargetCharacter, Power);
             }
         }
     }
