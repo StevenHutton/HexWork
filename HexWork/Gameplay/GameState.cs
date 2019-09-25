@@ -749,7 +749,7 @@ namespace HexWork.Gameplay
                 new DamageTakenEventArgs { DamageTaken = damage, TargetCharacterId = characterToDamage.Id });
             
             //check to see if they died.
-            if (characterToDamage.Health <= 0)
+            if (characterToDamage.Health <= 0 && characterToDamage.IsAlive)
             {
                 characterToDamage.IsAlive = false;
                 CharacterDiedEvent?.Invoke(this, new InteractionRequestEventArgs() { TargetCharacterId = characterToDamage.Id });
@@ -1351,7 +1351,7 @@ namespace HexWork.Gameplay
 		    //tile validation goes here.
 		    if (!IsHexWalkable(coordinate)) return false;
 
-		    var character = _characters.FirstOrDefault(c => c.Position == coordinate);
+		    var character = _characters.FirstOrDefault(c => c.Position == coordinate && c.IsAlive);
 		    if (character == null)
 			    return true;
 				
