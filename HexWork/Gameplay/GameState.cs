@@ -814,7 +814,6 @@ namespace HexWork.Gameplay
                     ApplyStatus(closestHero, action.StatusEffect);
 	                if (action.Combo != null)
 	                {
-		                ApplyCombo(closestHero, action.Combo);
 		                action.Combo.TriggerAsync(character, new DummyInputProvider(closestHero.Position), this);
 	                }
 
@@ -842,7 +841,6 @@ namespace HexWork.Gameplay
                 ApplyStatus(closestHero, action.StatusEffect);
 	            if (action.Combo != null)
 	            {
-		            ApplyCombo(closestHero, action.Combo);
 		            action.Combo.TriggerAsync(character, new DummyInputProvider(closestHero.Position), this);
 	            }
 

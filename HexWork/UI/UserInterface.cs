@@ -961,28 +961,16 @@ namespace HexWork.UI
                 return;
             }
 
-            var action = new UiAction();
-            action.Effect = new TextEffect("", _damageFont, TextAlignment.Center)
+            var tex = e.MonsterType == MonsterType.Zombie ? _monsterTexture : _monsterTexture_ZombieKing;
+            var portraitTex = e.MonsterType == MonsterType.Zombie ? _monsterPortraitTexture
+                : _monsterPortraitTexture_ZombieKing;
+
+            var sprite2 = new UiCharacter(tex, portraitTex, GetHexScreenPosition(e.TargetPosition), e.MaxHealth)
             {
-                Duration = 0.25f,
-                Position = GetHexScreenPosition(e.TargetPosition)
+                Scale = new Vector2(_hexScale * 0.9f)
             };
 
-            action.ActionCompleteCallback = () =>
-            {
-                var tex = e.MonsterType == MonsterType.Zombie ? _monsterTexture : _monsterTexture_ZombieKing;
-                var portraitTex = e.MonsterType == MonsterType.Zombie ? _monsterPortraitTexture
-                    : _monsterPortraitTexture_ZombieKing;
-
-                var sprite2 = new UiCharacter(tex, portraitTex, GetHexScreenPosition(e.TargetPosition), e.MaxHealth)
-                {
-                    Scale = new Vector2(_hexScale * 0.9f)
-                };
-
-                _uiCharacterDictionary.Add(e.CharacterId, sprite2);
-            };
-
-            _uiActions.Add(action);
+            _uiCharacterDictionary.Add(e.CharacterId, sprite2);
         }
 
         private void OnCharacterDied(object sender, InteractionRequestEventArgs e)
