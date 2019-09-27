@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using HexWork.Gameplay;
 
 namespace MonoGameTestProject.Gameplay
@@ -9,6 +11,8 @@ namespace MonoGameTestProject.Gameplay
         private readonly List<HexCoordinate> _pattern;
 
         public List<HexCoordinate> Pattern => _pattern;
+
+	    private HexCoordinate _direction = new HexCoordinate(1,-1);
         
         public TargetPattern(TargetPattern pattern)
         {
@@ -23,9 +27,10 @@ namespace MonoGameTestProject.Gameplay
 
         public void RotateClockwise()
         {
+	        _direction.SetValues(-_direction.Z, -_direction.X, -_direction.Y);
             foreach (var coord in _pattern)
             {
-                coord.SetValues(-coord.Z, -coord.X, -coord.Y);
+				coord.SetValues(-coord.Z, -coord.X, -coord.Y);
             }
         }
 
@@ -33,9 +38,18 @@ namespace MonoGameTestProject.Gameplay
         {
             foreach (var coord in _pattern)
             {
-                coord.SetValues(-coord.Y, -coord.Z, -coord.X);
+	            _direction.SetValues(-_direction.Y, -_direction.Z, -_direction.X);
+				coord.SetValues(-coord.Y, -coord.Z, -coord.X);
             }
         }
+
+	    public void RotatePatternTo(HexCoordinate direction)
+	    {
+			while (_direction != direction)
+		    {
+				RotateClockwise();
+		    }
+	    }
 
         /// <summary>
         /// Get the pattern translated to the target coordinates in hex space.

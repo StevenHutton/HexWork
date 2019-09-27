@@ -960,7 +960,7 @@ namespace HexWork.UI
                 sprite.Position = GetHexScreenPosition(e.TargetPosition);
                 return;
             }
-
+			
             var tex = e.MonsterType == MonsterType.Zombie ? _monsterTexture : _monsterTexture_ZombieKing;
             var portraitTex = e.MonsterType == MonsterType.Zombie ? _monsterPortraitTexture
                 : _monsterPortraitTexture_ZombieKing;
@@ -969,7 +969,6 @@ namespace HexWork.UI
             {
                 Scale = new Vector2(_hexScale * 0.9f)
             };
-
             _uiCharacterDictionary.Add(e.CharacterId, sprite2);
         }
 

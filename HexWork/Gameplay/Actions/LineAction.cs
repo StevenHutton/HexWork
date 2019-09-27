@@ -38,10 +38,7 @@ namespace HexWork.Gameplay.Actions
 
             var direction = targetPosition - nearestNeighbor;
 
-            while (Pattern.Pattern.All(coord => coord != direction))
-            {
-                Pattern.RotateClockwise();
-            }
+	        Pattern.RotatePatternTo(direction);
 
             var targetTiles = GetTargetTiles(targetPosition);
 

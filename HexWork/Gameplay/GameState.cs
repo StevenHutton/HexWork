@@ -315,7 +315,7 @@ namespace HexWork.Gameplay
             zombieKing.AddAction(_zombieBite);
             Characters.Add(zombieKing);
 
-            for (var i = 0; i < 4; i++)
+            for (var i = 0; i < 0; i++)
             {
                 var zombie = new Character($"Zom-boy {i}", 60, 100, 1, 0);
                 zombie.AddAction(_moveAction);
@@ -364,28 +364,37 @@ namespace HexWork.Gameplay
                 new HexCoordinate(1, 0),
                 new HexCoordinate(-1, 0));
 
-            var exBurningBoltAction = new HexAction("Fire Wall! (2)",
+	        var whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
+		        new HexCoordinate(1, -1, 0),
+		        new HexCoordinate(0, -1, 1),
+		        new HexCoordinate(-1, 0, 1),
+		        new HexCoordinate(-1, 1, 0),
+		        new HexCoordinate(0, 1, -1));
+
+			var exBurningBoltAction = new HexAction("Fire Wall! (1)",
                 TargettingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
                 new DotEffect(), null,
                 linePattern)
             {
-                PotentialCost = 2,
+                PotentialCost = 1,
                 Range = 3
             };
 
-            var lightningBolt = new HexAction("Lightning Bolt (1)", TargettingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo())
+	        var ringofFire = new HexAction("Ring of Fire! (2)",
+		        TargettingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
+		        new DotEffect(), null,
+		        whirlWindTargetPattern)
+	        {
+		        PotentialCost = 2,
+		        Range = 3
+	        };
+
+			var lightningBolt = new HexAction("Lightning Bolt (1)", TargettingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo())
             {
                 Range = 3,
                 Power = 15,
                 PotentialCost = 1
             };
-
-            var whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
-                new HexCoordinate(1, -1, 0),
-                new HexCoordinate(0, -1, 1),
-                new HexCoordinate(-1, 0, 1),
-                new HexCoordinate(-1, 1, 0),
-                new HexCoordinate(0, 1, -1));
 
             //create majin hero
             var majinCharacter = new Character("Majin", 100, 100, 3, 5)
@@ -397,7 +406,8 @@ namespace HexWork.Gameplay
             majinCharacter.AddAction(_moveActionEx);
             majinCharacter.AddAction(burningBolt);
             majinCharacter.AddAction(exBurningBoltAction);
-            majinCharacter.AddAction(lightningBolt);
+	        majinCharacter.AddAction(ringofFire);
+			majinCharacter.AddAction(lightningBolt);
 
             Characters.Add(majinCharacter);
             Commander = majinCharacter;
@@ -543,42 +553,40 @@ namespace HexWork.Gameplay
                 new HexCoordinate(-1, 1, 0),
                 new HexCoordinate(0, 1, -1));
 
+			var linePattern = new TargetPattern(new HexCoordinate(0,0,0),
+				new HexCoordinate(1, -1), new HexCoordinate(2, -2));
+
             var detonatingSlash =
               new HexAction("Detonating Strike! (1)", TargettingHelper.GetValidTargetTilesLos, null, new SpreadStatusCombo() { AllySafe = false }) { Range = 1, PotentialCost = 1 };
 
-            var exDetonatingSlash =
-            new HexAction("Massive Detonation! (1)", TargettingHelper.GetValidTargetTilesLos, null,
-              new ExploderCombo
-              {
-                  Power = 25,
-                  Pattern = whirlWindTargetPattern,
-				  AllySafe = false
-              })
-            {
-                Range = 1,
-                PotentialCost = 1,
-                Power = 25
-            };
+			var earthQuakeStrike = new LineAction("Earthquake Strike", 
+				TargettingHelper.GetValidAxisTargetTilesLos, 
+				new ImmobalisedEffect(), 
+				null,
+				linePattern);
 
-
+      //      var exDetonatingSlash =
+      //      new HexAction("Massive Detonation! (1)", TargettingHelper.GetValidTargetTilesLos, null,
+      //        new ExploderCombo
+      //        {
+      //            Power = 25,
+      //            Pattern = whirlWindTargetPattern,
+				  //AllySafe = false
+      //        })
+      //      {
+      //          Range = 1,
+      //          PotentialCost = 1,
+      //          Power = 25
+      //      };
+			
             var whirlwindAttack = new HexAction("Spin Attack", TargettingHelper.GetValidTargetTilesLos, null, new ComboAction(),
                 whirlWindTargetPattern)
             {
                 Power = 15,
-                PotentialCost = 0,
+                PotentialCost = 1,
                 Range = 0
             };
-
-            var whirlwindAttackEx = new RepeatingAction("Whirlwind Attack (2)", TargettingHelper.GetValidTargetTilesLos, null, null,
-                whirlWindTargetPattern)
-            {
-                Power = 10,
-                PotentialCost = 2,
-                Range = 0,
-                AllySafe = true
-            };
-
-
+			
             //create Barbarian hero
             var barbarianCharacter = new Character("Barbarian", 150, 100, 3, 2)
             {
@@ -587,12 +595,9 @@ namespace HexWork.Gameplay
             };
             barbarianCharacter.AddAction(_moveAction);
             barbarianCharacter.AddAction(_moveActionEx);
-            //barbarianCharacter.AddAction(burningStrike);
-            //barbarianCharacter.AddAction(burningStrikeEx);
+            barbarianCharacter.AddAction(earthQuakeStrike);
             barbarianCharacter.AddAction(whirlwindAttack);
             barbarianCharacter.AddAction(detonatingSlash);
-            barbarianCharacter.AddAction(exDetonatingSlash);
-            //barbarianCharacter.AddAction(whirlwindAttackEx);
             Characters.Add(barbarianCharacter);
         }
 
