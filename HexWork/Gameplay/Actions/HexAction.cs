@@ -13,6 +13,8 @@ namespace HexWork.Gameplay.Actions
 
         protected readonly GetValidTargetsDelegate _getValidTargets;
 
+        protected bool CanRotateTargetting = true;
+
         #endregion
 
         #region Properties
@@ -66,6 +68,9 @@ namespace HexWork.Gameplay.Actions
 
         public void RotateTargeting(bool isAntiClockwise)
         {
+            if (!CanRotateTargetting)
+                return;
+
             if (isAntiClockwise)
                 Pattern.RotateAntiClockwise();
             else

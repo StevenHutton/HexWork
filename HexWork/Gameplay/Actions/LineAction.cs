@@ -17,7 +17,9 @@ namespace HexWork.Gameplay.Actions
                 targetDelegate,
                 statusEffect,
                 combo, targetPattern)
-        { }
+        {
+            CanRotateTargetting = false;
+        }
 
         public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
         {

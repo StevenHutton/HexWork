@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Remoting.Channels;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
@@ -315,7 +314,7 @@ namespace HexWork.Gameplay
             zombieKing.AddAction(_zombieBite);
             Characters.Add(zombieKing);
 
-            for (var i = 0; i < 0; i++)
+            for (var i = 0; i < 2; i++)
             {
                 var zombie = new Character($"Zom-boy {i}", 60, 100, 1, 0);
                 zombie.AddAction(_moveAction);
@@ -347,8 +346,6 @@ namespace HexWork.Gameplay
             CreateIronSoul();
 
             CreateBarbarian();
-
-            Characters = Characters.OrderByDescending(c => c.TurnTimer).ToList();
         }
 
         private void CreateMajin()
@@ -415,6 +412,19 @@ namespace HexWork.Gameplay
 
         private void CreateGunner()
         {
+            var linePattern = new TargetPattern(new HexCoordinate(0, 0),
+                new HexCoordinate(1, 0),
+                new HexCoordinate(0, -1));
+            
+            var shotgunBlast = new LineAction("Shotgun Blast! (1)",
+                TargettingHelper.GetValidAxisTargetTilesLos,
+                null, new ComboAction(),
+                linePattern)
+            {
+                PotentialCost = 1,
+                Range = 2
+            };
+
             var shovingSnipeAction = new PushAction(name: "Shoving Snipe",
                 targetDelegate: TargettingHelper.GetValidAxisTargetTilesLos,
                 combo: null)
@@ -446,6 +456,7 @@ namespace HexWork.Gameplay
 
             gunnerCharacter.AddAction(shovingSnipeAction);
             gunnerCharacter.AddAction(detonatingSnipeActionEx);
+            gunnerCharacter.AddAction(shotgunBlast);
             Characters.Add(gunnerCharacter);
         }
 
