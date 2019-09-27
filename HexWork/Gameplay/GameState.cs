@@ -315,7 +315,7 @@ namespace HexWork.Gameplay
             zombieKing.AddAction(_zombieBite);
             Characters.Add(zombieKing);
 
-            for (var i = 0; i < 4; i++)
+            for (var i = 0; i < 0; i++)
             {
                 var zombie = new Character($"Zom-boy {i}", 60, 100, 1, 0);
                 zombie.AddAction(_moveAction);
