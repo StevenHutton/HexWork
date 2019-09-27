@@ -74,7 +74,9 @@ namespace HexWork.Gameplay
         public ImmobalisedEffect()
         {
             Name = "Immobalised";
-        }
+
+	        this.StatusEffectType = StatusEffectType.Rooted;
+		}
 
         public ImmobalisedEffect(ImmobalisedEffect effect)
         {

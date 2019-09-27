@@ -15,6 +15,8 @@ namespace HexWork.Gameplay
 
         public int Z { get; set; }
 
+	    public int VectorLength => (int)Math.Sqrt((X * X) + (Y * Y) + (Z * Z));
+
         #endregion
 
         public HexCoordinate(int x, int y)
