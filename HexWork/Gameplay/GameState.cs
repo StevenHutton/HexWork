@@ -790,14 +790,6 @@ namespace HexWork.Gameplay
             TakeDamageEvent?.Invoke(this,
                 new DamageTakenEventArgs { DamageTaken = damage, TargetCharacterId = characterToDamage.Id });
             
-            //check to see if they died.
-            if (characterToDamage.Health <= 0 && characterToDamage.IsAlive)
-            {
-                characterToDamage.IsAlive = false;
-                Characters.Remove(characterToDamage);
-                CharacterDiedEvent?.Invoke(this, new InteractionRequestEventArgs() { TargetCharacterId = characterToDamage.Id });
-            }
-
             return damage;
         }
 
@@ -812,6 +804,17 @@ namespace HexWork.Gameplay
                 DamageTaken = -healing,
                 TargetCharacterId = character.Id
             });
+        }
+
+        public void CheckDied(Character character)
+        {
+            //check to see if they died.
+            if (character.Health <= 0 && character.IsAlive)
+            {
+                character.IsAlive = false;
+                Characters.Remove(character);
+                CharacterDiedEvent?.Invoke(this, new InteractionRequestEventArgs() { TargetCharacterId = character.Id });
+            }
         }
 
         #region Private Update Methods
@@ -1104,7 +1107,7 @@ namespace HexWork.Gameplay
 
         public Character GetCharacterAtCoordinate(HexCoordinate coordinate)
         {
-            return Characters.FirstOrDefault(character => character.Position == coordinate && character.IsAlive);
+            return Characters.FirstOrDefault(character => character.Position == coordinate);
         }
 
         /// <summary>

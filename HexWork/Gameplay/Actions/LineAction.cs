@@ -62,6 +62,8 @@ namespace HexWork.Gameplay.Actions
 
                 if (Combo != null)
                     await Combo.TriggerAsync(character, new DummyInputProvider(targetPosition), gameState);
+
+                gameState.CheckDied(targetCharacter);
             }
 
             if (PotentialCost != 0)

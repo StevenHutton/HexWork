@@ -41,11 +41,13 @@ namespace HexWork.Gameplay.Interfaces
         void LosePotential(int potentialCost);
 
         void NextTurn();
-		
-	    /// <summary>
-	    /// Get all the visible tiles within range of a target position along each of our three coordinate system axes.
-	    /// </summary>
-	    List<HexCoordinate> GetVisibleAxisTilesInRange(Character objectCharacter, int range);
+
+        void CheckDied(Character character);
+
+        /// <summary>
+        /// Get all the visible tiles within range of a target position along each of our three coordinate system axes.
+        /// </summary>
+        List<HexCoordinate> GetVisibleAxisTilesInRange(Character objectCharacter, int range);
 
 	    List<HexCoordinate> GetVisibleAxisTilesInRangeIgnoreUnits(Character objectCharacter, int range);
 

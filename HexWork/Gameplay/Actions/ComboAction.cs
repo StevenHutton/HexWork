@@ -28,7 +28,7 @@ namespace HexWork.Gameplay.Actions
 
             gameState.ApplyCombo(targetCharacter, this);
             gameState.ApplyDamage(targetCharacter, Power);
-			gameState.ApplyStatus(targetCharacter, this.StatusEffect);
+            gameState.ApplyStatus(targetCharacter, this.StatusEffect);
         }
     }
 }

@@ -88,7 +88,10 @@ namespace HexWork.Gameplay.Actions
 		        .Contains(targetPosition))
 		        return;
 
-	        gameState.NotifyAction(this, character);
+            if (PotentialCost != 0)
+                gameState.LosePotential(PotentialCost);
+
+            gameState.NotifyAction(this, character);
 
 			//loop through the affected tiles.
             var targetTiles = GetTargetTiles(targetPosition);
@@ -105,13 +108,12 @@ namespace HexWork.Gameplay.Actions
 
                 if (Combo != null)
                     await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState);
+
 		        gameState.ApplyDamage(targetCharacter, Power);
 		        gameState.ApplyStatus(targetCharacter, StatusEffect);
+                gameState.CheckDied(targetCharacter);
             }
-
-	        if (PotentialCost != 0)
-		        gameState.LosePotential(PotentialCost);
-		}
+        }
 
         public virtual bool IsAvailable(Character character)
 		{

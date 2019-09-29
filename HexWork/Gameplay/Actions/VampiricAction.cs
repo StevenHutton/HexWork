@@ -56,6 +56,8 @@ namespace HexWork.Gameplay.Actions
                     await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState);
 
                 gameState.ApplyStatus(targetCharacter, StatusEffect);
+
+                gameState.CheckDied(targetCharacter);
             }
 
             gameState.ApplyHealing(character, amountToHeal);

@@ -53,6 +53,9 @@ namespace HexWork.Gameplay.Actions
             gameState.ApplyStatus(target, StatusEffect);
             if (Combo != null)
                 await Combo.TriggerAsync(character, new DummyInputProvider(targetPosition), gameState);
+
+
+            gameState.CheckDied(target);
         }
     }
 }

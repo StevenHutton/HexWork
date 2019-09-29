@@ -175,6 +175,9 @@ namespace HexWork.UI
 	        return power;
         }
 
+        public void CheckDied(Character character)
+        { }
+
         public void ApplyHealing(Character character, int power)
         {
             var position = GetHexScreenPosition(character.Position);
