@@ -47,11 +47,13 @@
     <Compile Include="Gameplay\Actions\HealingCombo.cs" />
     <Compile Include="Gameplay\Actions\LineAction.cs" />
     <Compile Include="Gameplay\Actions\MoveAction.cs" />
+    <Compile Include="Gameplay\Actions\PotentialGainAction.cs" />
     <Compile Include="Gameplay\Actions\PushAction.cs" />
     <Compile Include="Gameplay\Actions\ComboAction.cs" />
     <Compile Include="Gameplay\Actions\RepeatingAction.cs" />
     <Compile Include="Gameplay\Actions\SpreadStatusCombo.cs" />
     <Compile Include="Gameplay\Actions\StatusCombo.cs" />
+    <Compile Include="Gameplay\Actions\SwapAction.cs" />
     <Compile Include="Gameplay\Actions\VampiricAction.cs" />
     <Compile Include="Gameplay\GameStateManager.cs" />
     <Compile Include="Gameplay\Actions\HexAction.cs" />

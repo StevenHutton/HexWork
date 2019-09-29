@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace HexWork.Gameplay
 {
@@ -182,8 +181,8 @@ namespace HexWork.Gameplay
                         break;
                     case TerrainType.Lava:
                         tile.Color =  Color.Orange;
-                        tile.IsWalkable = false;
-                        tile.MovementCost = 0;
+                        tile.IsWalkable = true;
+                        tile.MovementCost = 1;
                         break;
                     case TerrainType.Ice:
                         tile.Color =  Color.LightBlue;

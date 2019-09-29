@@ -152,10 +152,13 @@ namespace HexWork.UI
             //throw new System.NotImplementedException();
         }
 
-		/// <summary>
-		/// intentionally does nothing
-		/// </summary>
-		/// <param name="action"></param>
+
+        public void TeleportCharacterTo(Character character, HexCoordinate position) { }
+
+        /// <summary>
+        /// intentionally does nothing
+        /// </summary>
+        /// <param name="action"></param>
         public void NotifyAction(HexAction action, Character character)
         { }
 
@@ -323,13 +326,17 @@ namespace HexWork.UI
 
         #endregion
 
-        #region IDisposable
+        public void NextTurn(){}
 
-        #endregion
+        public void GainPotential(int potentialGain = 1) { }
+
+        #region IDisposable
 
         public void Dispose()
         {
             _spriteBatch?.Dispose();
         }
+
+        #endregion
     }
 }

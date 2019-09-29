@@ -42,7 +42,8 @@ namespace HexWork.Gameplay
 	{
 		public Guid ActiveCharacterId;
 		public List<HexCoordinate> Path;
-	}
+        public HexCoordinate Destination;
+    }
 
     public class InteractionRequestEventArgs : EventArgs
     {
@@ -147,6 +148,26 @@ namespace HexWork.Gameplay
         private HexAction _zombieGrab;
 
         private HexAction _zombieBite;
+
+        private PotentialGainAction _potentialGainAction;
+
+        TargetPattern _whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
+            new HexCoordinate(1, -1, 0),
+            new HexCoordinate(0, -1, 1),
+            new HexCoordinate(-1, 0, 1),
+            new HexCoordinate(-1, 1, 0),
+            new HexCoordinate(0, 1, -1));
+
+        TargetPattern _xAxisLinePattern = new TargetPattern(new HexCoordinate(0, 0, 0),
+            new HexCoordinate(1, -1), new HexCoordinate(2, -2));
+
+        TargetPattern _rotatingLinePattern = new TargetPattern(new HexCoordinate(0, 0),
+            new HexCoordinate(1, 0),
+            new HexCoordinate(-1, 0));
+
+        TargetPattern _cornerPattern = new TargetPattern(new HexCoordinate(0, 0),
+            new HexCoordinate(1, 0),
+            new HexCoordinate(0, -1));
 
         #endregion 
 
@@ -256,6 +277,8 @@ namespace HexWork.Gameplay
                 Power = 10
             };
 
+            _potentialGainAction = new PotentialGainAction("Wind", null, null, null, null);
+
             InitialiseEnemies();
             InitialiseHeroes();
         }
@@ -356,22 +379,11 @@ namespace HexWork.Gameplay
             {
                 Range = 3
             };
-
-            var linePattern = new TargetPattern(new HexCoordinate(0, 0),
-                new HexCoordinate(1, 0),
-                new HexCoordinate(-1, 0));
-
-	        var whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
-		        new HexCoordinate(1, -1, 0),
-		        new HexCoordinate(0, -1, 1),
-		        new HexCoordinate(-1, 0, 1),
-		        new HexCoordinate(-1, 1, 0),
-		        new HexCoordinate(0, 1, -1));
-
+            
 			var exBurningBoltAction = new HexAction("Fire Wall! (1)",
                 TargettingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
                 new DotEffect(), null,
-                linePattern)
+                _rotatingLinePattern)
             {
                 PotentialCost = 1,
                 Range = 3
@@ -380,7 +392,7 @@ namespace HexWork.Gameplay
 	        var ringofFire = new HexAction("Ring of Fire! (2)",
 		        TargettingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
 		        new DotEffect(), null,
-		        whirlWindTargetPattern)
+		        _whirlWindTargetPattern)
 	        {
 		        PotentialCost = 2,
 		        Range = 3
@@ -405,6 +417,7 @@ namespace HexWork.Gameplay
             majinCharacter.AddAction(exBurningBoltAction);
 	        majinCharacter.AddAction(ringofFire);
 			majinCharacter.AddAction(lightningBolt);
+            majinCharacter.AddAction(_potentialGainAction);
 
             Characters.Add(majinCharacter);
             Commander = majinCharacter;
@@ -412,14 +425,10 @@ namespace HexWork.Gameplay
 
         private void CreateGunner()
         {
-            var linePattern = new TargetPattern(new HexCoordinate(0, 0),
-                new HexCoordinate(1, 0),
-                new HexCoordinate(0, -1));
-            
             var shotgunBlast = new LineAction("Shotgun Blast! (1)",
                 TargettingHelper.GetValidAxisTargetTilesLos,
                 null, new ComboAction(),
-                linePattern)
+                _cornerPattern)
             {
                 PotentialCost = 1,
                 Range = 2
@@ -453,31 +462,30 @@ namespace HexWork.Gameplay
 
             gunnerCharacter.AddAction(_moveAction);
             gunnerCharacter.AddAction(_moveActionEx);
-
             gunnerCharacter.AddAction(shovingSnipeAction);
             gunnerCharacter.AddAction(detonatingSnipeActionEx);
             gunnerCharacter.AddAction(shotgunBlast);
+            gunnerCharacter.AddAction(_potentialGainAction);
             Characters.Add(gunnerCharacter);
         }
 
         private void CreateNinja()
         {
-            var shurikenPattern = new TargetPattern(new HexCoordinate(-1, 1), new HexCoordinate(0, -1),
-                new HexCoordinate(1, 0));
-
             var shurikenHailAction = new HexAction("Shuriken",
                 TargettingHelper.GetValidTargetTilesLos,
                 new DotEffect()
                 {
                     Name = "Bleeding",
                     Damage = 5,
-                    Duration = 3,
+                    Duration = 1,
                     StatusEffectType = StatusEffectType.Bleeding
                 })
             {
-                Range = 3
+                Range = 2
             };
 
+            var shurikenPattern = new TargetPattern(new HexCoordinate(-1, 1), new HexCoordinate(0, -1),
+                new HexCoordinate(1, 0));
             var shurikenHailActionEx = new HexAction("Shuriken Hail! (1)",
                 TargettingHelper.GetValidTargetTilesLosIgnoreUnits,
                 new DotEffect()
@@ -493,6 +501,14 @@ namespace HexWork.Gameplay
                 Range = 3
             };
 
+            var swapAction = new SwapAction("Swap Positions (1)", TargettingHelper.GetValidTargetTilesLos)
+            {
+                Power = 10,
+                AllySafe = false,
+                PotentialCost = 1,
+                Range = 2
+            };
+
             //create ninja hero
             var ninjaCharacter = new Character("Ninja", 80, 80, 3, 4)
             {
@@ -502,9 +518,10 @@ namespace HexWork.Gameplay
 
             ninjaCharacter.AddAction(_moveAction);
             ninjaCharacter.AddAction(_moveActionEx);
-
             ninjaCharacter.AddAction(shurikenHailAction);
             ninjaCharacter.AddAction(shurikenHailActionEx);
+            ninjaCharacter.AddAction(swapAction);
+            ninjaCharacter.AddAction(_potentialGainAction);
 
             Characters.Add(ninjaCharacter);
         }
@@ -529,13 +546,27 @@ namespace HexWork.Gameplay
             {
                 Range = 1,
                 Power = 10,
-                PushForce = 3,
+                PushForce = 1,
                 PotentialCost = 1
             };
 
             var vampiricStrike = new VampiricAction("Vampiric Strike", TargettingHelper.GetValidAxisTargetTilesLos)
             {
                 Range = 1,
+            };
+            
+            var exDetonatingSlash =
+            new HexAction("Massive Detonation! (1)", TargettingHelper.GetValidTargetTilesLos, null,
+              new ExploderCombo
+              {
+                  Power = 25,
+                  Pattern = _whirlWindTargetPattern,
+                  AllySafe = false
+              })
+            {
+                Range = 1,
+                PotentialCost = 1,
+                Power = 25
             };
 
             //create Iron Soul hero
@@ -546,52 +577,32 @@ namespace HexWork.Gameplay
             };
             ironSoulCharacter.AddAction(_moveAction);
             ironSoulCharacter.AddAction(_moveActionEx);
+            ironSoulCharacter.AddAction(vampiricStrike);
             ironSoulCharacter.AddAction(pushingFist);
             ironSoulCharacter.AddAction(overwhelmingStrike);
-            ironSoulCharacter.AddAction(vampiricStrike);
-
-            //ironSoulCharacter.AddAction(detonatingSlash);
-            //ironSoulCharacter.AddAction(exDetonatingSlash);
+            ironSoulCharacter.AddAction(exDetonatingSlash);
+            ironSoulCharacter.AddAction(_potentialGainAction);
             Characters.Add(ironSoulCharacter);
         }
 
         private void CreateBarbarian()
         {
-            var whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
-                new HexCoordinate(1, -1, 0),
-                new HexCoordinate(0, -1, 1),
-                new HexCoordinate(-1, 0, 1),
-                new HexCoordinate(-1, 1, 0),
-                new HexCoordinate(0, 1, -1));
-
-			var linePattern = new TargetPattern(new HexCoordinate(0,0,0),
-				new HexCoordinate(1, -1), new HexCoordinate(2, -2));
-
+            var statusCombo = new SpreadStatusCombo() {AllySafe = true};
             var detonatingSlash =
-              new HexAction("Detonating Strike! (1)", TargettingHelper.GetValidTargetTilesLos, null, new SpreadStatusCombo() { AllySafe = false }) { Range = 1, PotentialCost = 1 };
+              new HexAction("Detonating Strike! (1)", TargettingHelper.GetValidTargetTilesLos, null, statusCombo)
+                  {
+                      Range = 1,
+                      PotentialCost = 1
+                  };
 
 			var earthQuakeStrike = new LineAction("Earthquake Strike", 
 				TargettingHelper.GetValidAxisTargetTilesLos, 
 				new ImmobalisedEffect(), 
 				null,
-				linePattern);
+				_xAxisLinePattern);
 
-      //      var exDetonatingSlash =
-      //      new HexAction("Massive Detonation! (1)", TargettingHelper.GetValidTargetTilesLos, null,
-      //        new ExploderCombo
-      //        {
-      //            Power = 25,
-      //            Pattern = whirlWindTargetPattern,
-				  //AllySafe = false
-      //        })
-      //      {
-      //          Range = 1,
-      //          PotentialCost = 1,
-      //          Power = 25
-      //      };
-			
             var whirlwindAttack = new HexAction("Spin Attack", TargettingHelper.GetValidTargetTilesLos, null, new ComboAction(),
-                whirlWindTargetPattern)
+                _whirlWindTargetPattern)
             {
                 Power = 15,
                 PotentialCost = 1,
@@ -609,6 +620,7 @@ namespace HexWork.Gameplay
             barbarianCharacter.AddAction(earthQuakeStrike);
             barbarianCharacter.AddAction(whirlwindAttack);
             barbarianCharacter.AddAction(detonatingSlash);
+            barbarianCharacter.AddAction(_potentialGainAction);
             Characters.Add(barbarianCharacter);
         }
 
@@ -740,7 +752,21 @@ namespace HexWork.Gameplay
                 new MoveEventArgs
 				{
                     ActiveCharacterId = character.Id,
-					Path = FindShortestPath(character.Position, position, character.MovementType)
+					Path = FindShortestPath(character.Position, position, character.MovementType),
+                    Destination = position
+                });
+
+            character.MoveTo(position);
+        }
+
+        public void TeleportCharacterTo(Character character, HexCoordinate position)
+        {
+            CharacterMoveEvent?.Invoke(this,
+                new MoveEventArgs
+                {
+                    ActiveCharacterId = character.Id,
+                    Path = null,
+                    Destination = position
                 });
 
             character.MoveTo(position);
@@ -1315,8 +1341,10 @@ namespace HexWork.Gameplay
                     if (!IsTilePassable(movementType, neighbor))
                         continue;
 
-                    //check if the tile is water.
-                    if (_map.Map[neighbor].TerrainType == TerrainType.Water && neighbor != destination)
+                    //check if the tile is water or lava.
+                    if (_map.Map[neighbor].TerrainType == TerrainType.Water
+                        || _map.Map[neighbor].TerrainType == TerrainType.Lava
+                        && neighbor != destination)
                         continue;
 
                     //nodes are always one space away - hexgrid!
@@ -1460,7 +1488,8 @@ namespace HexWork.Gameplay
                     neighbours.Add(coord);//then add it to the list.
                 }
 
-                if (_map.Map[coord].TerrainType == TerrainType.Water)
+                if (_map.Map[coord].TerrainType == TerrainType.Water
+                    || _map.Map[coord].TerrainType == TerrainType.Water)
                     continue;
 
                 GetWalkableNeighboursRecursive(neighbours, coord, movementType, maxSearchDepth, searchDepth + _map.Map[coord].MovementCost);

@@ -267,6 +267,10 @@ namespace HexWork.UI
             {
                 SelectedHexAction?.RotateTargeting(_keyBoardState.IsKeyDown(Keys.LeftShift));
             }
+            else if (_mouseState.ScrollWheelValue != _previousMouseState.ScrollWheelValue)
+            {
+                SelectedHexAction?.RotateTargeting(_mouseState.ScrollWheelValue < _previousMouseState.ScrollWheelValue);
+            }
 
             //right click cancels UI state.
             if (_previousMouseState.RightButton == ButtonState.Pressed &&
@@ -938,10 +942,16 @@ namespace HexWork.UI
         private void OnCharacterMove(object sender, MoveEventArgs e)
         {
             var sprite = _uiCharacterDictionary[e.ActiveCharacterId];
-			
+
+            if (e.Path == null)
+            {
+                sprite.Position = GetHexScreenPosition(e.Destination);
+                return;
+            }
+
             //get the path that the sprite will take in screen space relative to it's starting position
             var movementPath = e.Path.Select(GetHexScreenPosition);
-	        var action = new UiAction
+            var action = new UiAction
 	        {
 		        Sprite = sprite,
 				Animation = new MovementAnimation()

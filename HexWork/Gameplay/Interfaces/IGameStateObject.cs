@@ -22,6 +22,8 @@ namespace HexWork.Gameplay.Interfaces
 
         void MoveCharacterTo(Character character, HexCoordinate targetPosition);
 
+        void TeleportCharacterTo(Character character, HexCoordinate position);
+
         Character GetCharacterAtCoordinate(HexCoordinate coordinate);
 
         int ApplyDamage(Character character, int power, string message = null);
@@ -34,7 +36,11 @@ namespace HexWork.Gameplay.Interfaces
 
         void ApplyHealing(Character character, int healingAmount);
 
+        void GainPotential(int potentialGain = 1);
+
         void LosePotential(int potentialCost);
+
+        void NextTurn();
 		
 	    /// <summary>
 	    /// Get all the visible tiles within range of a target position along each of our three coordinate system axes.
