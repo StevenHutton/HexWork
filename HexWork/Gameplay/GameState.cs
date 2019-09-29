@@ -794,6 +794,7 @@ namespace HexWork.Gameplay
             if (characterToDamage.Health <= 0 && characterToDamage.IsAlive)
             {
                 characterToDamage.IsAlive = false;
+                Characters.Remove(characterToDamage);
                 CharacterDiedEvent?.Invoke(this, new InteractionRequestEventArgs() { TargetCharacterId = characterToDamage.Id });
             }
 
@@ -990,6 +991,9 @@ namespace HexWork.Gameplay
             //todo - apply status effects based on status damage
             //for now we just always apply any relevant status effects
             if (effect == null) return;
+
+            if (!targetCharacter.IsAlive)
+                return;
 
             var effectToApply = effect.Copy();
             targetCharacter.StatusEffects.Add(effectToApply);
@@ -1489,7 +1493,7 @@ namespace HexWork.Gameplay
                 }
 
                 if (_map.Map[coord].TerrainType == TerrainType.Water
-                    || _map.Map[coord].TerrainType == TerrainType.Water)
+                    || _map.Map[coord].TerrainType == TerrainType.Lava)
                     continue;
 
                 GetWalkableNeighboursRecursive(neighbours, coord, movementType, maxSearchDepth, searchDepth + _map.Map[coord].MovementCost);
