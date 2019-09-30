@@ -1349,8 +1349,8 @@ namespace HexWork.Gameplay
                         continue;
 
                     //check if the tile is water or lava.
-                    if (_map.Map[neighbor].TerrainType == TerrainType.Water
-                        || _map.Map[neighbor].TerrainType == TerrainType.Lava
+                    if ((_map.Map[neighbor].TerrainType == TerrainType.Water
+                        || _map.Map[neighbor].TerrainType == TerrainType.Lava)
                         && neighbor != destination)
                         continue;
 
