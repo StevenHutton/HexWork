@@ -587,7 +587,7 @@ namespace HexWork.Gameplay
 
         private void CreateBarbarian()
         {
-            var statusCombo = new SpreadStatusCombo() {AllySafe = true};
+            var statusCombo = new SpreadStatusCombo() { AllySafe = true };
             var detonatingSlash =
               new HexAction("Detonating Strike! (1)", TargettingHelper.GetValidTargetTilesLos, null, statusCombo)
                   {
