@@ -59,9 +59,10 @@ namespace HexWork.UI
 
         private readonly Color _buttonEnabledColor = Color.LightGray;
         private readonly Color _buttonDisabledColor = Color.DarkGray;
-        private readonly Color _buttonMouseDownColor = Color.LightSlateGray;
-        
-        private Texture2D _hexagonTexture;
+        private readonly Color _buttonMouseDownColor = Color.SlateGray;
+	    private readonly Color _buttonHoverColor = Color.LightSlateGray;
+
+		private Texture2D _hexagonTexture;
         private Texture2D _hexagonOutlineTexture;
 
         //screen dimensions
@@ -253,7 +254,9 @@ namespace HexWork.UI
             _mouseState = Mouse.GetState();
             _previousKeyboardState = _keyBoardState;
             _keyBoardState = Keyboard.GetState();
-            
+	        _actionBarButtons.ForEach(b => b.IsHover = false);
+
+			UiButton button;
             if (_previousMouseState.LeftButton == ButtonState.Released
                 && _mouseState.LeftButton == ButtonState.Pressed)
             {
@@ -264,6 +267,10 @@ namespace HexWork.UI
             {
                 MouseUp(_mouseState.Position);
             }
+			else if((button = _actionBarButtons.FirstOrDefault(b => b.Rect.Contains(_mouseState.Position))) != null)
+	        {
+				button.IsHover = true;
+	        }
             
             if (NewKeyRelease(Keys.Tab))
             {
@@ -399,10 +406,11 @@ namespace HexWork.UI
             foreach (var button in _actionBarButtons)
             {
                 var buttonColor = button.IsEnabled ? //1st conditional
-                    (button.IsMouseDown ? _buttonMouseDownColor : _buttonEnabledColor) //1st conditional true => second conditional
+	                (button.IsMouseDown ? _buttonMouseDownColor 
+		                : (button.IsHover ? _buttonHoverColor : _buttonEnabledColor))
                     : _buttonDisabledColor; //1st conditional false
 
-                var textColor = Color.White;
+                var textColor = button.IsEnabled ? Color.Black : Color.Gray;
 
                 _spriteBatch.Draw(_buttonTexture, button.Rect, buttonColor);
                 _spriteBatch.DrawString(_buttonFont, button.Text, button.Position - button.TextSize / 2, textColor);

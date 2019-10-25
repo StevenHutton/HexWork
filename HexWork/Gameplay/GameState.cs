@@ -337,7 +337,7 @@ namespace HexWork.Gameplay
             zombieKing.AddAction(_zombieBite);
             Characters.Add(zombieKing);
 
-            for (var i = 0; i < 2; i++)
+            for (var i = 0; i < 4; i++)
             {
                 var zombie = new Character($"Zom-boy {i}", 60, 100, 1, 0);
                 zombie.AddAction(_moveAction);
@@ -587,7 +587,7 @@ namespace HexWork.Gameplay
 
         private void CreateBarbarian()
         {
-            var statusCombo = new SpreadStatusCombo() {AllySafe = true};
+            var statusCombo = new SpreadStatusCombo() { AllySafe = true };
             var detonatingSlash =
               new HexAction("Detonating Strike! (1)", TargettingHelper.GetValidTargetTilesLos, null, statusCombo)
                   {
@@ -952,7 +952,7 @@ namespace HexWork.Gameplay
 
 			var rand = new Random(DateTime.Now.Millisecond);
 
-            if (rand.Next(0, 8) >= zombies.Count)
+            if (rand.Next(0, 10) >= zombies.Count)
 			{
                 //spawn zombie
                 var zombie = CreateZombie();
@@ -1350,8 +1350,8 @@ namespace HexWork.Gameplay
                         continue;
 
                     //check if the tile is water or lava.
-                    if (_map.Map[neighbor].TerrainType == TerrainType.Water
-                        || _map.Map[neighbor].TerrainType == TerrainType.Lava
+                    if ((_map.Map[neighbor].TerrainType == TerrainType.Water
+                        || _map.Map[neighbor].TerrainType == TerrainType.Lava)
                         && neighbor != destination)
                         continue;
 

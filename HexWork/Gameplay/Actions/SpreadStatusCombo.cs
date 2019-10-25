@@ -54,7 +54,7 @@ namespace HexWork.Gameplay.Actions
                 if (newTargetCharacter == null)
                     continue;
 
-                if (AllySafe && targetCharacter.IsHero == character.IsHero)
+                if (AllySafe && newTargetCharacter.IsHero == character.IsHero)
                     continue;
 
                 gameState.ApplyStatus(newTargetCharacter, targetCharacter.StatusEffects.FirstOrDefault());
