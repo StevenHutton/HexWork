@@ -50,7 +50,7 @@ namespace HexWork.Gameplay.Actions
 		    gameState.ApplyPush(targetCharacter, direction, PushForce);
 
             if(Combo != null)
-                await Combo.TriggerAsync(character, new DummyInputProvider(targetPosition), gameState);
+                await Combo.TriggerAsync(character, new DummyInputProvider(targetCharacter.Position), gameState);
 
 		    gameState.ApplyStatus(targetCharacter, StatusEffect);
 

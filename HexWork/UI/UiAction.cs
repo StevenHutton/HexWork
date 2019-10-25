@@ -17,16 +17,20 @@ namespace HexWork.UI
 
         public TextEffect Effect;
 
+        public void Start()
+        {
+            if (Sprite != null && (Effect != null))
+                Effect.Position = Sprite.Position;
+        }
+
         public void Update(GameTime gameTime)
         {
-            if (Sprite != null && Animation != null)
+            if (Sprite != null)
             {
-                Animation.Update(gameTime, Sprite);
+                Animation?.Update(gameTime, Sprite);
             }
-            if (Effect != null)
-            {
-                Effect.Update(gameTime);
-            }
+
+            Effect?.Update(gameTime);
         }
 
         public bool IsComplete()

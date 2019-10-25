@@ -446,7 +446,7 @@ namespace HexWork.Gameplay
             var detonatingSnipeActionEx = new HexAction("Perfect Snipe! (1)",
                 TargettingHelper.GetValidAxisTargetTilesLos,
                 null,
-                new ComboAction() { Power = 55 })
+                new ComboAction() { Power = 35 })
             {
                 PotentialCost = 1,
                 Power = 5,
@@ -545,8 +545,8 @@ namespace HexWork.Gameplay
                 })
             {
                 Range = 1,
-                Power = 10,
-                PushForce = 1,
+                Power = 15,
+                PushForce = 3,
                 PotentialCost = 1
             };
 
@@ -746,13 +746,14 @@ namespace HexWork.Gameplay
 
         }
         
-        public void MoveCharacterTo(Character character, HexCoordinate position)
+        //todo implement terrain effects as part of this method
+        public void MoveCharacterTo(Character character, HexCoordinate position, List<HexCoordinate> path = null)
         {
             CharacterMoveEvent?.Invoke(this, 
                 new MoveEventArgs
 				{
                     ActiveCharacterId = character.Id,
-					Path = FindShortestPath(character.Position, position, character.MovementType),
+					Path = path ?? FindShortestPath(character.Position, position, character.MovementType),
                     Destination = position
                 });
 
@@ -876,7 +877,7 @@ namespace HexWork.Gameplay
                 shortestPath.RemoveAt(character.Movement + 1);
             }
 
-            MoveCharacterTo(character, shortestPath.Last());
+            MoveCharacterTo(character, shortestPath.Last(), shortestPath);
 
             foreach (var action in character.Actions.Where(action =>
                 action.IsValidTarget(character, closestHero.Position, this)
@@ -944,7 +945,7 @@ namespace HexWork.Gameplay
                         }
                     }
                     if(destination != null)
-                        MoveCharacterTo(character, destination);
+                        MoveCharacterTo(character, destination, shortestPath);
                 }
             }
 	        var zombies = _characters.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();

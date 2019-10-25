@@ -233,15 +233,17 @@ namespace HexWork.UI
             }
             
             var actionToPlay = _uiActions.FirstOrDefault();
-            if (actionToPlay != null)
-            {
-                actionToPlay.Update(gameTime);
-                if (actionToPlay.IsComplete())
-                {
-                    actionToPlay.ActionCompleteCallback?.Invoke();
-                    _uiActions.Remove(actionToPlay);
-                }
-            }
+            if (actionToPlay == null) return;
+
+            actionToPlay.Update(gameTime);
+            if (!actionToPlay.IsComplete()) return;
+
+            actionToPlay.ActionCompleteCallback?.Invoke();
+
+            _uiActions.Remove(actionToPlay);
+
+            var newAction = _uiActions.FirstOrDefault();
+            newAction?.Start();
         }
 
         public void HandleInput(GameTime gameTime)
@@ -596,6 +598,8 @@ namespace HexWork.UI
             {
                 var position = character.Position + new Vector2(0.0f, 25.0f);
 
+                _spriteBatch.Draw(_blankTexture, position, null, Color.Black, 0.0f,
+                    new Vector2(1.0f, 1.0f), new Vector2(18.0f, 2.0f), SpriteEffects.None, 0.0f);
                 _spriteBatch.Draw(_blankTexture, position, null, Color.Green, 0.0f,
                     new Vector2(1.0f, 1.0f), new Vector2(character.HealthScale * 18.0f, 2.0f), SpriteEffects.None, 0.0f);
 
@@ -1047,7 +1051,10 @@ namespace HexWork.UI
         private void OnComboTrigger(object sender, ComboEventArgs e)
         {
             var character = _uiCharacterDictionary[e.TargetCharacterId];
-            var action = new UiAction();
+            var action = new UiAction()
+            {
+                Sprite = character
+            };
 
             action.Effect = new TextEffect(e.ComboEffect.Name, _damageFont)
             {
@@ -1064,7 +1071,10 @@ namespace HexWork.UI
             var character = _uiCharacterDictionary[e.TargetCharacterId];
 	        var statusEffect = e.StatusEffect;
 
-            var action = new UiAction();
+            var action = new UiAction()
+            {
+                Sprite = character
+            };
             action.Effect = new TextEffect(statusEffect.Name, _damageFont)
             {
                 Duration = 1.0f,
