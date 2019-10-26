@@ -577,22 +577,19 @@ namespace HexWork.UI
             {
                 var sprite = kvp.Value;
 	            var character = gameState.GetCharacter(kvp.Key);
-	            var color = Color.White;
-				if(character != null)
-					color = character.IsPrimed ? Color.Blue: Color.White;
 
 				if (kvp.Key == _selectedCharacter?.Id)
                 {
                     _outlineColour.SetValue(Color.Red.ToVector4());
 
-                    _spriteBatch.Draw(sprite.Texture, sprite.Position, null, color, 0.0f,
+                    _spriteBatch.Draw(sprite.Texture, sprite.Position, null, Color.White, 0.0f,
                         _hexCenter, sprite.Scale, SpriteEffects.None, 0.0f);
 
                     _outlineColour.SetValue(Color.TransparentBlack.ToVector4());
                 }
                 else
                 {
-                    _spriteBatch.Draw(sprite.Texture, sprite.Position, null, color, 0.0f,
+                    _spriteBatch.Draw(sprite.Texture, sprite.Position, null, Color.White, 0.0f,
                         _hexCenter, sprite.Scale, SpriteEffects.None, 0.0f);
                 }
             }

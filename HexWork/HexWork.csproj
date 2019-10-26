@@ -61,10 +61,9 @@
     <Compile Include="Gameplay\GameState.cs" />
     <Compile Include="Gameplay\HexGrid.cs" />
     <Compile Include="Gameplay\Interfaces\IGameStateObject.cs" />
-    <Compile Include="Gameplay\RulesEngine.cs" />
     <Compile Include="Gameplay\StatusEffect.cs" />
     <Compile Include="Gameplay\TargetPattern.cs" />
-    <Compile Include="Gameplay\TargettingHelper.cs" />
+    <Compile Include="Gameplay\TargetingHelper.cs" />
     <Compile Include="Gameplay\Tile.cs" />
     <Compile Include="InputManager.cs" />
     <Compile Include="Interfaces\IInputManager.cs" />

@@ -16,7 +16,6 @@ namespace HexWork.Gameplay
         GameOver
     }
 
-
 	#region Event Args
 
 	public class MessageEventArgs : EventArgs
@@ -253,8 +252,8 @@ namespace HexWork.Gameplay
 
         public GameState()
         {
-            _moveAction = new MoveAction("Move", TargettingHelper.GetDestinationTargetTiles) { Range = 0 };
-            _moveActionEx = new MoveAction("Nimble Move! (1)", TargettingHelper.GetDestinationTargetTiles)
+            _moveAction = new MoveAction("Move", TargetingHelper.GetDestinationTargetTiles) { Range = 0 };
+            _moveActionEx = new MoveAction("Nimble Move! (1)", TargetingHelper.GetDestinationTargetTiles)
                 { PotentialCost = 1, Range = 2 };
 
             _zombieGrab = new HexAction(name: "Zombie Grab",
@@ -263,7 +262,7 @@ namespace HexWork.Gameplay
                     StatusEffectType = StatusEffectType.Rooted
                 },
                 combo: null,
-                targetDelegate: TargettingHelper.GetValidTargetTilesNoLos)
+                targetDelegate: TargetingHelper.GetValidTargetTilesNoLos)
             {
                 Range = 1,
                 Power = 10
@@ -271,7 +270,7 @@ namespace HexWork.Gameplay
 
             _zombieBite = new HexAction(name: "Zombie Bite",
                 combo: new ComboAction() { Power = 15 },
-                targetDelegate: TargettingHelper.GetValidTargetTilesNoLos)
+                targetDelegate: TargetingHelper.GetValidTargetTilesNoLos)
             {
                 Range = 1,
                 Power = 10
@@ -337,7 +336,7 @@ namespace HexWork.Gameplay
             zombieKing.AddAction(_zombieBite);
             Characters.Add(zombieKing);
 
-            for (var i = 0; i < 4; i++)
+            for (var i = 0; i < 5; i++)
             {
                 var zombie = new Character($"Zom-boy {i}", 60, 100, 1, 0);
                 zombie.AddAction(_moveAction);
@@ -374,14 +373,14 @@ namespace HexWork.Gameplay
         private void CreateMajin()
         {
             var burningBolt = new HexAction("Fire Bolt",
-                TargettingHelper.GetValidAxisTargetTilesLos,
+                TargetingHelper.GetValidAxisTargetTilesLos,
                 new DotEffect())
             {
                 Range = 3
             };
             
 			var exBurningBoltAction = new HexAction("Fire Wall! (1)",
-                TargettingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
+                TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
                 new DotEffect(), null,
                 _rotatingLinePattern)
             {
@@ -390,7 +389,7 @@ namespace HexWork.Gameplay
             };
 
 	        var ringofFire = new HexAction("Ring of Fire! (2)",
-		        TargettingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
+		        TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
 		        new DotEffect(), null,
 		        _whirlWindTargetPattern)
 	        {
@@ -398,7 +397,7 @@ namespace HexWork.Gameplay
 		        Range = 3
 	        };
 
-			var lightningBolt = new HexAction("Lightning Bolt (1)", TargettingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo())
+			var lightningBolt = new HexAction("Lightning Bolt (1)", TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo())
             {
                 Range = 3,
                 Power = 15,
@@ -426,7 +425,7 @@ namespace HexWork.Gameplay
         private void CreateGunner()
         {
             var shotgunBlast = new LineAction("Shotgun Blast! (1)",
-                TargettingHelper.GetValidAxisTargetTilesLos,
+                TargetingHelper.GetValidAxisTargetTilesLos,
                 null, new ComboAction(),
                 _cornerPattern)
             {
@@ -435,7 +434,7 @@ namespace HexWork.Gameplay
             };
 
             var shovingSnipeAction = new PushAction(name: "Shoving Snipe",
-                targetDelegate: TargettingHelper.GetValidAxisTargetTilesLos,
+                targetDelegate: TargetingHelper.GetValidAxisTargetTilesLos,
                 combo: null)
             {
                 Power = 5,
@@ -444,7 +443,7 @@ namespace HexWork.Gameplay
             };
 
             var detonatingSnipeActionEx = new HexAction("Perfect Snipe! (1)",
-                TargettingHelper.GetValidAxisTargetTilesLos,
+                TargetingHelper.GetValidAxisTargetTilesLos,
                 null,
                 new ComboAction() { Power = 35 })
             {
@@ -472,7 +471,7 @@ namespace HexWork.Gameplay
         private void CreateNinja()
         {
             var shurikenHailAction = new HexAction("Shuriken",
-                TargettingHelper.GetValidTargetTilesLos,
+                TargetingHelper.GetValidTargetTilesLos,
                 new DotEffect()
                 {
                     Name = "Bleeding",
@@ -487,7 +486,7 @@ namespace HexWork.Gameplay
             var shurikenPattern = new TargetPattern(new HexCoordinate(-1, 1), new HexCoordinate(0, -1),
                 new HexCoordinate(1, 0));
             var shurikenHailActionEx = new HexAction("Shuriken Hail! (1)",
-                TargettingHelper.GetValidTargetTilesLosIgnoreUnits,
+                TargetingHelper.GetValidTargetTilesLosIgnoreUnits,
                 new DotEffect()
                 {
                     Name = "Bleeding",
@@ -501,7 +500,7 @@ namespace HexWork.Gameplay
                 Range = 3
             };
 
-            var swapAction = new SwapAction("Swap Positions (1)", TargettingHelper.GetValidTargetTilesLos)
+            var swapAction = new SwapAction("Swap Positions (1)", TargetingHelper.GetValidTargetTilesLos)
             {
                 Power = 10,
                 AllySafe = false,
@@ -528,14 +527,14 @@ namespace HexWork.Gameplay
 
         private void CreateIronSoul()
         {
-            var pushingFist = new PushAction("Pushing Fist", TargettingHelper.GetValidTargetTilesLos)
+            var pushingFist = new PushAction("Pushing Fist", TargetingHelper.GetValidTargetTilesLos)
             {
                 Range = 1,
                 Power = 10,
                 PushForce = 2
             };
 
-            var overwhelmingStrike = new PushAction("Overwhelming Strike! (1)", TargettingHelper.GetValidTargetTilesLos,
+            var overwhelmingStrike = new PushAction("Overwhelming Strike! (1)", TargetingHelper.GetValidTargetTilesLos,
                 null, new StatusCombo()
                 {
                     Effect = new ImmobalisedEffect()
@@ -550,13 +549,13 @@ namespace HexWork.Gameplay
                 PotentialCost = 1
             };
 
-            var vampiricStrike = new VampiricAction("Vampiric Strike", TargettingHelper.GetValidAxisTargetTilesLos)
+            var vampiricStrike = new VampiricAction("Vampiric Strike", TargetingHelper.GetValidAxisTargetTilesLos)
             {
                 Range = 1,
             };
             
             var exDetonatingSlash =
-            new HexAction("Massive Detonation! (1)", TargettingHelper.GetValidTargetTilesLos, null,
+            new HexAction("Massive Detonation! (1)", TargetingHelper.GetValidTargetTilesLos, null,
               new ExploderCombo
               {
                   Power = 25,
@@ -589,19 +588,19 @@ namespace HexWork.Gameplay
         {
             var statusCombo = new SpreadStatusCombo() { AllySafe = true };
             var detonatingSlash =
-              new HexAction("Detonating Strike! (1)", TargettingHelper.GetValidTargetTilesLos, null, statusCombo)
+              new HexAction("Detonating Strike! (1)", TargetingHelper.GetValidTargetTilesLos, null, statusCombo)
                   {
                       Range = 1,
                       PotentialCost = 1
                   };
 
 			var earthQuakeStrike = new LineAction("Earthquake Strike", 
-				TargettingHelper.GetValidAxisTargetTilesLos, 
+				TargetingHelper.GetValidAxisTargetTilesLos, 
 				new ImmobalisedEffect(), 
 				null,
 				_xAxisLinePattern);
 
-            var whirlwindAttack = new HexAction("Spin Attack", TargettingHelper.GetValidTargetTilesLos, null, new ComboAction(),
+            var whirlwindAttack = new HexAction("Spin Attack", TargetingHelper.GetValidTargetTilesLos, null, new ComboAction(),
                 _whirlWindTargetPattern)
             {
                 Power = 15,
@@ -627,6 +626,8 @@ namespace HexWork.Gameplay
         #endregion
 
         #endregion
+
+        #region Public Update Methods
 
         public void Update(GameTime gameTime)
         {
@@ -690,10 +691,6 @@ namespace HexWork.Gameplay
                         StatusRemovedEvent?.Invoke(this, new StatusEventArgs(_activeCharacter.Id, statusEffect));
                     }
                 }
-
-                //if the character no longer has any status, no more combos.
-                if (!_activeCharacter.StatusEffects.Any())
-                    _activeCharacter.IsPrimed = false;
             }
 
             _activeCharacter = GetCharacterAtInitiative(0);
@@ -749,15 +746,16 @@ namespace HexWork.Gameplay
         //todo implement terrain effects as part of this method
         public void MoveCharacterTo(Character character, HexCoordinate position, List<HexCoordinate> path = null)
         {
-            CharacterMoveEvent?.Invoke(this, 
+            CharacterMoveEvent?.Invoke(this,
                 new MoveEventArgs
-				{
+                {
                     ActiveCharacterId = character.Id,
-					Path = path ?? FindShortestPath(character.Position, position, character.MovementType),
+                    Path = path ?? FindShortestPath(character.Position, position, character.MovementType),
                     Destination = position
                 });
 
             character.MoveTo(position);
+            ResolveTerrainEffects(character, position);
         }
 
         public void TeleportCharacterTo(Character character, HexCoordinate position)
@@ -771,6 +769,7 @@ namespace HexWork.Gameplay
                 });
 
             character.MoveTo(position);
+            ResolveTerrainEffects(character, position);
         }
 
         public void NotifyAction(HexAction action, Character character)
@@ -818,6 +817,8 @@ namespace HexWork.Gameplay
             }
         }
 
+        #endregion
+
         #region Private Update Methods
 
         private void ZombieTurn(Character character)
@@ -853,7 +854,8 @@ namespace HexWork.Gameplay
             foreach (var action in character.Actions.Where(a => a.IsAvailable(character)))
             {
                 if (action.IsValidTarget(character, closestHero.Position, this) &&
-                    action.IsDetonator == closestHero.IsPrimed)
+                    action.IsDetonator == closestHero.HasStatus
+                    && action.IsDetonator == closestHero.HasStatus && action.IsAvailable(character))
                 {
                     //if we can hit the hero, hit them now and end turn.
                     NotifyAction(action, character);
@@ -870,7 +872,7 @@ namespace HexWork.Gameplay
 
             //if we couldn't reach the closest hero move towards them.
             //if we found a path to a hero 
-            if (shortestPath == null) return;
+            if (shortestPath == null || !character.CanMove) return;
 
             while (shortestPath.Count > character.Movement + 1)
             {
@@ -881,7 +883,7 @@ namespace HexWork.Gameplay
 
             foreach (var action in character.Actions.Where(action =>
                 action.IsValidTarget(character, closestHero.Position, this)
-                && action.IsDetonator == closestHero.IsPrimed && action.IsAvailable(character)))
+                && action.IsDetonator == closestHero.HasStatus && action.IsAvailable(character)))
             {
                 NotifyAction(action, character);
                 ApplyDamage(closestHero, action.Power);
@@ -1001,15 +1003,22 @@ namespace HexWork.Gameplay
 
             var effectToApply = effect.Copy();
             targetCharacter.StatusEffects.Add(effectToApply);
-            targetCharacter.IsPrimed = true;
 
             StatusAppliedEvent?.Invoke(this, new StatusEventArgs(targetCharacter.Id, effectToApply));
         }
 
+        /// <summary>
+        /// Apply a combo effect to a target character if they're currently suffering a status effect.
+        /// todo - Remove the current status effect from the character.
+        /// </summary>
+        /// <param name="targetCharacter"></param>
+        /// <param name="combo"></param>
         public void ApplyCombo(Character targetCharacter, ComboAction combo)
         {
+            if (!targetCharacter.HasStatus)
+                return;
+
             ComboEvent?.Invoke(this, new ComboEventArgs(targetCharacter.Id, combo));
-            targetCharacter.IsPrimed = false;
 
             //if the player scores a combo they gain potential. if their commander gets comboed they lose potential (uh-oh!)
             if (_activeCharacter.IsHero)
@@ -1019,6 +1028,16 @@ namespace HexWork.Gameplay
             {
                 SendMessage("Commander Comboed\nPotential Down");
                 LosePotential(1);
+            }
+
+            var status = targetCharacter.StatusEffects.First();
+
+            foreach (var statusEffect in targetCharacter.StatusEffects.Where(s =>
+                s.StatusEffectType == status.StatusEffectType).ToList())
+            {
+                targetCharacter.StatusEffects.Remove(statusEffect);
+
+                StatusRemovedEvent?.Invoke(this, new StatusEventArgs(targetCharacter.Id, statusEffect));
             }
         }
 
@@ -1315,6 +1334,10 @@ namespace HexWork.Gameplay
         /// A* is fuckin' rad.
         /// 
         /// Rad as shit.
+        ///
+        /// Lots of comments on this - DON'T DELETE THEM!
+        /// 
+        /// DO UPDATE THEM!
         /// </summary>
         public List<HexCoordinate> FindShortestPath(HexCoordinate start, HexCoordinate destination, MovementType movementType = MovementType.NormalMove)
         {
@@ -1328,7 +1351,7 @@ namespace HexWork.Gameplay
             var pathValues = new Dictionary<HexCoordinate, int> { { start, 0 } };
 
             //data structure holding the estimated path length from the start to the destination for each tile we've searched.
-            var tileEstimates = new Dictionary<HexCoordinate, int> { { start, 0 } };
+            var tileEstimates = new Dictionary<HexCoordinate, float> { { start, 0 } };
 
             HexCoordinate current = start;
 
@@ -1342,7 +1365,7 @@ namespace HexWork.Gameplay
                 if (current == destination)
                     break;
                 
-                //look at all of the best estimated tile's neighbours
+                //look at all of the best estimated tile's neighbors
                 foreach (var neighbor in _map.GetNeighborCoordinates(current))
                 {
                     //tile validation goes here.
@@ -1360,13 +1383,15 @@ namespace HexWork.Gameplay
                     //the path from the start to the tile we're looking at now is the path the 
                     var pathLengthToNeighbor = pathValues[current] + _map.Map[neighbor].MovementCost;
                     
-                    //estimate the neighbour and add it to the list of estimates or update it if it's already in the list
+                    //estimate the neighbor and add it to the list of estimates or update it if it's already in the list
                     if (!pathValues.ContainsKey(neighbor) || pathValues[neighbor] > pathLengthToNeighbor)
                     {
-                        pathValues[neighbor] = pathLengthToNeighbor;
+                        //deliberate truncation in cast.
+                        pathValues[neighbor] = (int)pathLengthToNeighbor;
 
                         //heuristic for "distance to destination tile" is just absolute distance between current tile and the destination
-                        var estimate = pathLengthToNeighbor + _map.DistanceBetweenPoints(neighbor, destination);
+                        float estimate = pathLengthToNeighbor + _map.DistanceBetweenPoints(neighbor, destination);
+                        
                         ancestorMap[neighbor] = current;
 
                         tileEstimates[neighbor] = estimate;
@@ -1396,7 +1421,44 @@ namespace HexWork.Gameplay
 
         #region Private Helper Methods
 
-	    private bool IsTilePassable(MovementType movementType, HexCoordinate coordinate)
+        //when a character moves into a tile check to see if there're any terrain effects for moving into that tile.
+        private void ResolveTerrainEffects(Character character, HexCoordinate position)
+        {
+            var tile = _map.Map[position];
+
+            switch (tile.TerrainType)
+            {
+                case TerrainType.Ground:
+                    break;
+                case TerrainType.Water:
+                    break;
+                case TerrainType.Lava:
+                    ApplyStatus(character, new DotEffect
+                    {
+                        Damage = 5,
+                        Duration = 3,
+                        Name = "Burning",
+                        StatusEffectType = StatusEffectType.Burning
+                    });
+                    break;
+                case TerrainType.Ice:
+                    break;
+                case TerrainType.ThinIce:
+                    break;
+                case TerrainType.Snow:
+                    break;
+                case TerrainType.Sand:
+                    break;
+                case TerrainType.Pit:
+                    break;
+                case TerrainType.Wall:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private bool IsTilePassable(MovementType movementType, HexCoordinate coordinate)
 	    {
 		    //tile validation goes here.
 		    if (!IsHexWalkable(coordinate)) return false;
@@ -1488,19 +1550,24 @@ namespace HexWork.Gameplay
             {
 	            if (!IsTilePassable(movementType, coord)) continue;
 
+                int movementCost = (int) _map.Map[coord].MovementCost;
+                TerrainType terrainType = _map.Map[coord].TerrainType;
+
                 //if this tile is not already in the list
                 if (!neighbours.Contains(coord) 
-                    && searchDepth + _map.Map[coord].MovementCost <= maxSearchDepth //and we have enough movement to walk to this tile
+                    && searchDepth + movementCost <= maxSearchDepth //and we have enough movement to walk to this tile
                     && IsTileEmpty(coord)) //and the tile is empty
                 {
                     neighbours.Add(coord);//then add it to the list.
                 }
 
-                if (_map.Map[coord].TerrainType == TerrainType.Water
-                    || _map.Map[coord].TerrainType == TerrainType.Lava)
+                if (terrainType == TerrainType.Water
+                    || terrainType == TerrainType.Lava)
                     continue;
 
-                GetWalkableNeighboursRecursive(neighbours, coord, movementType, maxSearchDepth, searchDepth + _map.Map[coord].MovementCost);
+                GetWalkableNeighboursRecursive(neighbours, coord, movementType, 
+                    maxSearchDepth, 
+                    searchDepth + movementCost);//deliberate truncation in cast.
             }
         }
 

@@ -182,7 +182,7 @@ namespace HexWork.Gameplay
                     case TerrainType.Lava:
                         tile.Color =  Color.Orange;
                         tile.IsWalkable = true;
-                        tile.MovementCost = 1;
+                        tile.MovementCost = 1.1f;
                         break;
                     case TerrainType.Ice:
                         tile.Color =  Color.LightBlue;

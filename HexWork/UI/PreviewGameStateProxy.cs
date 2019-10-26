@@ -147,7 +147,7 @@ namespace HexWork.UI
 		/// </summary>
 		/// <param name="character"></param>
 		/// <param name="targetPosition"></param>
-        public void MoveCharacterTo(Character character, HexCoordinate targetPosition)
+        public void MoveCharacterTo(Character character, HexCoordinate targetPosition, List<HexCoordinate> path = null)
         {
             //throw new System.NotImplementedException();
         }

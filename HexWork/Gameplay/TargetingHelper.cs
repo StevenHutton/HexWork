@@ -7,7 +7,7 @@ using HexWork.Gameplay.Interfaces;
 
 namespace HexWork.Gameplay
 {
-    public static class TargettingHelper
+    public static class TargetingHelper
     {
         #region Targetting Methods
 

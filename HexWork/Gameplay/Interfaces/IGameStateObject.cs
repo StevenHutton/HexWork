@@ -20,7 +20,7 @@ namespace HexWork.Gameplay.Interfaces
     {
         void NotifyAction(HexAction action, Character character);
 
-        void MoveCharacterTo(Character character, HexCoordinate targetPosition);
+        void MoveCharacterTo(Character character, HexCoordinate targetPosition, List<HexCoordinate> path = null);
 
         void TeleportCharacterTo(Character character, HexCoordinate position);
 

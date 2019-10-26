@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Interfaces;
@@ -53,9 +54,7 @@ namespace HexWork.Gameplay
         public bool CanAttack = false;
 
         public bool CanMove = false;
-
-        public bool IsPrimed = false;
-
+        
         public int RangeModifier = 0;
 
         public static Random rand;
@@ -67,6 +66,8 @@ namespace HexWork.Gameplay
         public int Potential => _potential;
 
 	    public MovementType MovementType = MovementType.NormalMove;
+
+        public bool HasStatus => StatusEffects.Count > 0;
 		
 		#endregion
 
@@ -127,8 +128,6 @@ namespace HexWork.Gameplay
         {
             if (!StatusEffects.Contains(effect))
                 StatusEffects.Add(effect);
-
-            IsPrimed = true;
         }
 
         #endregion

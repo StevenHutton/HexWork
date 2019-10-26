@@ -32,7 +32,7 @@ namespace HexWork.Gameplay.Actions
             if (targetCharacter == null)
                 return;
 
-            if (!targetCharacter.IsPrimed)
+            if (!targetCharacter.HasStatus)
                 return;
 
             gameState.ApplyCombo(targetCharacter, this);
