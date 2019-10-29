@@ -370,8 +370,7 @@ namespace HexWork.UI
 	        _spriteBatch.DrawString(_uiFont, potentialString, new Vector2(posX2, ScreenEdgeMargin+25), Color.Black);
 
 			var tabHelpText = "PRESS [TAB] To rotate targeting \n" +
-							  "Enemies with status effects are primed (blue)\n" +
-                              "Primed enemies can be comboed\n" +
+							  "Enemies with status effects can be comboed\n" +
 							  "Characters can move and attack once per turn.\n" +
 							  "Some moves cost POTENTIAL. \n" +
                               "Potential is shown in red at the top of the screen.\n" +
