@@ -831,7 +831,7 @@ namespace HexWork.Gameplay
             //find the closest hero
             foreach (var hero in Heroes)
             {
-                var nearestNeighbour = GetNearestWalkableNeighbor(position, hero.Position);
+                var nearestNeighbour = GetNearestTileAdjacentToDestination(position, hero.Position);
 
                 if (nearestNeighbour == null)
                     continue;
@@ -907,7 +907,7 @@ namespace HexWork.Gameplay
             //find the closest hero
             foreach (var hero in Heroes)
             {
-                var nearestNeighbour = GetNearestWalkableNeighbor(position, hero.Position);
+                var nearestNeighbour = GetNearestTileAdjacentToDestination(position, hero.Position);
 
                 if (nearestNeighbour == null)
                     continue;
@@ -1669,23 +1669,23 @@ namespace HexWork.Gameplay
             }
         }
 
-        //get the nearest walkable neightbour to a target tile from a destination
-        private HexCoordinate GetNearestWalkableNeighbor(HexCoordinate start, HexCoordinate end)
+        //Get nearest adjacent tile to a target destination.
+        private HexCoordinate GetNearestTileAdjacentToDestination(HexCoordinate start, HexCoordinate end)
         {
             var neighbours = _map.GetNeighborCoordinates(end);
 
-            int distance = 100;
+            int distance = 1000;
             HexCoordinate nearest = null;
 
-            foreach (var neighbour in neighbours)
+            foreach (var neighbor in neighbours)
             {
-                if(!IsHexPassable(neighbour))
+                if(!IsHexPassable(neighbor))
                     continue;
 
-                var delta = _map.DistanceBetweenPoints(start, neighbour);
+                var delta = _map.DistanceBetweenPoints(start, neighbor);
                 if (delta < distance)
                 {
-                    nearest = neighbour;
+                    nearest = neighbor;
                     distance = delta;
                 }
             }

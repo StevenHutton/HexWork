@@ -298,7 +298,7 @@ namespace HexWork.Gameplay
         {
             List<HexCoordinate> coordinates = new List<HexCoordinate>();
 
-            //loop through neighbours
+            //loop through neighbors
             for (int i = 0; i < 6; i++)
             {
                 HexCoordinate neighbourCoordinate = position + Directions[i];
