@@ -204,7 +204,7 @@ namespace HexWork.Gameplay
 
         public Dictionary<HexCoordinate, Tile> Map
         {
-            get => _map.Map;
+            get => _map;
         }
 
         public List<Character> Characters
@@ -289,7 +289,7 @@ namespace HexWork.Gameplay
                 var coordinate = _map.GetRandomCoordinateInMap();
 
                 //one unit per tile and only deploy to walkable spaces.
-                while (Characters.Select(cha => cha.Position).Contains(coordinate) || !_map.Map[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
+                while (Characters.Select(cha => cha.Position).Contains(coordinate) || !_map[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
                 {
                     coordinate = _map.GetRandomCoordinateInMap();
                 }
@@ -1053,7 +1053,7 @@ namespace HexWork.Gameplay
                 {
                     MoveCharacterTo(targetCharacter, destinationPos);
 
-                    var tile = _map.Map[destinationPos];
+                    var tile = _map[destinationPos];
 
                     if (tile.TerrainType != TerrainType.Ice && tile.TerrainType != TerrainType.ThinIce)
                         distance--;
@@ -1117,7 +1117,7 @@ namespace HexWork.Gameplay
 
 	    public Tile GetTileAtCoordinate(HexCoordinate coordinate)
 	    {
-		    return _map.Map[coordinate];
+		    return _map[coordinate];
 	    }
 
         public Character GetCharacter(Guid characterId)
@@ -1341,7 +1341,7 @@ namespace HexWork.Gameplay
         /// </summary>
         public List<HexCoordinate> FindShortestPath(HexCoordinate start, HexCoordinate destination, MovementType movementType = MovementType.NormalMove)
         {
-            if (!_map.Map.ContainsKey(start) || !_map.Map.ContainsKey(destination))
+            if (!_map.ContainsKey(start) || !_map.ContainsKey(destination))
                 return null;
 
             //data structure map such that key : a tile we've looked at one or more times, value : the previous tile in the shortest path to the hex in the key.
@@ -1373,15 +1373,15 @@ namespace HexWork.Gameplay
                         continue;
 
                     //check if the tile is water or lava.
-                    if ((_map.Map[neighbor].TerrainType == TerrainType.Water
-                        || _map.Map[neighbor].TerrainType == TerrainType.Lava)
+                    if ((_map[neighbor].TerrainType == TerrainType.Water
+                        || _map[neighbor].TerrainType == TerrainType.Lava)
                         && neighbor != destination)
                         continue;
 
                     //nodes are always one space away - hexgrid!
                     //BUT hexes have different movement costs to move through!
                     //the path from the start to the tile we're looking at now is the path the 
-                    var pathLengthToNeighbor = pathValues[current] + _map.Map[neighbor].MovementCost;
+                    var pathLengthToNeighbor = pathValues[current] + _map[neighbor].MovementCost;
                     
                     //estimate the neighbor and add it to the list of estimates or update it if it's already in the list
                     if (!pathValues.ContainsKey(neighbor) || pathValues[neighbor] > pathLengthToNeighbor)
@@ -1424,7 +1424,7 @@ namespace HexWork.Gameplay
         //when a character moves into a tile check to see if there're any terrain effects for moving into that tile.
         private void ResolveTerrainEffects(Character character, HexCoordinate position)
         {
-            var tile = _map.Map[position];
+            var tile = _map[position];
 
             switch (tile.TerrainType)
             {
@@ -1509,12 +1509,12 @@ namespace HexWork.Gameplay
 
 	    private bool IsHexWalkable(HexCoordinate co)
         { 
-		    return _map.Map[co].IsWalkable;
+		    return _map[co].IsWalkable;
 	    }
 
         private bool IsHexOpaque(HexCoordinate coordinate)
         {
-            return _map.Map[coordinate].BlocksLOS;
+            return _map[coordinate].BlocksLOS;
         }
 
         private bool BlocksLineOfSight(HexCoordinate coordinate)
@@ -1550,8 +1550,8 @@ namespace HexWork.Gameplay
             {
 	            if (!IsTilePassable(movementType, coord)) continue;
 
-                int movementCost = (int) _map.Map[coord].MovementCost;
-                TerrainType terrainType = _map.Map[coord].TerrainType;
+                int movementCost = (int) _map[coord].MovementCost;
+                TerrainType terrainType = _map[coord].TerrainType;
 
                 //if this tile is not already in the list
                 if (!neighbours.Contains(coord) 
