@@ -1638,7 +1638,8 @@ namespace HexWork.Gameplay
 		    return new Vector2(posX, posY);
 		}
 
-		private void GetVisibleTilesRecursive(List<HexCoordinate> neighbours, HexCoordinate position, HexCoordinate startPosition, int maxSearchDepth, int searchDepth = 0, bool ignoreUnits = false)
+        private void GetVisibleTilesRecursive(List<HexCoordinate> neighbours, HexCoordinate position,
+            HexCoordinate startPosition, int maxSearchDepth, int searchDepth = 0, bool ignoreUnits = false)
         {
             if (searchDepth >= maxSearchDepth)
                 return;
@@ -1654,9 +1655,9 @@ namespace HexWork.Gameplay
                 var distanceToNeighbour = _map.DistanceBetweenPoints(startPosition, coord);
 
                 //only look at neighbouring tiles that're further away from the starting position than the tile we're currently at
-                if(distanceToPoint >= distanceToNeighbour)
+                if (distanceToPoint >= distanceToNeighbour)
                     continue;
-                
+
                 if (!neighbours.Contains(coord) && searchDepth + 1 <= maxSearchDepth)
                 {
                     neighbours.Add(coord);
