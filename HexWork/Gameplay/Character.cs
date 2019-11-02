@@ -12,7 +12,12 @@ namespace HexWork.Gameplay
     public enum MonsterType
     {
         Zombie,
-        ZombieKing
+        ZombieKing,
+        Majin,
+        Gunner,
+        Barbarian,
+        IronSoul,
+        Ninja
     }
 
     public class Character
@@ -20,9 +25,12 @@ namespace HexWork.Gameplay
         #region Attributes
         
         public bool HasActed = false;
+        public bool IsActive = false; 
+        public bool IsHero = false;
+        public bool IsAlive = false;
+        public bool CanAttack = false;
+        public bool CanMove = false;
 
-        public bool IsActive = false;
-        
         private List<HexAction> _actions = new List<HexAction>();
         
         private int _turnCooldown = 100;
@@ -46,14 +54,6 @@ namespace HexWork.Gameplay
         public int TurnCooldown => _turnCooldown;
 
         public int Movement;
-        
-        public bool IsHero = false;
-
-        public bool IsAlive = false;
-        
-        public bool CanAttack = false;
-
-        public bool CanMove = false;
         
         public int RangeModifier = 0;
 

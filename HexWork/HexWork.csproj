@@ -64,6 +64,7 @@
     <Compile Include="Gameplay\StatusEffect.cs" />
     <Compile Include="Gameplay\TargetPattern.cs" />
     <Compile Include="Gameplay\TargetingHelper.cs" />
+    <Compile Include="Gameplay\TerrainEffect.cs" />
     <Compile Include="Gameplay\Tile.cs" />
     <Compile Include="InputManager.cs" />
     <Compile Include="Interfaces\IInputManager.cs" />

@@ -130,41 +130,38 @@ namespace HexWork.Gameplay
     {
         #region Attributes
 
-        private readonly HexGrid _map = new HexGrid();
+        public readonly HexGrid Map = new HexGrid();
 
-        private List<Character> _characters = new List<Character>();
+        public List<Character> Characters = new List<Character>();
 
         /// <summary>
         /// The character who currently has initiative
         /// </summary>
-        private Character _activeCharacter = null;
+        public Character _activeCharacter = null;
 
         #region Gameplay Actions
 
-        private HexAction _moveAction;
-        private HexAction _moveActionEx;
+        private readonly HexAction _moveAction;
+        private readonly HexAction _moveActionEx;
+        private readonly HexAction _zombieGrab;
+        private readonly HexAction _zombieBite;
+        private readonly PotentialGainAction _potentialGainAction;
 
-        private HexAction _zombieGrab;
-
-        private HexAction _zombieBite;
-
-        private PotentialGainAction _potentialGainAction;
-
-        TargetPattern _whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
+        readonly TargetPattern _whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
             new HexCoordinate(1, -1, 0),
             new HexCoordinate(0, -1, 1),
             new HexCoordinate(-1, 0, 1),
             new HexCoordinate(-1, 1, 0),
             new HexCoordinate(0, 1, -1));
 
-        TargetPattern _xAxisLinePattern = new TargetPattern(new HexCoordinate(0, 0, 0),
+        readonly TargetPattern _xAxisLinePattern = new TargetPattern(new HexCoordinate(0, 0, 0),
             new HexCoordinate(1, -1), new HexCoordinate(2, -2));
 
-        TargetPattern _rotatingLinePattern = new TargetPattern(new HexCoordinate(0, 0),
+        readonly TargetPattern _rotatingLinePattern = new TargetPattern(new HexCoordinate(0, 0),
             new HexCoordinate(1, 0),
             new HexCoordinate(-1, 0));
 
-        TargetPattern _cornerPattern = new TargetPattern(new HexCoordinate(0, 0),
+        readonly TargetPattern _cornerPattern = new TargetPattern(new HexCoordinate(0, 0),
             new HexCoordinate(1, 0),
             new HexCoordinate(0, -1));
 
@@ -201,27 +198,10 @@ namespace HexWork.Gameplay
         #endregion
 
         #region Properties
+        
+        public IEnumerable<Character> Heroes => Characters.Where(character => character.IsHero && character.IsAlive);
 
-        public Dictionary<HexCoordinate, Tile> Map
-        {
-            get => _map;
-        }
-
-        public List<Character> Characters
-        {
-            get => _characters;
-            set => _characters = value;
-        }
-
-        public IEnumerable<Character> Heroes
-        {
-            get => _characters.Where(character => character.IsHero && character.IsAlive);
-        }
-
-        public IEnumerable<Character> Enemies
-        {
-            get => _characters.Where(character => !character.IsHero && character.IsAlive);
-        }
+        public IEnumerable<Character> Enemies => Characters.Where(character => !character.IsHero && character.IsAlive);
 
         /// <summary>
         ///The character who currently has initiative
@@ -235,9 +215,7 @@ namespace HexWork.Gameplay
         /// 
         /// </summary>
         public Character Commander { get; set; }
-
-        public GamePhase Phase { get; set; }
-
+        
         public int TeamSize { get; set; } = 5;
 
         public int MaxPotential { get; set; } = 0;
@@ -284,14 +262,14 @@ namespace HexWork.Gameplay
         
         public void StartGame()
         {
-            foreach (var character in _characters.Where(c => !c.IsHero))
+            foreach (var character in Characters.Where(c => !c.IsHero))
             {
-                var coordinate = _map.GetRandomCoordinateInMap();
+                var coordinate = Map.GetRandomCoordinateInMap();
 
                 //one unit per tile and only deploy to walkable spaces.
-                while (Characters.Select(cha => cha.Position).Contains(coordinate) || !_map[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
+                while (Characters.Select(cha => cha.Position).Contains(coordinate) || !Map[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
                 {
-                    coordinate = _map.GetRandomCoordinateInMap();
+                    coordinate = Map.GetRandomCoordinateInMap();
                 }
 
                 character.SpawnAt(coordinate);
@@ -312,7 +290,7 @@ namespace HexWork.Gameplay
 
                     //tiles are only valid so long as they're walkable and have at least one passable neighbor.
                     validTile = IsHexPassable(position) &&
-                                _map.GetNeighborCoordinates(position).Any(IsHexPassable);
+                                Map.GetNeighborCoordinates(position).Any(IsHexPassable);
                 }
                 SpawnHero(position);
             }
@@ -631,37 +609,22 @@ namespace HexWork.Gameplay
 
         public void Update(GameTime gameTime)
         {
-            if (Phase != GamePhase.EnemyTurn) return;
-
             if (_activeCharacter.IsHero)
-            {
-                Phase = GamePhase.Playing;
                 return;
-            }
 
-            if (!_activeCharacter.IsAlive)
+            switch (_activeCharacter.MonsterType)
             {
-                NextTurn();
-                return;
+                case MonsterType.Zombie:
+                    ZombieTurn(_activeCharacter);
+                    break;
+                case MonsterType.ZombieKing:
+                    ZombieKingTurn(_activeCharacter);
+                    break;
+                default:
+                    return;
             }
 
-            //if they can move take their actions and end turn
-            if (!_activeCharacter.HasActed)
-            {
-                switch (_activeCharacter.MonsterType)
-                {
-                    case MonsterType.Zombie:
-                        ZombieTurn(_activeCharacter);
-                        break;
-                    case MonsterType.ZombieKing:
-                        ZombieKingTurn(_activeCharacter);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                NextTurn();
-            }
+            NextTurn();
         }
 
         public void NextTurn()
@@ -671,7 +634,7 @@ namespace HexWork.Gameplay
             {
                 _activeCharacter.EndTurn();
                 var deltaTime = _activeCharacter.TurnTimer;
-                foreach (var character in _characters)
+                foreach (var character in Characters)
                 {
                     character.TurnTimer -= deltaTime;
                 }
@@ -703,47 +666,34 @@ namespace HexWork.Gameplay
             }
         
             //apply any status effects for characters that apply whenever initiative moves.
-            foreach (var character in _characters)
+            foreach (var character in Characters)
             {
                 foreach (var statusEffect in character.StatusEffects)
                 {
                     statusEffect.Tick(character, this);
                 }
             }
-
-            if (!_activeCharacter.IsHero)
-                Phase = GamePhase.EnemyTurn;
-            else
-            {
-                Phase = GamePhase.Playing;
-            }
-
-            if (!Heroes.Any() || !Enemies.Any())
-                Phase = GamePhase.GameOver;
-
+            
             EndTurnEvent?.Invoke(this, new EndTurnEventArgs(GetInitiativeList().ToList()));
 
             if(_activeCharacter == Commander)
                 GainPotential();
 
-            var zk = _characters.FirstOrDefault(c => !c.IsHero && c.MonsterType == MonsterType.ZombieKing);
+            var zk = Characters.FirstOrDefault(c => !c.IsHero && c.MonsterType == MonsterType.ZombieKing);
 
             if (zk == null || !zk.IsAlive)
             {
-                SendMessage("Enemy Leader Defaated");
+                SendMessage("Enemy Leader Defeated");
                 GameOverEvent?.Invoke(this, new MessageEventArgs("You Win!"));
             }
 
             if (!Commander.IsAlive)
             {
-
                 SendMessage("Commander Defaated");
                 GameOverEvent?.Invoke(this, new MessageEventArgs("You Lose."));
             }
-
         }
         
-        //todo implement terrain effects as part of this method
         public void MoveCharacterTo(Character character, HexCoordinate position, List<HexCoordinate> path = null)
         {
             CharacterMoveEvent?.Invoke(this,
@@ -815,6 +765,109 @@ namespace HexWork.Gameplay
                 Characters.Remove(character);
                 CharacterDiedEvent?.Invoke(this, new InteractionRequestEventArgs() { TargetCharacterId = character.Id });
             }
+        }
+
+        public void ApplyStatus(Character targetCharacter, StatusEffect effect)
+        {
+            //todo - apply status effects based on status damage
+            //for now we just always apply any relevant status effects
+            if (effect == null) return;
+
+            if (!targetCharacter.IsAlive)
+                return;
+
+            var effectToApply = effect.Copy();
+            targetCharacter.StatusEffects.Add(effectToApply);
+
+            StatusAppliedEvent?.Invoke(this, new StatusEventArgs(targetCharacter.Id, effectToApply));
+        }
+
+        /// <summary>
+        /// Apply a combo effect to a target character if they're currently suffering a status effect.
+        /// todo - Remove the current status effect from the character.
+        /// </summary>
+        /// <param name="targetCharacter"></param>
+        /// <param name="combo"></param>
+        public void ApplyCombo(Character targetCharacter, ComboAction combo)
+        {
+            if (!targetCharacter.HasStatus)
+                return;
+
+            ComboEvent?.Invoke(this, new ComboEventArgs(targetCharacter.Id, combo));
+
+            //if the player scores a combo they gain potential. if their commander gets comboed they lose potential (uh-oh!)
+            if (_activeCharacter.IsHero)
+                GainPotential();
+
+            if (targetCharacter == Commander)
+            {
+                SendMessage("Commander Comboed\nPotential Down");
+                LosePotential(1);
+            }
+
+            var status = targetCharacter.StatusEffects.First();
+
+            foreach (var statusEffect in targetCharacter.StatusEffects.Where(s =>
+                s.StatusEffectType == status.StatusEffectType).ToList())
+            {
+                targetCharacter.StatusEffects.Remove(statusEffect);
+
+                StatusRemovedEvent?.Invoke(this, new StatusEventArgs(targetCharacter.Id, statusEffect));
+            }
+        }
+        
+        public void ApplyPush(Character targetCharacter, HexCoordinate direction, int distance = 0)
+        {
+            SendMessage("PUSH");
+
+            var targetCharacterPos = targetCharacter.Position;
+            var destinationPos = targetCharacterPos + direction;
+            while (distance > 0)
+            {
+                if (IsHexPassable(destinationPos))
+                {
+                    MoveCharacterTo(targetCharacter, destinationPos);
+
+                    var tile = Map[destinationPos];
+
+                    if (tile.TerrainType != TerrainType.Ice && tile.TerrainType != TerrainType.ThinIce)
+                        distance--;
+
+                    destinationPos = destinationPos + direction;
+                }
+                else if (!IsTileEmpty(destinationPos))
+                {
+                    var objectCharacter = GetCharacterAtCoordinate(destinationPos);
+                    ApplyDamage(targetCharacter, distance * 10, "IMPACT");
+                    ApplyDamage(objectCharacter, distance * 10, "IMPACT");
+                    distance = 0;
+                }
+                else
+                {
+                    ApplyDamage(targetCharacter, distance * 15, "IMPACT");
+                    distance = 0;
+                }
+            }
+        }
+
+        public void GainPotential(int potential = 1)
+        {
+            if (Potential + potential <= MaxPotential)
+            {
+                Potential += potential;
+            }
+
+            PotentialChangeEvent?.Invoke(this, new PotentialEventArgs(potential));
+        }
+
+        public void LosePotential(int potential)
+        {
+            if (Potential >= potential)
+            {
+                Potential -= potential;
+            }
+
+            PotentialChangeEvent?.Invoke(this, new PotentialEventArgs(-potential));
         }
 
         #endregion
@@ -937,7 +990,7 @@ namespace HexWork.Gameplay
                     //look at all the possible destinations and get the one which is the furthest average distance away from heroes
                     foreach (var tile in tilesInRange)
                     {
-                        var distanceToHeroes = Heroes.Select(data => _map.DistanceBetweenPoints(tile, data.Position));
+                        var distanceToHeroes = Heroes.Select(data => Map.DistanceBetweenPoints(tile, data.Position));
 
                         var distance = (float)distanceToHeroes.Sum() / (float)Heroes.Count();
                         if (distance > greatestDistance)
@@ -950,7 +1003,7 @@ namespace HexWork.Gameplay
                         MoveCharacterTo(character, destination, shortestPath);
                 }
             }
-	        var zombies = _characters.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
+	        var zombies = Characters.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
 
 			var rand = new Random(DateTime.Now.Millisecond);
 
@@ -961,13 +1014,13 @@ namespace HexWork.Gameplay
 
                 MessageEvent?.Invoke(this, new MessageEventArgs("Zombie Summon"));
                 
-                foreach (var tile in _map.GetNeighborCoordinates(character.Position))
+                foreach (var tile in Map.GetNeighborCoordinates(character.Position))
                 {
                     //one unit per tile and only deploy to walkable spaces.
                     if(IsHexPassable(tile))
                     {
                         zombie.SpawnAt(tile);
-                        _characters.Add(zombie);
+                        Characters.Add(zombie);
                         SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs(){ CharacterId = zombie.Id, TargetPosition = tile, MaxHealth = zombie.MaxHealth, MonsterType = MonsterType.Zombie});
                         break;
                     }
@@ -992,95 +1045,12 @@ namespace HexWork.Gameplay
             }
         }
 
-        public void ApplyStatus(Character targetCharacter, StatusEffect effect)
-        {
-            //todo - apply status effects based on status damage
-            //for now we just always apply any relevant status effects
-            if (effect == null) return;
-
-            if (!targetCharacter.IsAlive)
-                return;
-
-            var effectToApply = effect.Copy();
-            targetCharacter.StatusEffects.Add(effectToApply);
-
-            StatusAppliedEvent?.Invoke(this, new StatusEventArgs(targetCharacter.Id, effectToApply));
-        }
-
-        /// <summary>
-        /// Apply a combo effect to a target character if they're currently suffering a status effect.
-        /// todo - Remove the current status effect from the character.
-        /// </summary>
-        /// <param name="targetCharacter"></param>
-        /// <param name="combo"></param>
-        public void ApplyCombo(Character targetCharacter, ComboAction combo)
-        {
-            if (!targetCharacter.HasStatus)
-                return;
-
-            ComboEvent?.Invoke(this, new ComboEventArgs(targetCharacter.Id, combo));
-
-            //if the player scores a combo they gain potential. if their commander gets comboed they lose potential (uh-oh!)
-            if (_activeCharacter.IsHero)
-                GainPotential();
-
-            if (targetCharacter == Commander)
-            {
-                SendMessage("Commander Comboed\nPotential Down");
-                LosePotential(1);
-            }
-
-            var status = targetCharacter.StatusEffects.First();
-
-            foreach (var statusEffect in targetCharacter.StatusEffects.Where(s =>
-                s.StatusEffectType == status.StatusEffectType).ToList())
-            {
-                targetCharacter.StatusEffects.Remove(statusEffect);
-
-                StatusRemovedEvent?.Invoke(this, new StatusEventArgs(targetCharacter.Id, statusEffect));
-            }
-        }
-
-        public void ApplyPush(Character targetCharacter, HexCoordinate direction, int distance = 0)
-        {
-            SendMessage("PUSH");
-
-            var targetCharacterPos = targetCharacter.Position;
-            var destinationPos = targetCharacterPos + direction;
-            while (distance > 0)
-            {
-                if (IsHexPassable(destinationPos))
-                {
-                    MoveCharacterTo(targetCharacter, destinationPos);
-
-                    var tile = _map[destinationPos];
-
-                    if (tile.TerrainType != TerrainType.Ice && tile.TerrainType != TerrainType.ThinIce)
-                        distance--;
-
-                    destinationPos = destinationPos + direction;
-                }
-                else if (!IsTileEmpty(destinationPos))
-                {
-                    var objectCharacter = GetCharacterAtCoordinate(destinationPos);
-                    ApplyDamage(targetCharacter, distance * 10, "IMPACT");
-                    ApplyDamage(objectCharacter, distance * 10, "IMPACT");
-                    distance = 0;
-                }
-                else
-                {
-                    ApplyDamage(targetCharacter, distance * 15, "IMPACT");
-                    distance = 0;
-                }
-            }
-        }
-
         private void SpawnHero(HexCoordinate position)
         {
-            if (_characters.Any(character => character.Position == position))
+            if (Characters.Any(character => character.Position == position))
                 return;
 
-            var hero = _characters.FirstOrDefault(chracter => chracter.IsHero && !chracter.IsAlive);
+            var hero = Characters.FirstOrDefault(chracter => chracter.IsHero && !chracter.IsAlive);
             if (hero == null) return;
 
             if (!IsHexPassable(position))
@@ -1090,39 +1060,19 @@ namespace HexWork.Gameplay
 
             SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs() { CharacterId = hero.Id, TargetPosition = position });
         }
-
-        public void GainPotential(int potential = 1)
-        {
-            if (Potential + potential <= MaxPotential)
-            {
-                Potential += potential;
-            }
-
-            PotentialChangeEvent?.Invoke(this, new PotentialEventArgs(potential));
-        }
-
-        public void LosePotential(int potential)
-        {
-            if (Potential >= potential)
-            {
-                Potential -= potential;
-            }
-
-            PotentialChangeEvent?.Invoke(this, new PotentialEventArgs(-potential));
-        }
-
+        
         #endregion
 
         #region Public Accessor Methods
 
 	    public Tile GetTileAtCoordinate(HexCoordinate coordinate)
 	    {
-		    return _map[coordinate];
+		    return Map[coordinate];
 	    }
 
         public Character GetCharacter(Guid characterId)
         {
-            return _characters.FirstOrDefault(ch => ch.Id == characterId);
+            return Characters.FirstOrDefault(ch => ch.Id == characterId);
         }
 
         public Character GetCharacterAtCoordinate(HexCoordinate coordinate)
@@ -1142,7 +1092,7 @@ namespace HexWork.Gameplay
 
         public bool IsTileEmpty(HexCoordinate position)
         {
-			return !_characters.Any(character => character.Position == position && character.IsAlive);
+			return !Characters.Any(character => character.Position == position && character.IsAlive);
         }
 		
         public Character GetCharacterAtInitiative(int initiative)
@@ -1158,7 +1108,7 @@ namespace HexWork.Gameplay
         {
             var initiativeList = new List<Character>();
             var turnTimerToBeat = int.MaxValue;
-            var orderedList = _characters.Where(cha => cha.IsAlive).OrderBy(cha => cha.TurnTimer);
+            var orderedList = Characters.Where(cha => cha.IsAlive).OrderBy(cha => cha.TurnTimer);
             Character characterToBeat = orderedList?.First();
 
             var iterator = orderedList.GetEnumerator();
@@ -1341,7 +1291,7 @@ namespace HexWork.Gameplay
         /// </summary>
         public List<HexCoordinate> FindShortestPath(HexCoordinate start, HexCoordinate destination, MovementType movementType = MovementType.NormalMove)
         {
-            if (!_map.ContainsKey(start) || !_map.ContainsKey(destination))
+            if (!Map.ContainsKey(start) || !Map.ContainsKey(destination))
                 return null;
 
             //data structure map such that key : a tile we've looked at one or more times, value : the previous tile in the shortest path to the hex in the key.
@@ -1366,22 +1316,22 @@ namespace HexWork.Gameplay
                     break;
                 
                 //look at all of the best estimated tile's neighbors
-                foreach (var neighbor in _map.GetNeighborCoordinates(current))
+                foreach (var neighbor in Map.GetNeighborCoordinates(current))
                 {
                     //tile validation goes here.
                     if (!IsTilePassable(movementType, neighbor))
                         continue;
 
                     //check if the tile is water or lava.
-                    if ((_map[neighbor].TerrainType == TerrainType.Water
-                        || _map[neighbor].TerrainType == TerrainType.Lava)
+                    if ((Map[neighbor].TerrainType == TerrainType.Water
+                        || Map[neighbor].TerrainType == TerrainType.Lava)
                         && neighbor != destination)
                         continue;
 
                     //nodes are always one space away - hexgrid!
                     //BUT hexes have different movement costs to move through!
                     //the path from the start to the tile we're looking at now is the path the 
-                    var pathLengthToNeighbor = pathValues[current] + _map[neighbor].MovementCost;
+                    var pathLengthToNeighbor = pathValues[current] + Map[neighbor].MovementCost;
                     
                     //estimate the neighbor and add it to the list of estimates or update it if it's already in the list
                     if (!pathValues.ContainsKey(neighbor) || pathValues[neighbor] > pathLengthToNeighbor)
@@ -1390,7 +1340,7 @@ namespace HexWork.Gameplay
                         pathValues[neighbor] = (int)pathLengthToNeighbor;
 
                         //heuristic for "distance to destination tile" is just absolute distance between current tile and the destination
-                        float estimate = pathLengthToNeighbor + _map.DistanceBetweenPoints(neighbor, destination);
+                        float estimate = pathLengthToNeighbor + Map.DistanceBetweenPoints(neighbor, destination);
                         
                         ancestorMap[neighbor] = current;
 
@@ -1424,7 +1374,7 @@ namespace HexWork.Gameplay
         //when a character moves into a tile check to see if there're any terrain effects for moving into that tile.
         private void ResolveTerrainEffects(Character character, HexCoordinate position)
         {
-            var tile = _map[position];
+            var tile = Map[position];
 
             switch (tile.TerrainType)
             {
@@ -1463,7 +1413,7 @@ namespace HexWork.Gameplay
 		    //tile validation goes here.
 		    if (!IsHexWalkable(coordinate)) return false;
 
-		    var character = _characters.FirstOrDefault(c => c.Position == coordinate && c.IsAlive);
+		    var character = Characters.FirstOrDefault(c => c.Position == coordinate && c.IsAlive);
 		    if (character == null)
 			    return true;
 				
@@ -1509,12 +1459,12 @@ namespace HexWork.Gameplay
 
 	    private bool IsHexWalkable(HexCoordinate co)
         { 
-		    return _map[co].IsWalkable;
+		    return Map[co].IsWalkable;
 	    }
 
         private bool IsHexOpaque(HexCoordinate coordinate)
         {
-            return _map[coordinate].BlocksLOS;
+            return Map[coordinate].BlocksLOS;
         }
 
         private bool BlocksLineOfSight(HexCoordinate coordinate)
@@ -1527,7 +1477,7 @@ namespace HexWork.Gameplay
             if (searchDepth >= range)
                 return;
 
-            var adjacentTiles = _map.GetNeighborCoordinates(position);
+            var adjacentTiles = Map.GetNeighborCoordinates(position);
             foreach (var coord in adjacentTiles)
             {
                 if (!tilesInRange.Contains(coord))
@@ -1544,14 +1494,14 @@ namespace HexWork.Gameplay
             if (searchDepth >= maxSearchDepth)
                 return;
 
-            var adjacentTiles = _map.GetNeighborCoordinates(position);
+            var adjacentTiles = Map.GetNeighborCoordinates(position);
 
             foreach (var coord in adjacentTiles)
             {
 	            if (!IsTilePassable(movementType, coord)) continue;
 
-                int movementCost = (int) _map[coord].MovementCost;
-                TerrainType terrainType = _map[coord].TerrainType;
+                int movementCost = (int) Map[coord].MovementCost;
+                TerrainType terrainType = Map[coord].TerrainType;
 
                 //if this tile is not already in the list
                 if (!neighbours.Contains(coord) 
@@ -1576,7 +1526,7 @@ namespace HexWork.Gameplay
             if (searchDepth >= maxSearchDepth)
                 return null;
 
-            var adjacentTiles = _map.GetNeighborCoordinates(position);
+            var adjacentTiles = Map.GetNeighborCoordinates(position);
 
             foreach (var coord in adjacentTiles)
             {
@@ -1594,14 +1544,14 @@ namespace HexWork.Gameplay
 
 		public HexCoordinate GetNearestNeighbor(HexCoordinate start, HexCoordinate end)
 		{
-			var neighbours = _map.GetNeighborCoordinates(end);
+			var neighbours = Map.GetNeighborCoordinates(end);
 
 			int distance = 100;
 			HexCoordinate nearest = null;
 
 			foreach (var neighbor in neighbours)
 			{
-				var delta = _map.DistanceBetweenPoints(start, neighbor);
+				var delta = Map.DistanceBetweenPoints(start, neighbor);
 				if (delta < distance)
 				{
 					nearest = neighbor;
@@ -1644,15 +1594,15 @@ namespace HexWork.Gameplay
             if (searchDepth >= maxSearchDepth)
                 return;
 
-            var adjacentTiles = _map.GetNeighborCoordinates(position);
+            var adjacentTiles = Map.GetNeighborCoordinates(position);
 
             foreach (var coord in adjacentTiles)
             {
                 //if the terrain blocks LOS then move on
                 if (IsHexOpaque(coord)) continue;
 
-                var distanceToPoint = _map.DistanceBetweenPoints(startPosition, position);
-                var distanceToNeighbour = _map.DistanceBetweenPoints(startPosition, coord);
+                var distanceToPoint = Map.DistanceBetweenPoints(startPosition, position);
+                var distanceToNeighbour = Map.DistanceBetweenPoints(startPosition, coord);
 
                 //only look at neighbouring tiles that're further away from the starting position than the tile we're currently at
                 if (distanceToPoint >= distanceToNeighbour)
@@ -1673,7 +1623,7 @@ namespace HexWork.Gameplay
         //Get nearest adjacent tile to a target destination.
         private HexCoordinate GetNearestTileAdjacentToDestination(HexCoordinate start, HexCoordinate end)
         {
-            var neighbours = _map.GetNeighborCoordinates(end);
+            var neighbours = Map.GetNeighborCoordinates(end);
 
             int distance = 1000;
             HexCoordinate nearest = null;
@@ -1683,7 +1633,7 @@ namespace HexWork.Gameplay
                 if(!IsHexPassable(neighbor))
                     continue;
 
-                var delta = _map.DistanceBetweenPoints(start, neighbor);
+                var delta = Map.DistanceBetweenPoints(start, neighbor);
                 if (delta < distance)
                 {
                     nearest = neighbor;

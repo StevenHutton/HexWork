@@ -10,45 +10,32 @@ namespace HexWork.UI
     {
         #region Attributes
 
-        private Vector2 _scale = new Vector2(1f, 1f);
-        private Vector2 _position = new Vector2(0f, 0f);
-
         //The target health for transitions expressed as a percentage
-        private float _targetHealth = 100;
+        private float _targetHealth;
 
-        //Speed at which the healthbar fills measured in percentage/second
+        //Speed at which the health bar fills measured in percentage/second
         private float _healthBarSpeed = 100.0f;
 
-	    private List<UiStatusEffect> _statusEffect = new List<UiStatusEffect>();
-
-		#endregion
+        #endregion
 
         #region Properties
 		public Texture2D Texture { get; set; }
         public Texture2D PortraitTexture { get; set; }
         public Color Colour { get; set; } = Color.White;
 
-        public Vector2 Position
-        {
-            get => _position;
-            set => _position = value;
-        }
+        public Vector2 Position { get; set; }
 
-        public Vector2 Scale
-        {
-            get => _scale;
-            set => _scale = value;
-        }
+        public Vector2 Scale { get; set; } = new Vector2(1f, 1f);
 
         public Animation Animation { get; set; } = null;
 
-        public float MaxHealth { get; set; } = 100.0f;
+        public float MaxHealth { get; set; }
 
         public float Health { get; set; }
 
-		public List<UiStatusEffect> StatusEffects => _statusEffect;
+		public List<UiStatusEffect> StatusEffects { get; } = new List<UiStatusEffect>();
 
-	    /// <summary>
+        /// <summary>
         /// Health expressed as a percentage.
         /// </summary>
         public float PercentageHealth => (Health / MaxHealth) * 100.0f;
