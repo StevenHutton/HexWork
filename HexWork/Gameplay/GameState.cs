@@ -1020,8 +1020,8 @@ namespace HexWork.Gameplay
 
             ComboEvent?.Invoke(this, new ComboEventArgs(targetCharacter.Id, combo));
 
-            //if the player scores a combo they gain potential. if their commander gets comboed they lose potential (uh-oh!)
-            if (_activeCharacter.IsHero)
+            //if the player's scores a combo they gain potential, commander gets comboed they lose potential (uh-oh!)
+            if (_activeCharacter == Commander)
                 GainPotential();
 
             if (targetCharacter == Commander)
@@ -1377,8 +1377,8 @@ namespace HexWork.Gameplay
                         || _map.Map[neighbor].TerrainType == TerrainType.Lava)
                         && neighbor != destination)
                         continue;
-
-                    //nodes are always one space away - hexgrid!
+					
+	                //nodes are always one space away - hexgrid!
                     //BUT hexes have different movement costs to move through!
                     //the path from the start to the tile we're looking at now is the path the 
                     var pathLengthToNeighbor = pathValues[current] + _map.Map[neighbor].MovementCost;
