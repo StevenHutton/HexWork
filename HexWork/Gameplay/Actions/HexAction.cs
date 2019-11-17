@@ -11,6 +11,8 @@ namespace HexWork.Gameplay.Actions
     {
         #region Attributes
 
+        public TileEffectType TileEffect = TileEffectType.None;
+
         protected readonly GetValidTargetsDelegate _getValidTargets;
 
         protected bool CanRotateTargetting = true;
@@ -98,6 +100,9 @@ namespace HexWork.Gameplay.Actions
 	        foreach (var targetTile in targetTiles)
 	        {
 		        var targetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
+
+                if(TileEffect != TileEffectType.None && gameState.IsHexPassable(targetTile))
+                    gameState.CreateTileEffect(targetTile);
 
 		        //if no one is there, next tile
 		        if (targetCharacter == null)

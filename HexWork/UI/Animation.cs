@@ -11,7 +11,7 @@ namespace HexWork.UI
     {
         protected float _progress = 0.0f;
 
-        protected float _speed = 3.00f;
+        protected float _speed = 8.0f;
 
         public bool IsComplete = false;
 

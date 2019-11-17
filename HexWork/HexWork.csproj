@@ -66,6 +66,7 @@
     <Compile Include="Gameplay\TargetingHelper.cs" />
     <Compile Include="Gameplay\TerrainEffect.cs" />
     <Compile Include="Gameplay\Tile.cs" />
+    <Compile Include="Gameplay\TileEffect.cs" />
     <Compile Include="InputManager.cs" />
     <Compile Include="Interfaces\IInputManager.cs" />
     <Compile Include="Interfaces\IScreen.cs" />
@@ -91,8 +92,8 @@
     <Compile Include="UI\UiAction.cs" />
     <Compile Include="UI\UiButton.cs" />
     <Compile Include="UI\UiCharacter.cs" />
-    <Compile Include="UI\UIState.cs" />
     <Compile Include="UI\UiStatusEffect.cs" />
+    <Compile Include="UI\UiTileEffect.cs" />
     <Compile Include="UI\UserInterface.cs" />
   </ItemGroup>
   <ItemGroup>

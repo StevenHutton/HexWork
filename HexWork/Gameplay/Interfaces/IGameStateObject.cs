@@ -36,6 +36,8 @@ namespace HexWork.Gameplay.Interfaces
 
         void ApplyHealing(Character character, int healingAmount);
 
+        void CreateTileEffect(HexCoordinate position);
+
         void GainPotential(int potentialGain = 1);
 
         void LosePotential(int potentialCost);

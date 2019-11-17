@@ -149,18 +149,28 @@ namespace HexWork.UI
 		/// <param name="targetPosition"></param>
         public void MoveCharacterTo(Character character, HexCoordinate targetPosition, List<HexCoordinate> path = null)
         {
-            //throw new System.NotImplementedException();
+            ResolveTerrainEffects();
         }
 
 
-        public void TeleportCharacterTo(Character character, HexCoordinate position) { }
+        public void TeleportCharacterTo(Character character, HexCoordinate position)
+        {
+
+        }
+
+        private void ResolveTerrainEffects()
+        {
+
+        }
 
         /// <summary>
         /// intentionally does nothing
         /// </summary>
         /// <param name="action"></param>
         public void NotifyAction(HexAction action, Character character)
-        { }
+        {
+
+        }
 
         public Character GetCharacterAtCoordinate(HexCoordinate coordinate)
         {
@@ -221,6 +231,27 @@ namespace HexWork.UI
 		        SpriteEffects.None, 
 		        0.0f);
 		}
+
+        public void CreateTileEffect(HexCoordinate location)
+        {
+            var statusTexture = _hexGame.Content.Load<Texture2D>("FireIcon");
+            var position = GetHexScreenPosition(location);
+
+            var width = (float)statusTexture.Width;
+            var height = (float)statusTexture.Height;
+
+            var origin = new Vector2(width / 2, height - (width / 2));
+
+            _spriteBatch.Draw(statusTexture,
+                position,
+                null,
+                Color.White,
+                0.0f,
+                origin,
+                new Vector2(0.3f), 
+                SpriteEffects.None,
+                0.0f);
+        }
 
         public void ApplyCombo(Character targetCharacter, ComboAction combo)
         {

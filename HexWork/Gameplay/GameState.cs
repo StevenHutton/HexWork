@@ -46,13 +46,23 @@ namespace HexWork.Gameplay
 
     public class InteractionRequestEventArgs : EventArgs
     {
-        public Guid ActiveCharacterId;
-
         public Guid TargetCharacterId;
 
         public HexCoordinate TargetPosition;
-        
+    }
 
+    public class SpawnTileEffectEventArgs : EventArgs
+    {
+        public Guid Id;
+
+        public TileEffectType Type = TileEffectType.Fire;
+
+        public HexCoordinate Position;
+    }
+
+    public class RemoveTileEffectEventArgs : EventArgs
+    {
+        public Guid Id;
     }
 
     public class SpawnChracterEventArgs
@@ -134,6 +144,8 @@ namespace HexWork.Gameplay
 
         public List<Character> Characters = new List<Character>();
 
+        public List<TileEffect> TileEffects = new List<TileEffect>();
+
         /// <summary>
         /// The character who currently has initiative
         /// </summary>
@@ -195,10 +207,14 @@ namespace HexWork.Gameplay
 
         public event EventHandler<MessageEventArgs> GameOverEvent;
 
+        public event EventHandler<SpawnTileEffectEventArgs> SpawnTileEffectEvent;
+
+        public event EventHandler<RemoveTileEffectEventArgs> RemoveTileEffectEvent;
+
         #endregion
 
         #region Properties
-        
+
         public IEnumerable<Character> Heroes => Characters.Where(character => character.IsHero && character.IsAlive);
 
         public IEnumerable<Character> Enemies => Characters.Where(character => !character.IsHero && character.IsAlive);
@@ -363,7 +379,8 @@ namespace HexWork.Gameplay
                 _rotatingLinePattern)
             {
                 PotentialCost = 1,
-                Range = 3
+                Range = 3,
+                TileEffect = TileEffectType.Fire
             };
 
 	        var ringofFire = new HexAction("Ring of Fire! (2)",
@@ -372,8 +389,9 @@ namespace HexWork.Gameplay
 		        _whirlWindTargetPattern)
 	        {
 		        PotentialCost = 2,
-		        Range = 3
-	        };
+		        Range = 3,
+                TileEffect = TileEffectType.Fire
+            };
 
 			var lightningBolt = new HexAction("Lightning Bolt (1)", TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo())
             {
@@ -693,7 +711,9 @@ namespace HexWork.Gameplay
                 GameOverEvent?.Invoke(this, new MessageEventArgs("You Lose."));
             }
         }
-        
+
+        #region Gamestate Transforms
+
         public void MoveCharacterTo(Character character, HexCoordinate position, List<HexCoordinate> path = null)
         {
             CharacterMoveEvent?.Invoke(this,
@@ -722,6 +742,44 @@ namespace HexWork.Gameplay
             ResolveTerrainEffects(character, position);
         }
 
+        //when a character moves into a tile check to see if there're any terrain effects for moving into that tile.
+        private void ResolveTerrainEffects(Character character, HexCoordinate position)
+        {
+            var tile = Map[position];
+
+            switch (tile.TerrainType)
+            {
+                case TerrainType.Ground:
+                    break;
+                case TerrainType.Water:
+                    break;
+                case TerrainType.Lava:
+                    ApplyStatus(character, 
+                        new DotEffect
+                        {
+                            Damage = 5,
+                            Duration = 3,
+                            Name = "Burning",
+                            StatusEffectType = StatusEffectType.Burning
+                        });
+                    break;
+                case TerrainType.Ice:
+                    break;
+                case TerrainType.ThinIce:
+                    break;
+                case TerrainType.Snow:
+                    break;
+                case TerrainType.Sand:
+                    break;
+                case TerrainType.Pit:
+                    break;
+                case TerrainType.Wall:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+        
         public void NotifyAction(HexAction action, Character character)
         {
             ActionEvent?.Invoke(this,
@@ -870,202 +928,28 @@ namespace HexWork.Gameplay
             PotentialChangeEvent?.Invoke(this, new PotentialEventArgs(-potential));
         }
 
+        public void CreateTileEffect(HexCoordinate location)
+        {
+            var tileEffect = new TileEffect(location);
+            TileEffects.Add(tileEffect);
+
+            SpawnTileEffectEvent?.Invoke(this, new SpawnTileEffectEventArgs()
+            {
+                Id = tileEffect.Guid,
+                Position = location,
+                Type = TileEffectType.Fire
+            });
+        }
+
         #endregion
 
-        #region Private Update Methods
+        #endregion
 
-        private void ZombieTurn(Character character)
-        {
-            var position = character.Position;
-            List<HexCoordinate> shortestPath = null;
-            int shortestPathLength = int.MaxValue;
-            Character closestHero = null;
-
-            //find the closest hero
-            foreach (var hero in Heroes)
-            {
-                var nearestNeighbour = GetNearestTileAdjacentToDestination(position, hero.Position);
-
-                if (nearestNeighbour == null)
-                    continue;
-
-                var path = FindShortestPath(position, nearestNeighbour);
-
-                if (path == null) continue;
-
-                if (path.Count >= shortestPathLength) continue;
-
-                shortestPathLength = path.Count;
-                shortestPath = path;
-                closestHero = hero;
-            }
-
-            if (closestHero == null)
-                return;
-
-            //loop through available actions
-            foreach (var action in character.Actions.Where(a => a.IsAvailable(character)))
-            {
-                if (action.IsValidTarget(character, closestHero.Position, this) &&
-                    action.IsDetonator == closestHero.HasStatus
-                    && action.IsDetonator == closestHero.HasStatus && action.IsAvailable(character))
-                {
-                    //if we can hit the hero, hit them now and end turn.
-                    NotifyAction(action, character);
-                    ApplyDamage(closestHero, action.Power);
-                    ApplyStatus(closestHero, action.StatusEffect);
-	                if (action.Combo != null)
-	                {
-		                action.Combo.TriggerAsync(character, new DummyInputProvider(closestHero.Position), this);
-	                }
-
-	                return;
-                }
-            }
-
-            //if we couldn't reach the closest hero move towards them.
-            //if we found a path to a hero 
-            if (shortestPath == null || !character.CanMove) return;
-
-            while (shortestPath.Count > character.Movement + 1)
-            {
-                shortestPath.RemoveAt(character.Movement + 1);
-            }
-
-            MoveCharacterTo(character, shortestPath.Last(), shortestPath);
-
-            foreach (var action in character.Actions.Where(action =>
-                action.IsValidTarget(character, closestHero.Position, this)
-                && action.IsDetonator == closestHero.HasStatus && action.IsAvailable(character)))
-            {
-                NotifyAction(action, character);
-                ApplyDamage(closestHero, action.Power);
-                ApplyStatus(closestHero, action.StatusEffect);
-	            if (action.Combo != null)
-	            {
-		            action.Combo.TriggerAsync(character, new DummyInputProvider(closestHero.Position), this);
-	            }
-
-	            return;
-            }
-        }
-
-        private void ZombieKingTurn(Character character)
-        {
-            var position = character.Position;
-            List<HexCoordinate> shortestPath = null;
-            int shortestPathLength = int.MaxValue;
-            Character closestHero = null;
-
-            //find the closest hero
-            foreach (var hero in Heroes)
-            {
-                var nearestNeighbour = GetNearestTileAdjacentToDestination(position, hero.Position);
-
-                if (nearestNeighbour == null)
-                    continue;
-
-                var path = FindShortestPath(position, nearestNeighbour);
-
-                if (path == null) continue;
-
-                if (path.Count >= shortestPathLength) continue;
-
-                shortestPathLength = path.Count;
-                shortestPath = path;
-                closestHero = hero;
-            }
-
-            if (closestHero != null)
-            {
-                //if the closest hero is close then move away.
-                if (shortestPathLength <= 3)
-                {
-                    //get all the tiles to which the zombie COULD move
-                    var tilesInRange = GetValidDestinations(character, character.Movement);
-
-                    float greatestDistance = 0;
-                    HexCoordinate destination = null;
-
-                    //look at all the possible destinations and get the one which is the furthest average distance away from heroes
-                    foreach (var tile in tilesInRange)
-                    {
-                        var distanceToHeroes = Heroes.Select(data => Map.DistanceBetweenPoints(tile, data.Position));
-
-                        var distance = (float)distanceToHeroes.Sum() / (float)Heroes.Count();
-                        if (distance > greatestDistance)
-                        {
-                            greatestDistance = distance;
-                            destination = tile;
-                        }
-                    }
-                    if(destination != null)
-                        MoveCharacterTo(character, destination, shortestPath);
-                }
-            }
-	        var zombies = Characters.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
-
-			var rand = new Random(DateTime.Now.Millisecond);
-
-            if (rand.Next(0, 10) >= zombies.Count)
-			{
-                //spawn zombie
-                var zombie = CreateZombie();
-
-                MessageEvent?.Invoke(this, new MessageEventArgs("Zombie Summon"));
-                
-                foreach (var tile in Map.GetNeighborCoordinates(character.Position))
-                {
-                    //one unit per tile and only deploy to walkable spaces.
-                    if(IsHexPassable(tile))
-                    {
-                        zombie.SpawnAt(tile);
-                        Characters.Add(zombie);
-                        SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs(){ CharacterId = zombie.Id, TargetPosition = tile, MaxHealth = zombie.MaxHealth, MonsterType = MonsterType.Zombie});
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                
-                if (zombies.Count == 0) return;
-
-                var zombie = zombies[rand.Next(0, zombies.Count)];
-                var zombie2 = zombies[rand.Next(0, zombies.Count)];
-
-                MessageEvent?.Invoke(this, new MessageEventArgs("Zombie Rush!"));
-
-                zombie.StartTurn();
-                ZombieTurn(zombie);
-                zombie.EndTurn();
-                zombie2.StartTurn();
-                ZombieTurn(zombie2);
-                zombie2.EndTurn();
-            }
-        }
-
-        private void SpawnHero(HexCoordinate position)
-        {
-            if (Characters.Any(character => character.Position == position))
-                return;
-
-            var hero = Characters.FirstOrDefault(chracter => chracter.IsHero && !chracter.IsAlive);
-            if (hero == null) return;
-
-            if (!IsHexPassable(position))
-                return;
-
-            hero.SpawnAt(position);
-
-            SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs() { CharacterId = hero.Id, TargetPosition = position });
-        }
-        
         #endregion
 
         #region Public Accessor Methods
 
-	    public Tile GetTileAtCoordinate(HexCoordinate coordinate)
+        public Tile GetTileAtCoordinate(HexCoordinate coordinate)
 	    {
 		    return Map[coordinate];
 	    }
@@ -1371,44 +1255,7 @@ namespace HexWork.Gameplay
 
         #region Private Helper Methods
 
-        //when a character moves into a tile check to see if there're any terrain effects for moving into that tile.
-        private void ResolveTerrainEffects(Character character, HexCoordinate position)
-        {
-            var tile = Map[position];
-
-            switch (tile.TerrainType)
-            {
-                case TerrainType.Ground:
-                    break;
-                case TerrainType.Water:
-                    break;
-                case TerrainType.Lava:
-                    ApplyStatus(character, new DotEffect
-                    {
-                        Damage = 5,
-                        Duration = 3,
-                        Name = "Burning",
-                        StatusEffectType = StatusEffectType.Burning
-                    });
-                    break;
-                case TerrainType.Ice:
-                    break;
-                case TerrainType.ThinIce:
-                    break;
-                case TerrainType.Snow:
-                    break;
-                case TerrainType.Sand:
-                    break;
-                case TerrainType.Pit:
-                    break;
-                case TerrainType.Wall:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        private bool IsTilePassable(MovementType movementType, HexCoordinate coordinate)
+       private bool IsTilePassable(MovementType movementType, HexCoordinate coordinate)
 	    {
 		    //tile validation goes here.
 		    if (!IsHexWalkable(coordinate)) return false;
@@ -1643,7 +1490,201 @@ namespace HexWork.Gameplay
 
             return nearest;
         }
-        
+
+        #region Private Update Methods
+
+        private void ZombieTurn(Character character)
+        {
+            var position = character.Position;
+            List<HexCoordinate> shortestPath = null;
+            int shortestPathLength = int.MaxValue;
+            Character closestHero = null;
+
+            //find the closest hero
+            foreach (var hero in Heroes)
+            {
+                var nearestNeighbour = GetNearestTileAdjacentToDestination(position, hero.Position);
+
+                if (nearestNeighbour == null)
+                    continue;
+
+                var path = FindShortestPath(position, nearestNeighbour);
+
+                if (path == null) continue;
+
+                if (path.Count >= shortestPathLength) continue;
+
+                shortestPathLength = path.Count;
+                shortestPath = path;
+                closestHero = hero;
+            }
+
+            if (closestHero == null)
+                return;
+
+            //loop through available actions
+            foreach (var action in character.Actions.Where(a => a.IsAvailable(character)))
+            {
+                if (action.IsValidTarget(character, closestHero.Position, this) &&
+                    action.IsDetonator == closestHero.HasStatus
+                    && action.IsDetonator == closestHero.HasStatus && action.IsAvailable(character))
+                {
+                    //if we can hit the hero, hit them now and end turn.
+                    NotifyAction(action, character);
+                    ApplyDamage(closestHero, action.Power);
+                    ApplyStatus(closestHero, action.StatusEffect);
+                    if (action.Combo != null)
+                    {
+                        action.Combo.TriggerAsync(character, new DummyInputProvider(closestHero.Position), this);
+                    }
+
+                    return;
+                }
+            }
+
+            //if we couldn't reach the closest hero move towards them.
+            //if we found a path to a hero 
+            if (shortestPath == null || !character.CanMove) return;
+
+            while (shortestPath.Count > character.Movement + 1)
+            {
+                shortestPath.RemoveAt(character.Movement + 1);
+            }
+
+            MoveCharacterTo(character, shortestPath.Last(), shortestPath);
+
+            foreach (var action in character.Actions.Where(action =>
+                action.IsValidTarget(character, closestHero.Position, this)
+                && action.IsDetonator == closestHero.HasStatus && action.IsAvailable(character)))
+            {
+                NotifyAction(action, character);
+                ApplyDamage(closestHero, action.Power);
+                ApplyStatus(closestHero, action.StatusEffect);
+                if (action.Combo != null)
+                {
+                    action.Combo.TriggerAsync(character, new DummyInputProvider(closestHero.Position), this);
+                }
+
+                return;
+            }
+        }
+
+        private void ZombieKingTurn(Character character)
+        {
+            var position = character.Position;
+            List<HexCoordinate> shortestPath = null;
+            int shortestPathLength = int.MaxValue;
+            Character closestHero = null;
+
+            //find the closest hero
+            foreach (var hero in Heroes)
+            {
+                var nearestNeighbour = GetNearestTileAdjacentToDestination(position, hero.Position);
+
+                if (nearestNeighbour == null)
+                    continue;
+
+                var path = FindShortestPath(position, nearestNeighbour);
+
+                if (path == null) continue;
+
+                if (path.Count >= shortestPathLength) continue;
+
+                shortestPathLength = path.Count;
+                shortestPath = path;
+                closestHero = hero;
+            }
+
+            if (closestHero != null && character.CanMove)
+            {
+                //if the closest hero is close then move away.
+                if (shortestPathLength <= 3)
+                {
+                    //get all the tiles to which the zombie COULD move
+                    var tilesInRange = GetValidDestinations(character, character.Movement);
+
+                    float greatestDistance = 0;
+                    HexCoordinate destination = null;
+
+                    //look at all the possible destinations and get the one which is the furthest average distance away from heroes
+                    foreach (var tile in tilesInRange)
+                    {
+                        var distanceToHeroes = Heroes.Select(data => Map.DistanceBetweenPoints(tile, data.Position));
+
+                        var distance = (float)distanceToHeroes.Sum() / (float)Heroes.Count();
+                        if (distance > greatestDistance)
+                        {
+                            greatestDistance = distance;
+                            destination = tile;
+                        }
+                    }
+                    if (destination != null)
+                        MoveCharacterTo(character, destination, shortestPath);
+                }
+            }
+            
+            var zombies = Characters.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
+
+            var rand = new Random(DateTime.Now.Millisecond);
+
+            if (rand.Next(0, 10) >= zombies.Count)
+            {
+                //spawn zombie
+                var zombie = CreateZombie();
+
+                MessageEvent?.Invoke(this, new MessageEventArgs("Zombie Summon"));
+
+                foreach (var tile in Map.GetNeighborCoordinates(character.Position))
+                {
+                    //one unit per tile and only deploy to walkable spaces.
+                    if (IsHexPassable(tile))
+                    {
+                        zombie.SpawnAt(tile);
+                        Characters.Add(zombie);
+                        SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs
+                        {
+                            CharacterId = zombie.Id, TargetPosition = tile, 
+                            MaxHealth = zombie.MaxHealth, MonsterType = MonsterType.Zombie
+                        });
+                        break;
+                    }
+                }
+            }
+            else
+            {
+
+                if (zombies.Count == 0) return;
+
+                var zombie = zombies[rand.Next(0, zombies.Count)];
+                var zombie2 = zombies[rand.Next(0, zombies.Count)];
+
+                MessageEvent?.Invoke(this, new MessageEventArgs("Zombie Rush!"));
+
+                zombie.StartTurn();
+                ZombieTurn(zombie);
+                zombie.EndTurn();
+                zombie2.StartTurn();
+                ZombieTurn(zombie2);
+                zombie2.EndTurn();
+            }
+        }
+
+        private void SpawnHero(HexCoordinate position)
+        {
+            if (Characters.Any(character => character.Position == position))
+                return;
+
+            var hero = Characters.FirstOrDefault(chracter => chracter.IsHero && !chracter.IsAlive);
+            if (hero == null) return;
+
+            if (!IsHexPassable(position))
+                return;
+
+            hero.SpawnAt(position);
+
+            SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs() { CharacterId = hero.Id, TargetPosition = position });
+        }
+
         #endregion
 
         #endregion

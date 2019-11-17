@@ -30,8 +30,12 @@ namespace HexWork.UI
         #endregion
         
         private readonly List<UiButton> _actionBarButtons = new List<UiButton>();
+
         private Dictionary<Guid, UiCharacter> _uiCharacterDictionary = new Dictionary<Guid, UiCharacter>();
+        private Dictionary<Guid, UiTileEffect> _tileEffectDictionary = new Dictionary<Guid, UiTileEffect>();
+
         private readonly List<InitiativeTrackButton> _initiativeTrack = new List<InitiativeTrackButton>();
+
         private List<UiAction> _uiActions = new List<UiAction>();
 	    private PreviewGameStateProxy _gameStateProxy;
 
@@ -41,9 +45,11 @@ namespace HexWork.UI
 
         public event EventHandler<HexCoordinate> OnClickEvent;
 
-		#region Rendering Attributes
+        private HexAction SelectedHexAction = null;
 
-		private readonly Color _cursorColor = Color.Red;
+        #region Rendering Attributes
+
+        private readonly Color _cursorColor = Color.Red;
         private SpriteFont _buttonFont;
         private SpriteFont _uiFont;
         private SpriteFont _damageFont;
@@ -103,13 +109,7 @@ namespace HexWork.UI
         #endregion
 
         #endregion
-
-        #region Properties
         
-        public HexAction SelectedHexAction { get; set; }
-		
-		#endregion
-
         #region Methods
 
         #region Initialisation Methods
@@ -141,6 +141,8 @@ namespace HexWork.UI
             gameState.PotentialChangeEvent += OnPotentialChange;
             gameState.MessageEvent += OnMessage;
             gameState.GameOverEvent += OnGameOver;
+            gameState.SpawnTileEffectEvent += OnTileEffectSpawn;
+            gameState.RemoveTileEffectEvent += OnRemoveTileEffect;
         }
 
         public void LoadContent(Game game)
@@ -310,6 +312,7 @@ namespace HexWork.UI
             DrawMapUi();
             DrawCharacters();
             DrawUiEffects();
+            DrawTileEffects();
 
 			//Draw Preview
 	        if (_cursorPosition != null)
@@ -326,6 +329,24 @@ namespace HexWork.UI
         }
         
         #region Private Rendering Methods
+
+        private void DrawTileEffects()
+        {
+            _spriteBatch.Begin();
+            foreach (var tileEffect in _tileEffectDictionary.Values)
+            {
+                _spriteBatch.Draw(tileEffect.Texture,
+                    tileEffect.Position,
+                    null,
+                    Color.White,
+                    0.0f,
+                    tileEffect.Origin,
+                    new Vector2(0.3f), 
+                    SpriteEffects.None,
+                    0.0f);
+            }
+            _spriteBatch.End();
+        }
 
         private void DrawPath(IEnumerable<HexCoordinate> path)
         {
@@ -930,7 +951,6 @@ namespace HexWork.UI
                 var character = _uiCharacterDictionary[args.Character.Id];
                 action.Effect = new TextEffect(args.Message, _damageFont)
                 {
-                    Duration = 1.0f,
                     Position = character.Position + new Vector2(10.0f, -25.0f)
                 };
             }
@@ -938,7 +958,6 @@ namespace HexWork.UI
             {
                 action.Effect = new TextEffect(args.Message, _effectFont, TextAlignment.Center)
                 {
-                    Duration = 1.0f,
                     Position = _screenCenter,
                     Scale = new Vector2(1.0f)
                 };
@@ -997,7 +1016,6 @@ namespace HexWork.UI
             var action = new UiAction();
             action.Effect = new TextEffect("DEAD", _damageFont, TextAlignment.Center)
             {
-                Duration = 1.0f,
                 Position = character.Position + new Vector2(10.0f, -25.0f)
             };
 
@@ -1017,7 +1035,6 @@ namespace HexWork.UI
             //todo - the values here are set based on the character's position at the moment it is called not when it is SHOWN.
             action.Effect = new TextEffect(args.DamageTaken.ToString(), _damageFont)
             {
-                Duration = 1.0f,
                 Position = character.Position + new Vector2(10.0f, -25.0f)
             };
 
@@ -1044,7 +1061,6 @@ namespace HexWork.UI
             var showActionNameUiAction = new UiAction();
             showActionNameUiAction.Effect = new TextEffect(e.Action.Name, _effectFont, TextAlignment.Center)
             {
-                Duration = 1.0f,
                 Position = _screenCenter,
                 Scale = new Vector2(1.0f)
             };
@@ -1062,7 +1078,6 @@ namespace HexWork.UI
 
             action.Effect = new TextEffect(e.ComboEffect.Name, _damageFont)
             {
-                Duration = 1.0f,
                 Position = character.Position + new Vector2(10.0f, -25.0f),
                 Scale = new Vector2(1.2f)
             };
@@ -1081,7 +1096,6 @@ namespace HexWork.UI
             };
             action.Effect = new TextEffect(statusEffect.Name, _damageFont)
             {
-                Duration = 1.0f,
                 Position = character.Position + new Vector2(20.0f, -30.0f)
             };
 
@@ -1121,7 +1135,6 @@ namespace HexWork.UI
             {
                 Effect = new TextEffect("- " + e.StatusEffect.Name, _damageFont)
                 {
-                    Duration = 1.0f,
                     Position = character.Position + new Vector2(10.0f, -25.0f),
                     BaseColour = Color.White
                 }
@@ -1141,7 +1154,6 @@ namespace HexWork.UI
             var potentialChange = new UiAction();
             potentialChange.Effect = new TextEffect($"{args.PotentialChange} Potential", _effectFont, TextAlignment.Center)
             {
-                Duration = 1.0f,
                 Position = _screenCenter,
                 Scale = new Vector2(1.0f)
             };
@@ -1163,7 +1175,25 @@ namespace HexWork.UI
 
             _uiActions.Add(gameOver);
         }
-        
+
+        private void OnRemoveTileEffect(object sender, RemoveTileEffectEventArgs e)
+        {
+            if (_tileEffectDictionary.ContainsKey(e.Id))
+            {
+                _tileEffectDictionary.Remove(e.Id);
+            }
+        }
+
+        private void OnTileEffectSpawn(object sender, SpawnTileEffectEventArgs e)
+        {
+            var tileEffect = new UiTileEffect(e.Id, _hexGame.Content.Load<Texture2D>("FireIcon"))
+            {
+                Position =  GetHexScreenPosition(e.Position)
+            };
+            _tileEffectDictionary.Add(tileEffect.Id, tileEffect);
+        }
+
+
         #endregion
 
         #endregion

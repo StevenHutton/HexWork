@@ -34,7 +34,7 @@ namespace HexWork.UI
         private SpriteFont _font;
 
         //how long to display this effect in seconds.
-        public float Duration = 1.0f;
+        public float Duration = 0.5f;
 
         //how long the effect has been displayed in seconds
         private float _timer = 0.0f;
