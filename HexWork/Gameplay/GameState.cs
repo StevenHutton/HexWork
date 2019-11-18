@@ -762,16 +762,18 @@ namespace HexWork.Gameplay
 
         public void MoveCharacterTo(Character character, HexCoordinate position, List<HexCoordinate> path = null)
         {
+            path = path ?? FindShortestPath(character.Position, position, character.MovementType);
+
             CharacterMoveEvent?.Invoke(this,
                 new MoveEventArgs
                 {
                     ActiveCharacterId = character.Id,
-                    Path = path ?? FindShortestPath(character.Position, position, character.MovementType),
+                    Path = path,
                     Destination = position
                 });
 
+            ResolveTerrainEffects(character, path);
             character.MoveTo(position);
-            ResolveTerrainEffects(character, position);
         }
 
         public void TeleportCharacterTo(Character character, HexCoordinate position)
@@ -784,15 +786,27 @@ namespace HexWork.Gameplay
                     Destination = position
                 });
 
+            ResolveTerrainEffects(character, new List<HexCoordinate>{ position });
             character.MoveTo(position);
-            ResolveTerrainEffects(character, position);
         }
 
         //when a character moves into a tile check to see if there're any terrain effects for moving into that tile.
-        private void ResolveTerrainEffects(Character character, HexCoordinate position)
+        private void ResolveTerrainEffects(Character character, List<HexCoordinate> path)
         {
-            var tile = Map[position];
+            //don't count terrain effects from a tile you're standing. We don't punish players for leaving lava.
+            if (path.First() == character.Position)
+            {
+                path.Remove(character.Position);
+            }
 
+            foreach (var position in path)
+            {
+                ResolveTerrainEffect(character, Map[position]);
+            }
+        }
+
+        private void ResolveTerrainEffect(Character character, Tile tile)
+        {
             switch (tile.TerrainType)
             {
                 case TerrainType.Ground:
@@ -1654,7 +1668,7 @@ namespace HexWork.Gameplay
                     //look at all the possible destinations and get the one which is the furthest average distance away from heroes
                     foreach (var tile in tilesInRange)
                     {
-                        var distanceToHeroes = Heroes.Select(data => Map.DistanceBetweenPoints(tile, data.Position));
+                        var distanceToHeroes = Heroes.Select(data => _map.DistanceBetweenPoints(tile, data.Position));
 
                         var distance = (float)distanceToHeroes.Sum() / (float)Heroes.Count();
                         if (distance > greatestDistance)
@@ -1679,7 +1693,7 @@ namespace HexWork.Gameplay
 
                 MessageEvent?.Invoke(this, new MessageEventArgs("Zombie Summon"));
 
-                foreach (var tile in Map.GetNeighborCoordinates(character.Position))
+                foreach (var tile in _map.GetNeighborCoordinates(character.Position))
                 {
                     //one unit per tile and only deploy to walkable spaces.
                     if (IsHexPassable(tile))

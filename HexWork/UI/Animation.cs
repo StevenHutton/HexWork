@@ -56,6 +56,7 @@ namespace HexWork.UI
 
                 sprite.Animation = null;
                 IsComplete = true;
+                sprite.Position = end;
             }
         }
     }

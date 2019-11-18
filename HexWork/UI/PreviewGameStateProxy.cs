@@ -36,6 +36,7 @@ namespace HexWork.UI
 	    //half-height of a hex-texture in pixels - todo should be set dynamically.
 	    private readonly float _hexHalfSize = 128;
 	    private readonly Vector2 _hexCenter;
+        private readonly Vector2 _iconOrigin;
 
         private HexWork _hexGame;
 
@@ -76,8 +77,9 @@ namespace HexWork.UI
             _arrowTexture = game.Content.Load<Texture2D>("Arrow");
 
 	        _fireIconTexture = game.Content.Load<Texture2D>("FireIcon");
+            _iconOrigin = new Vector2(_fireIconTexture.Width/2, _fireIconTexture.Height/2);
 
-			var data = new[] { Color.White, Color.White, Color.White, Color.White };
+            var data = new[] { Color.White, Color.White, Color.White, Color.White };
 			_blankTexture = new Texture2D(game.GraphicsDevice, 2, 2);
 	        _blankTexture.SetData(data);
 
@@ -149,7 +151,8 @@ namespace HexWork.UI
 		/// <param name="targetPosition"></param>
         public void MoveCharacterTo(Character character, HexCoordinate targetPosition, List<HexCoordinate> path = null)
         {
-            ResolveTerrainEffects();
+            path = path ?? _gameState.FindShortestPath(character.Position, targetPosition);
+            ResolveTerrainEffects(character, path);
         }
 
 
@@ -158,9 +161,44 @@ namespace HexWork.UI
 
         }
 
-        private void ResolveTerrainEffects()
+        private void ResolveTerrainEffects(Character character, List<HexCoordinate> path)
         {
+            if (path == null || path.Count == 0)
+                return;
 
+            foreach (var position in path)
+            {
+                ResolveTerrainEffect(character, position);
+            }
+        }
+
+        private void ResolveTerrainEffect(Character character, HexCoordinate position)
+        {
+            var tile = _gameState.GetTileAtCoordinate(position);
+            switch (tile.TerrainType)
+            {
+                case TerrainType.Ground:
+                    break;
+                case TerrainType.Water:
+                    break;
+                case TerrainType.Lava:
+                    ApplyStatus(character, new StatusEffect{StatusEffectType = StatusEffectType.Burning});
+                    break;
+                case TerrainType.Ice:
+                    break;
+                case TerrainType.ThinIce:
+                    break;
+                case TerrainType.Snow:
+                    break;
+                case TerrainType.Sand:
+                    break;
+                case TerrainType.Pit:
+                    break;
+                case TerrainType.Wall:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         /// <summary>
@@ -204,7 +242,7 @@ namespace HexWork.UI
             switch (effect.StatusEffectType)
             {
                 case StatusEffectType.Burning:
-                    statusTexture = _hexGame.Content.Load<Texture2D>("FireIcon");
+                    statusTexture = _fireIconTexture;
                     break;
                 case StatusEffectType.Frozen:
                     statusTexture = _hexGame.Content.Load<Texture2D>("FrozenIcon");
@@ -219,14 +257,13 @@ namespace HexWork.UI
                     throw new ArgumentOutOfRangeException();
             }
 
-            var status = new UiStatusEffect(statusTexture, effect.Id);
 	        var position = GetHexScreenPosition(character.Position);
-	        _spriteBatch.Draw(status.Texture, 
+	        _spriteBatch.Draw(statusTexture, 
 		        position,
 		        null,
 		        Color.White,
 		        0.0f,
-		        status.Origin, 
+		        _iconOrigin, 
 		        new Vector2(0.3f), 
 		        SpriteEffects.None, 
 		        0.0f);
