@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Interfaces;
@@ -14,8 +15,8 @@ namespace HexWork.UI
         private IGameStateObject _gameState;
 
 	    private SpriteBatch _spriteBatch;
-
-	    private Texture2D _invalidTexture;
+		
+		private Texture2D _invalidTexture;
 	    private Texture2D _blankTexture;
 	    private Texture2D _damageTexture;
         private Texture2D _healingTexture;
@@ -41,6 +42,8 @@ namespace HexWork.UI
         private HexWork _hexGame;
 
 		#region Properties
+
+		public List<TileEffect> TileEffects { get; set; }
 
 		public IGameStateObject GameState
 	    {
@@ -152,21 +155,47 @@ namespace HexWork.UI
         public void MoveCharacterTo(Character character, HexCoordinate targetPosition, List<HexCoordinate> path = null)
         {
             path = path ?? _gameState.FindShortestPath(character.Position, targetPosition);
+	        ResolveTileEffects(character, path);
             ResolveTerrainEffects(character, path);
         }
 
-
         public void TeleportCharacterTo(Character character, HexCoordinate position)
         {
+	        ResolveTileEffects(character, new List<HexCoordinate> { position});
+			ResolveTerrainEffects(character, new List<HexCoordinate>{position});
+		}
 
-        }
+	    private void ResolveTileEffects(Character character, List<HexCoordinate> path)
+	    {
+		    //don't count terrain effects from a tile you're standing. We don't punish players for e.g. leaving lava.
+		    if (path.First() == character.Position)
+		    {
+			    path.Remove(character.Position);
+		    }
 
-        private void ResolveTerrainEffects(Character character, List<HexCoordinate> path)
+		    foreach (var tile in path)
+		    {
+			    var tileEffect = _gameState.TileEffects.FirstOrDefault(data => data.Position == tile);
+
+			    if (tileEffect == null)
+				    continue;
+
+			    tileEffect.TriggerEffect(this, character);
+		    }
+		}
+
+	    private void ResolveTerrainEffects(Character character, List<HexCoordinate> path)
         {
             if (path == null || path.Count == 0)
                 return;
 
-            foreach (var position in path)
+	        //don't count terrain effects from a tile you're standing. We don't punish players for e.g. leaving lava.
+	        if (path.First() == character.Position)
+	        {
+		        path.Remove(character.Position);
+	        }
+
+			foreach (var position in path)
             {
                 ResolveTerrainEffect(character, position);
             }

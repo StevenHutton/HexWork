@@ -18,10 +18,11 @@ namespace HexWork.Gameplay
 
         public TileEffectType Type = TileEffectType.Fire;
 
-        public async void TriggerEffect(IGameStateObject gameState, IInputProvider input)
-        {
-
-        }
+	    public async void TriggerEffect(IGameStateObject gameState, Character character)
+	    {
+		    gameState.ApplyDamage(character, 5);
+		    gameState.ApplyStatus(character, new DotEffect());
+	    }
 
         public TileEffect(HexCoordinate pos)
         {

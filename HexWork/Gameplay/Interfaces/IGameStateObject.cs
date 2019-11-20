@@ -18,7 +18,9 @@ namespace HexWork.Gameplay.Interfaces
 
 	public interface IGameStateObject
     {
-        void NotifyAction(HexAction action, Character character);
+		List<TileEffect> TileEffects { get; set; }
+
+		void NotifyAction(HexAction action, Character character);
 
         void MoveCharacterTo(Character character, HexCoordinate targetPosition, List<HexCoordinate> path = null);
 

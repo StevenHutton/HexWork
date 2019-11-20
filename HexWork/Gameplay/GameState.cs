@@ -144,7 +144,7 @@ namespace HexWork.Gameplay
 
         private List<Character> _characters = new List<Character>();
 
-        public List<TileEffect> TileEffects = new List<TileEffect>();
+        public List<TileEffect> TileEffects { get; set; } = new List<TileEffect>();
 
         /// <summary>
         /// The character who currently has initiative
@@ -772,7 +772,8 @@ namespace HexWork.Gameplay
                     Destination = position
                 });
 
-            ResolveTerrainEffects(character, path);
+	        ResolveTileEffects(character, path);
+			ResolveTerrainEffects(character, path);
             character.MoveTo(position);
         }
 
@@ -786,9 +787,32 @@ namespace HexWork.Gameplay
                     Destination = position
                 });
 
-            ResolveTerrainEffects(character, new List<HexCoordinate>{ position });
+	        ResolveTileEffects(character, new List<HexCoordinate>{ position});
+
+			ResolveTerrainEffects(character, new List<HexCoordinate>{ position });
             character.MoveTo(position);
         }
+
+	    private void ResolveTileEffects(Character character, List<HexCoordinate> path)
+	    {
+		    //don't count terrain effects from a tile you're standing. We don't punish players for e.g. leaving lava.
+		    if (path.First() == character.Position)
+		    {
+			    path.Remove(character.Position);
+		    }
+
+			foreach (var tile in path)
+		    {
+			    var tileEffect = TileEffects.FirstOrDefault(data => data.Position == tile);
+
+				if(tileEffect == null)
+					continue;
+
+				tileEffect.TriggerEffect(this, character);
+			    TileEffects.Remove(tileEffect);
+				RemoveTileEffectEvent?.Invoke(this, new RemoveTileEffectEventArgs(){Id = tileEffect.Guid});
+		    }
+	    }
 
         //when a character moves into a tile check to see if there're any terrain effects for moving into that tile.
         private void ResolveTerrainEffects(Character character, List<HexCoordinate> path)
