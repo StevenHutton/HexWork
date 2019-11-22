@@ -151,7 +151,6 @@ namespace HexWork.UI
             _monsterTexture_ZombieKing = game.Content.Load<Texture2D>("ZombieKingSprite");
             _monsterPortraitTexture = game.Content.Load<Texture2D>("ZombiePortrait");
             _monsterPortraitTexture_ZombieKing = game.Content.Load<Texture2D>("ZombieKingPortrait");
-
             _hexagonTexture = game.Content.Load<Texture2D>("hexagon");
             _hexagonOutlineTexture = game.Content.Load<Texture2D>("hexagonOutline");
 
@@ -956,7 +955,7 @@ namespace HexWork.UI
             }
             else
             {
-                action.Effect = new TextEffect(args.Message, _effectFont, TextAlignment.Center)
+                action.Effect = new TextEffect(args?.Message, _effectFont, TextAlignment.Center)
                 {
                     Position = _screenCenter,
                     Scale = new Vector2(1.0f)
@@ -1090,7 +1089,7 @@ namespace HexWork.UI
             var character = _uiCharacterDictionary[e.TargetCharacterId];
 	        var statusEffect = e.StatusEffect;
 
-            var action = new UiAction()
+            var action = new UiAction
             {
                 Sprite = character
             };

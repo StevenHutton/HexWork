@@ -38,8 +38,7 @@ namespace HexWork
 		private readonly float _sqrt3 = (float) Math.Sqrt(3.0);
 
 		#endregion
-
-
+		
 		#region Methods
 
 		#region Initialisation Methods
@@ -86,9 +85,7 @@ namespace HexWork
 		}
         
         #endregion
-
 		
-
 		#endregion
 
 		#region Main Loop
