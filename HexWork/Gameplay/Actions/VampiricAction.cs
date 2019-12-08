@@ -50,7 +50,7 @@ namespace HexWork.Gameplay.Actions
                 if (AllySafe && targetCharacter.IsHero == character.IsHero)
                     continue;
 
-                amountToHeal += gameState.ApplyDamage(targetCharacter, Power);
+                amountToHeal += gameState.ApplyDamage(targetCharacter, Power * character.Power);
 
                 if (Combo != null)
                     await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState);

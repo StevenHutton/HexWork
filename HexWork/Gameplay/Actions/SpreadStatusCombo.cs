@@ -18,7 +18,7 @@ namespace HexWork.Gameplay.Actions
                 new HexCoordinate(0, -1),
                 new HexCoordinate(-1, 1),
                 new HexCoordinate(1, -1));
-            Power = 10;
+            Power = 2;
         }
 
         public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
@@ -58,10 +58,10 @@ namespace HexWork.Gameplay.Actions
                     continue;
 
                 gameState.ApplyStatus(newTargetCharacter, targetCharacter.StatusEffects.FirstOrDefault());
-                gameState.ApplyDamage(newTargetCharacter, Power);
+                gameState.ApplyDamage(newTargetCharacter, Power * character.Power);
             }
 
-            gameState.ApplyDamage(targetCharacter, Power);
+            gameState.ApplyDamage(targetCharacter, Power * character.Power);
         }
     }
 }

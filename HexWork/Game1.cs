@@ -59,7 +59,10 @@ namespace HexWork
 			Components.Add(_inputManager);
 
 			Content.RootDirectory = "Content";
-		}
+            
+            GameStateManager.SetGameState(new GameState());
+            GameStateManager.CurrentGameState.StartGame();
+        }
 
 		/// <summary>
 		/// Allows the game to perform any initialization it needs to before starting to run.
@@ -72,8 +75,8 @@ namespace HexWork
 			this.IsMouseVisible = true;
 			base.Initialize();
 
-			_screenManager.AddScreen(new BattleScreen(_screenManager));
-		}
+			_screenManager.AddScreen(new RewardsScreen(_screenManager));
+        }
 
 		/// <summary>
 		/// LoadContent will be called once per game and is the place to load

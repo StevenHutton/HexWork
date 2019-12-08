@@ -19,7 +19,7 @@ namespace HexWork.Gameplay.Actions
 	            new HexCoordinate(0, -1),
 	            new HexCoordinate(-1, 1),
 	            new HexCoordinate(1, -1));
-			Power = 25;
+			Power = 4;
         }
 
         public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
@@ -58,7 +58,7 @@ namespace HexWork.Gameplay.Actions
 	            if (AllySafe && targetCharacter.IsHero == character.IsHero)
 		            continue;
 
-				gameState.ApplyDamage(newTargetCharacter, Power);
+				gameState.ApplyDamage(newTargetCharacter, Power * character.Power);
             }
         }
     }

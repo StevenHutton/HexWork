@@ -14,65 +14,58 @@ namespace HexWork.Gameplay
     public class Character
     {
         #region Attributes
-        
-        public bool HasActed = false;
 
-        public bool IsActive = false;
-        
-        private List<HexAction> _actions = new List<HexAction>();
-        
-        private int _turnCooldown = 100;
-        
-        private readonly int _potential = 0;
-		
-	    public MonsterType MonsterType;
+        #region Stats
 
-        public Guid Id = Guid.NewGuid();
+        //Feeds into damage
+        public int Power = 5;
 
-	    public string Name;
-       
-        public HexCoordinate Position { get; set; } = new HexCoordinate(0, 0, 0);
+        //indicates how much potential your team can have if this character is your commander.
+        public int Command = 0;
 
         public int Health;
-
         public int MaxHealth;
 
+        #endregion
+
+        public List<HexAction> Actions = new List<HexAction>();
+        public List<StatusEffect> StatusEffects = new List<StatusEffect>(); 
+
+        public Guid Id = Guid.NewGuid();
+        public MonsterType MonsterType;
+	    public string Name;
+        public HexCoordinate Position;
+        
+        public int Movement;
+        public MovementType MovementType = MovementType.NormalMove;
+
+        public bool IsHero = false;
+        public bool IsAlive = false;
+        public bool CanAttack = false;
+        public bool CanMove = false;
+        public int RangeModifier = 0;
+        public bool HasActed = false;
+        public bool IsActive = false;
+
+        public int TurnCooldown;
 	    public int TurnTimer;
 
-        public int TurnCooldown => _turnCooldown;
+        private static Random _rand;
 
-        public int Movement;
-        
-        public bool IsHero = false;
+        #endregion
 
-        public bool IsAlive = false;
-        
-        public bool CanAttack = false;
-
-        public bool CanMove = false;
-        
-        public int RangeModifier = 0;
-
-        public static Random rand;
-
-        public List<HexAction> Actions => _actions;
-
-        public List<StatusEffect> StatusEffects = new List<StatusEffect>();
-
-        public int Potential => _potential;
-
-	    public MovementType MovementType = MovementType.NormalMove;
+        #region Properties
 
         public bool HasStatus => StatusEffects.Count > 0;
-		
-		#endregion
+        
+        #endregion
 
         #region Methods
 
         public Character(string name, int maxHealth, int turnLength, int speed, int potential)
         {
-            if(rand == null)
-                rand = new Random(DateTime.Now.Millisecond);
+            if(_rand == null)
+                _rand = new Random(DateTime.Now.Millisecond);
             
             //just create the character WAY off the map.
             Position = new HexCoordinate(100,100);
@@ -80,11 +73,11 @@ namespace HexWork.Gameplay
             Name = name;
             MaxHealth = maxHealth;
             Health = maxHealth;
-            _turnCooldown = turnLength;
+            TurnCooldown = turnLength;
             Movement = speed;
-            _potential = potential;
+            Command = potential;
 
-            TurnTimer = rand.Next(0, _turnCooldown);
+            TurnTimer = _rand.Next(0, TurnCooldown);
         }
         
         public void StartTurn()
@@ -117,7 +110,8 @@ namespace HexWork.Gameplay
 
         public void AddAction(HexAction action)
         {
-            _actions.Add(action);
+            if(!Actions.Contains(action))
+                Actions.Add(action);
         }
         
         public void ApplyStatusEffect(StatusEffect effect)

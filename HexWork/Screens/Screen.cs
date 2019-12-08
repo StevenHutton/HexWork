@@ -188,7 +188,7 @@ namespace HexWork.Screens
             }
         }
 
-       #endregion
+        #endregion
 
         #region Private Methods
 

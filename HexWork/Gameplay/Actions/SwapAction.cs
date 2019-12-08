@@ -49,7 +49,7 @@ namespace HexWork.Gameplay.Actions
             gameState.TeleportCharacterTo(character, targetPosition);
             gameState.TeleportCharacterTo(target, characterPosition);
 
-            gameState.ApplyDamage(target, Power);
+            gameState.ApplyDamage(target, Power * character.Power);
             gameState.ApplyStatus(target, StatusEffect);
             if (Combo != null)
                 await Combo.TriggerAsync(character, new DummyInputProvider(targetPosition), gameState);

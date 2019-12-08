@@ -151,7 +151,7 @@ namespace HexWork
                 else if (screenCovered && (screensToUpdate[i].State == ScreenState.Inactive ))
                 {
                     //if this screen is inactive and is fully covered by another screen then we don't need it                    
-                    
+                    screens.Remove(screens[i]);
                 }                
                 
                 //Update the screen
@@ -176,8 +176,12 @@ namespace HexWork
 
         public void AddScreen(IScreen screen)
         {
-            screen.State = ScreenState.Activating;
-
+            screen.State = ScreenState.Activating; 
+            
+            foreach (var s in screens)
+            {
+                s.State = ScreenState.Deactivating;
+            }
             if (isInitialised)
                 screen.LoadContent(Game);
 

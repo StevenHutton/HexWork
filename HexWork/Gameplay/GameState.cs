@@ -278,7 +278,7 @@ namespace HexWork.Gameplay
                 targetDelegate: TargetingHelper.GetValidTargetTilesNoLos)
             {
                 Range = 1,
-                Power = 10
+                Power = 2
             };
 
             _zombieBite = new HexAction(name: "Zombie Bite",
@@ -286,7 +286,7 @@ namespace HexWork.Gameplay
                 targetDelegate: TargetingHelper.GetValidTargetTilesNoLos)
             {
                 Range = 1,
-                Power = 10
+                Power = 2
             };
 
             _potentialGainAction = new PotentialGainAction("Wind", null, null, null, null);
@@ -330,7 +330,7 @@ namespace HexWork.Gameplay
                 SpawnHero(position);
             }
 
-            MaxPotential = Commander.Potential;
+            MaxPotential = Commander.Command;
             Potential = 0;
 
             NextTurn();
@@ -415,7 +415,7 @@ namespace HexWork.Gameplay
 			var lightningBolt = new HexAction("Lightning Bolt (1)", TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo())
             {
                 Range = 3,
-                Power = 15,
+                Power = 3,
                 PotentialCost = 1
             };
 
@@ -452,7 +452,7 @@ namespace HexWork.Gameplay
                 targetDelegate: TargetingHelper.GetValidAxisTargetTilesLos,
                 combo: null)
             {
-                Power = 5,
+                Power = 1,
                 Range = 5,
                 PushForce = 1
             };
@@ -460,10 +460,10 @@ namespace HexWork.Gameplay
             var detonatingSnipeActionEx = new HexAction("Perfect Snipe! (1)",
                 TargetingHelper.GetValidAxisTargetTilesLos,
                 null,
-                new ComboAction() { Power = 35 })
+                new ComboAction{ Power = 7 })
             {
                 PotentialCost = 1,
-                Power = 5,
+                Power = 1,
                 Range = 5
             };
 
@@ -517,7 +517,7 @@ namespace HexWork.Gameplay
 
             var swapAction = new SwapAction("Swap Positions (1)", TargetingHelper.GetValidTargetTilesLos)
             {
-                Power = 10,
+                Power = 3,
                 AllySafe = false,
                 PotentialCost = 1,
                 Range = 2
@@ -545,7 +545,7 @@ namespace HexWork.Gameplay
             var pushingFist = new PushAction("Pushing Fist", TargetingHelper.GetValidTargetTilesLos)
             {
                 Range = 1,
-                Power = 10,
+                Power = 3,
                 PushForce = 2
             };
 
@@ -559,7 +559,7 @@ namespace HexWork.Gameplay
                 })
             {
                 Range = 1,
-                Power = 15,
+                Power = 4,
                 PushForce = 3,
                 PotentialCost = 1
             };
@@ -571,16 +571,16 @@ namespace HexWork.Gameplay
 
             var exDetonatingSlash =
             new HexAction("Massive Detonation! (1)", TargetingHelper.GetValidTargetTilesLos, null,
-              new ExploderCombo
-              {
-                  Power = 25,
-                  Pattern = _whirlWindTargetPattern,
-                  AllySafe = false
-              })
+                new ExploderCombo
+                {
+                    Power = 5,
+                    Pattern = _whirlWindTargetPattern,
+                    AllySafe = false
+                })
             {
                 Range = 1,
                 PotentialCost = 1,
-                Power = 25
+                Power = 5
             };
 
             //create Iron Soul hero
@@ -601,7 +601,7 @@ namespace HexWork.Gameplay
 
         private void CreateBarbarian()
         {
-            var statusCombo = new SpreadStatusCombo() { AllySafe = true };
+            var statusCombo = new SpreadStatusCombo { AllySafe = true };
             var detonatingSlash =
               new HexAction("Detonating Strike! (1)", TargetingHelper.GetValidTargetTilesLos, null, statusCombo)
                   {
@@ -618,7 +618,7 @@ namespace HexWork.Gameplay
             var whirlwindAttack = new HexAction("Spin Attack", TargetingHelper.GetValidTargetTilesLos, null, new ComboAction(),
                 _whirlWindTargetPattern)
             {
-                Power = 15,
+                Power = 3,
                 PotentialCost = 1,
                 Range = 0
             };
@@ -1614,7 +1614,7 @@ namespace HexWork.Gameplay
                 {
                     //if we can hit the hero, hit them now and end turn.
                     NotifyAction(action, character);
-                    ApplyDamage(closestHero, action.Power);
+                    ApplyDamage(closestHero, action.Power * character.Power);
                     ApplyStatus(closestHero, action.StatusEffect);
                     if (action.Combo != null)
                     {
@@ -1641,7 +1641,7 @@ namespace HexWork.Gameplay
                 && action.IsDetonator == closestHero.HasStatus && action.IsAvailable(character)))
             {
                 NotifyAction(action, character);
-                ApplyDamage(closestHero, action.Power);
+                ApplyDamage(closestHero, action.Power * character.Power);
                 ApplyStatus(closestHero, action.StatusEffect);
                 if (action.Combo != null)
                 {

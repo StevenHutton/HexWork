@@ -25,9 +25,7 @@ namespace HexWork.Screens
             : base(_screenManager)
         {
             var game = (HexWork)_screenManager.Game;
-            _gameState = new GameState();
-            GameStateManager.SetGameState(_gameState);
-
+            _gameState = GameStateManager.CurrentGameState;
             _ui = new UserInterface(game);
         }
 

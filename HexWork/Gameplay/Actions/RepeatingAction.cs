@@ -65,7 +65,7 @@ namespace HexWork.Gameplay.Actions
                     if (AllySafe && targetCharacter.IsHero == character.IsHero)
                         continue;
 
-                    gameState.ApplyDamage(targetCharacter, Power);
+                    gameState.ApplyDamage(targetCharacter, Power * character.Power);
                     gameState.ApplyStatus(targetCharacter, StatusEffect);
 
                     if (Combo != null)

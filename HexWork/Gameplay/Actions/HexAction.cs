@@ -17,6 +17,10 @@ namespace HexWork.Gameplay.Actions
 
         protected bool CanRotateTargetting = true;
 
+        public TargetPattern Pattern;
+        public int PotentialCost = 0;
+        public ComboAction Combo = null;
+
         #endregion
 
         #region Properties
@@ -29,17 +33,11 @@ namespace HexWork.Gameplay.Actions
 
         public bool IsDetonator => Combo != null;
 
-        public ComboAction Combo { get; }
-
-        public TargetPattern Pattern { get; set; }
-
-        public int PotentialCost { get; set; } = 0;
-
         public bool IsExtender => PotentialCost > 0;
 
-        public int Power { get; set; } = 15;
+        public int Power = 2;
 
-        public bool AllySafe { get; set; } = false;
+        public bool AllySafe = false;
         
         #endregion
 
@@ -114,7 +112,7 @@ namespace HexWork.Gameplay.Actions
                 if (Combo != null)
                     await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState);
 
-		        gameState.ApplyDamage(targetCharacter, Power);
+		        gameState.ApplyDamage(targetCharacter, Power * character.Power);
 		        gameState.ApplyStatus(targetCharacter, StatusEffect);
                 gameState.CheckDied(targetCharacter);
             }

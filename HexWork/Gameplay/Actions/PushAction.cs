@@ -46,7 +46,7 @@ namespace HexWork.Gameplay.Actions
 		    var nearestNeighbor = gameState.GetNearestNeighbor(character.Position, targetCharacter.Position);
 		    var direction = targetCharacter.Position - nearestNeighbor;
 
-			gameState.ApplyDamage(targetCharacter, Power);
+			gameState.ApplyDamage(targetCharacter, Power * character.Power);
 		    gameState.ApplyPush(targetCharacter, direction, PushForce);
 
             if(Combo != null)
