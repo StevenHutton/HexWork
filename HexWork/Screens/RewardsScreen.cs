@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using HexWork.Gameplay;
 using HexWork.Interfaces;
 using Microsoft.Xna.Framework;
@@ -136,16 +133,18 @@ namespace HexWork.Screens
             _previousMouseState = _mouseState;
             _mouseState = Mouse.GetState();
 
-            if (_mouseState.LeftButton == ButtonState.Released && _previousMouseState.LeftButton == ButtonState.Pressed)
-            {
-                foreach (var button in _characterPortraits)
-                {
-                    if (button.Rect.Contains(_mouseState.Position))
-                    {
-                        
-                    }
-                }
-            }
+	        if (_mouseState.LeftButton != ButtonState.Released ||
+	            _previousMouseState.LeftButton != ButtonState.Pressed) return;
+
+	        foreach (var button in _characterPortraits)
+	        {
+		        if (button.Rect.Contains(_mouseState.Position))
+		        {
+					this.screenManager.AddScreen(new LevelUpScreen(this.screenManager, button.CharacterId));
+			        button.HasReward = false;
+					button.Color = new Color(new Vector3(0.20f, 0.20f, 0.20f));
+		        }
+	        }
         }
     }
 }

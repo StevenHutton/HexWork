@@ -13,6 +13,7 @@
 *********************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using HexWork.Interfaces;
@@ -157,6 +158,11 @@ namespace HexWork
                 //Update the screen
                 screensToUpdate[i].Update(_gameTime);
             }
+
+	        if (!activeScreenFound)
+	        {
+		        screensToUpdate.Last().State = ScreenState.Activating;
+	        }
         }
 		#endregion
 

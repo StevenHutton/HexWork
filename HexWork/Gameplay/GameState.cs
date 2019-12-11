@@ -236,7 +236,7 @@ namespace HexWork.Gameplay
             get => _characters.Where(character => !character.IsHero && character.IsAlive);
         }
 
-        /// <summary>
+		/// <summary>
         ///The character who currently has initiative
         /// </summary>
         public Character ActiveCharacter
@@ -1574,6 +1574,11 @@ namespace HexWork.Gameplay
             return nearest;
         }
 
+	    private Character FindCharacterById(Guid characterId)
+	    {
+		    return _characters.FirstOrDefault(cha => cha.Id == characterId);
+	    }
+
         #region Private Update Methods
 
         private void ZombieTurn(Character character)
@@ -1771,5 +1776,29 @@ namespace HexWork.Gameplay
         #endregion
 
         #endregion
-    }
+
+	    public void CharacterGainPower(Guid characterId)
+	    {
+		    var character = FindCharacterById(characterId);
+
+		    if (character == null)
+			    return;
+
+		    character.Power += 1;
+	    }
+
+	    public void CharacterGainHealth(Guid characterId)
+	    {
+		    var character = FindCharacterById(characterId);
+
+		    if (character == null)
+			    return;
+
+		    character.MaxHealth += 10;
+		    character.Health += 10;
+
+		    if (character.Health >= character.MaxHealth)
+			    character.Health = character.MaxHealth;
+	    }
+	}
 }

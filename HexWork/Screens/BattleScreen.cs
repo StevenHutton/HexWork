@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using HexWork.Gameplay;
 using HexWork.Interfaces;
 using HexWork.UI;
-using Microsoft.Xna.Framework.Graphics;
 using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Screens
@@ -46,8 +42,7 @@ namespace HexWork.Screens
             _gameState.Update(gameTime);
             _ui.Update(gameTime);
         }
-
-
+		
         public override void Draw(GameTime gameTime)
         {
             _ui.Draw();

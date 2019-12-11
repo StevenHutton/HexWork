@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using HexWork.Gameplay;
-using HexWork.Gameplay.Actions;
-using HexWork.Gameplay.Interfaces;
 using HexWork.Interfaces;
 using HexWork.Screens;
 using MonoGameTestProject.Gameplay;
