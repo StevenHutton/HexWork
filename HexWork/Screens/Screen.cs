@@ -29,7 +29,7 @@ namespace HexWork.Screens
         protected Vector2 screenSize;
         protected Rectangle safeArea;
 
-        protected TimeSpan _activeTransitionTime = new TimeSpan(0, 0, 2);
+        protected TimeSpan _activeTransitionTime = new TimeSpan(0, 0, 0, 0, 500);
         protected TimeSpan _deactiveTransitionTime = new TimeSpan(0, 0, 0, 0, 500);
         protected TimeSpan transitioningTime = TimeSpan.Zero;
 

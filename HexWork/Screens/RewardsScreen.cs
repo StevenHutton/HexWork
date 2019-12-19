@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HexWork.Gameplay;
 using HexWork.Interfaces;
+using HexWork.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -130,21 +131,27 @@ namespace HexWork.Screens
 
         public override void HandleInput()
         {
+            if (!_characterPortraits.Any(p => p.HasReward))
+            {
+                screenManager.AddScreen(new BattleScreen(this.screenManager));
+                Exit();
+            }
+
             _previousMouseState = _mouseState;
             _mouseState = Mouse.GetState();
 
-	        if (_mouseState.LeftButton != ButtonState.Released ||
-	            _previousMouseState.LeftButton != ButtonState.Pressed) return;
+            if (_mouseState.LeftButton != ButtonState.Released ||
+                _previousMouseState.LeftButton != ButtonState.Pressed) return;
 
-	        foreach (var button in _characterPortraits)
-	        {
-		        if (button.Rect.Contains(_mouseState.Position))
-		        {
-					this.screenManager.AddScreen(new LevelUpScreen(this.screenManager, button.CharacterId));
-			        button.HasReward = false;
-					button.Color = new Color(new Vector3(0.20f, 0.20f, 0.20f));
-		        }
-	        }
+            foreach (var button in _characterPortraits.Where(b => b.HasReward))
+            {
+                if (!button.Rect.Contains(_mouseState.Position)) continue;
+
+                this.screenManager.AddScreen(new LevelUpScreen(this.screenManager, button.CharacterId));
+                button.HasReward = false;
+                button.Color = new Color(new Vector3(0.20f, 0.20f, 0.20f));
+            }
         }
+
     }
 }

@@ -13,9 +13,10 @@ namespace HexWork.Screens
 		public LevelUpScreen(IScreenManager _screenManager, Guid characterId, PlayerIndex? _controllingPlayer = null) : base(_screenManager, _controllingPlayer)
 		{ 
 			_hexGame = (HexWork)_screenManager.Game;
-
-			MenuEntry gainPower = new MenuEntry("Gain Power");
-			MenuEntry gainHealth = new MenuEntry("Gain Health");
+            fullscreen = false;
+            
+			var gainPower = new MenuEntry("Gain Power");
+			var gainHealth = new MenuEntry("Gain Health");
 
 			gainPower.selected += (sender, args) =>
 				{

@@ -218,7 +218,7 @@ namespace HexWork.Gameplay
 
         #region Properties
 
-        public IEnumerable<Character> Heroes => Characters.Where(character => character.IsHero && character.IsAlive);
+        public IEnumerable<Character> Heroes => LivingCharacters.Where(character => character.IsHero && character.IsAlive);
 
         public Dictionary<HexCoordinate, Tile> Map
         {
@@ -229,6 +229,11 @@ namespace HexWork.Gameplay
         {
             get => _characters;
             set => _characters = value;
+        }
+
+        public IEnumerable<Character> LivingCharacters
+        {
+            get => _characters.Where(c => c.IsAlive);
         }
 
         public IEnumerable<Character> Enemies
@@ -313,7 +318,7 @@ namespace HexWork.Gameplay
 
             var spawnPoint = new HexCoordinate(-2, -2, 4);
 
-            while (Characters.Any(hero => hero.IsHero && !hero.IsAlive))
+            while (LivingCharacters.Any(hero => hero.IsHero && !hero.IsAlive))
             {
                 var position = spawnPoint;
 
@@ -882,6 +887,8 @@ namespace HexWork.Gameplay
             TakeDamageEvent?.Invoke(this,
                 new DamageTakenEventArgs { DamageTaken = damage, TargetCharacterId = characterToDamage.Id });
 
+            CheckDied(characterToDamage);
+
             return damage;
         }
 
@@ -904,7 +911,6 @@ namespace HexWork.Gameplay
             if (character.Health <= 0 && character.IsAlive)
             {
                 character.IsAlive = false;
-                Characters.Remove(character);
                 CharacterDiedEvent?.Invoke(this, new InteractionRequestEventArgs() { TargetCharacterId = character.Id });
             }
         }
@@ -1045,7 +1051,7 @@ namespace HexWork.Gameplay
 
         public Character GetCharacterAtCoordinate(HexCoordinate coordinate)
         {
-            return Characters.FirstOrDefault(character => character.Position == coordinate);
+            return LivingCharacters.FirstOrDefault(character => character.Position == coordinate);
         }
 
         /// <summary>
@@ -1711,7 +1717,7 @@ namespace HexWork.Gameplay
                 }
             }
 
-            var zombies = Characters.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
+            var zombies = LivingCharacters.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
 
             var rand = new Random(DateTime.Now.Millisecond);
 
@@ -1762,7 +1768,7 @@ namespace HexWork.Gameplay
             if (Characters.Any(character => character.Position == position))
                 return;
 
-            var hero = Characters.FirstOrDefault(chracter => chracter.IsHero && !chracter.IsAlive);
+            var hero = Heroes.FirstOrDefault();
             if (hero == null) return;
 
             if (!IsHexPassable(position))

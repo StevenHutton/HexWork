@@ -827,7 +827,7 @@ namespace HexWork.UI
             foreach (var action in actions)
             {
                 AddButton(action.Name,
-                    async (IInputProvider input) =>
+                    async (input) =>
                     {
                         await action.TriggerAsync(_selectedCharacter, input, GameStateManager.CurrentGameState);
                     },

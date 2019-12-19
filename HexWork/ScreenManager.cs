@@ -131,6 +131,8 @@ namespace HexWork
             //loop through all screens
             for (int i = screensToUpdate.Count - 1; i >= 0; i--)
             {
+                screensToUpdate[i].Update(_gameTime);
+
                 //check if this screen is active or becoming active
                 if (screensToUpdate[i].State == ScreenState.Active ||
                     screensToUpdate[i].State == ScreenState.Activating)
@@ -141,6 +143,7 @@ namespace HexWork
                         //the make a note of that and let it handle input
                         activeScreenFound = true;
 
+                        //Update the screen
                         screens[i].HandleInput();
                     }
 
@@ -153,10 +156,7 @@ namespace HexWork
                 {
                     //if this screen is inactive and is fully covered by another screen then we don't need it                    
                     screens.Remove(screens[i]);
-                }                
-                
-                //Update the screen
-                screensToUpdate[i].Update(_gameTime);
+                }
             }
 
 	        if (!activeScreenFound)
@@ -183,11 +183,7 @@ namespace HexWork
         public void AddScreen(IScreen screen)
         {
             screen.State = ScreenState.Activating; 
-            
-            foreach (var s in screens)
-            {
-                s.State = ScreenState.Deactivating;
-            }
+
             if (isInitialised)
                 screen.LoadContent(Game);
 

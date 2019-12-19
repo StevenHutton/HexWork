@@ -99,22 +99,24 @@ namespace HexWork.Gameplay.Actions
 	        {
 		        var targetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
 
-                if(TileEffect != TileEffectType.None && gameState.IsHexPassable(targetTile))
+                if (TileEffect != TileEffectType.None && gameState.IsHexPassable(targetTile))
                     gameState.CreateTileEffect(targetTile);
 
-		        //if no one is there, next tile
-		        if (targetCharacter == null)
+                //if no one is there, next tile
+                if (targetCharacter == null)
 			        continue;
 
                 if (AllySafe && targetCharacter.IsHero == character.IsHero)
                     continue;
+                
+		        gameState.ApplyDamage(targetCharacter, Power * character.Power);
+		        gameState.ApplyStatus(targetCharacter, StatusEffect);
 
                 if (Combo != null)
                     await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState);
 
-		        gameState.ApplyDamage(targetCharacter, Power * character.Power);
-		        gameState.ApplyStatus(targetCharacter, StatusEffect);
-                gameState.CheckDied(targetCharacter);
+                if (TileEffect != TileEffectType.None && gameState.IsHexPassable(targetTile))
+                    gameState.CreateTileEffect(targetTile);
             }
         }
 
