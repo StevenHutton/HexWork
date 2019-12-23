@@ -107,6 +107,11 @@ namespace HexWork.Gameplay
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return $"{X},{Y},{Z}";
+        }
     }
     
     public class HexGrid

@@ -40,7 +40,7 @@ namespace HexWork.Gameplay
         public MovementType MovementType = MovementType.NormalMove;
 
         public bool IsHero = false;
-        public bool IsAlive = false;
+        public bool IsAlive = true;
         public bool CanAttack = false;
         public bool CanMove = false;
         public int RangeModifier = 0;

@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using HexWork.Gameplay;
 using HexWork.Interfaces;
 using HexWork.Screens;
+using HexWork.UI;
 using MonoGameTestProject.Gameplay;
 
 namespace HexWork
@@ -46,8 +47,8 @@ namespace HexWork
 				PreferredBackBufferHeight = ScreenHeight
 			};
             _screenCenterVector = new Vector2((float) ScreenWidth / 2, (float) ScreenHeight / 2);
-            
-			_screenManager = new ScreenManager(this);
+
+            _screenManager = new ScreenManager(this);
 			_inputManager = new InputManager(this);
 
 			Components.Add(_screenManager);
@@ -70,7 +71,7 @@ namespace HexWork
 			this.IsMouseVisible = true;
 			base.Initialize();
 
-			_screenManager.AddScreen(new RewardsScreen(_screenManager));
+            _screenManager.AddScreen(new BattleScreen(_screenManager));
         }
 
 		/// <summary>

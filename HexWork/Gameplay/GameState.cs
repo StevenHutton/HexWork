@@ -9,13 +9,6 @@ using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Gameplay
 {
-    public enum GamePhase
-    {
-        Playing,
-        EnemyTurn,
-        GameOver
-    }
-
 	#region Event Args
 
 	public class MessageEventArgs : EventArgs
@@ -147,9 +140,9 @@ namespace HexWork.Gameplay
         public List<TileEffect> TileEffects { get; set; } = new List<TileEffect>();
 
         /// <summary>
-        /// The character who currently has initiative
+        ///The character who currently has initiative
         /// </summary>
-        private Character _activeCharacter = null;
+        public Character ActiveCharacter;
 
         #region Gameplay Actions
 
@@ -218,7 +211,7 @@ namespace HexWork.Gameplay
 
         #region Properties
 
-        public IEnumerable<Character> Heroes => LivingCharacters.Where(character => character.IsHero && character.IsAlive);
+        public IEnumerable<Character> Heroes => LivingCharacters.Where(character => character.IsHero);
 
         public Dictionary<HexCoordinate, Tile> Map
         {
@@ -241,21 +234,13 @@ namespace HexWork.Gameplay
             get => _characters.Where(character => !character.IsHero && character.IsAlive);
         }
 
-		/// <summary>
-        ///The character who currently has initiative
-        /// </summary>
-        public Character ActiveCharacter
-        {
-            get => _activeCharacter;
-        }
+
 
         /// <summary>
         ///
         /// </summary>
         public Character Commander { get; set; }
-
-        public GamePhase Phase { get; set; }
-
+        
         public int TeamSize { get; set; } = 5;
 
         public int MaxPotential { get; set; } = 0;
@@ -287,7 +272,7 @@ namespace HexWork.Gameplay
             };
 
             _zombieBite = new HexAction(name: "Zombie Bite",
-                combo: new ComboAction() { Power = 15 },
+                combo: new ComboAction() { Power = 2 },
                 targetDelegate: TargetingHelper.GetValidTargetTilesNoLos)
             {
                 Range = 1,
@@ -318,7 +303,7 @@ namespace HexWork.Gameplay
 
             var spawnPoint = new HexCoordinate(-2, -2, 4);
 
-            while (LivingCharacters.Any(hero => hero.IsHero && !hero.IsAlive))
+            foreach (var character in Heroes)
             {
                 var position = spawnPoint;
 
@@ -332,7 +317,9 @@ namespace HexWork.Gameplay
                     validTile = IsHexPassable(position) &&
                                 _map.GetNeighborCoordinates(position).Any(IsHexPassable);
                 }
-                SpawnHero(position);
+
+                character.SpawnAt(position);
+                SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs() { CharacterId = character.Id, TargetPosition = position });
             }
 
             MaxPotential = Commander.Command;
@@ -378,13 +365,9 @@ namespace HexWork.Gameplay
         private void InitialiseHeroes()
         {
             CreateMajin();
-
             CreateGunner();
-
             CreateNinja();
-
             CreateIronSoul();
-
             CreateBarbarian();
         }
 
@@ -618,7 +601,10 @@ namespace HexWork.Gameplay
 				TargetingHelper.GetValidAxisTargetTilesLos,
 				new ImmobalisedEffect(),
 				null,
-				_xAxisLinePattern);
+				_xAxisLinePattern)
+            {
+                Range = 1
+            };
 
             var whirlwindAttack = new HexAction("Spin Attack", TargetingHelper.GetValidTargetTilesLos, null, new ComboAction(),
                 _whirlWindTargetPattern)
@@ -651,30 +637,25 @@ namespace HexWork.Gameplay
 
         public void Update(GameTime gameTime)
         {
-            if (Phase != GamePhase.EnemyTurn) return;
-
-            if (_activeCharacter.IsHero)
-            {
-                Phase = GamePhase.Playing;
-                return;
-            }
-
-            if (!_activeCharacter.IsAlive)
+            if (!ActiveCharacter.IsAlive)
             {
                 NextTurn();
                 return;
             }
 
+            if (ActiveCharacter.IsHero)
+                return;
+
             //if they can move take their actions and end turn
-            if (!_activeCharacter.HasActed)
+            if (!ActiveCharacter.HasActed)
             {
-                switch (_activeCharacter.MonsterType)
+                switch (ActiveCharacter.MonsterType)
                 {
                     case MonsterType.Zombie:
-                        ZombieTurn(_activeCharacter);
+                        ZombieTurn(ActiveCharacter);
                         break;
                     case MonsterType.ZombieKing:
-                        ZombieKingTurn(_activeCharacter);
+                        ZombieKingTurn(ActiveCharacter);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -687,39 +668,39 @@ namespace HexWork.Gameplay
         public void NextTurn()
         {
             //if we have an active character then update all the initiative values
-            if (_activeCharacter != null)
+            if (ActiveCharacter != null)
             {
-                _activeCharacter.EndTurn();
-                var deltaTime = _activeCharacter.TurnTimer;
+                ActiveCharacter.EndTurn();
+                var deltaTime = ActiveCharacter.TurnTimer;
                 foreach (var character in _characters)
                 {
                     character.TurnTimer -= deltaTime;
                 }
 
-                _activeCharacter.TurnTimer += _activeCharacter.TurnCooldown;
+                ActiveCharacter.TurnTimer += ActiveCharacter.TurnCooldown;
 
                 //also apply any status effects for the active character that trigger at the end of the turn.
-                foreach (var statusEffect in _activeCharacter.StatusEffects.ToList())
+                foreach (var statusEffect in ActiveCharacter.StatusEffects.ToList())
                 {
-                    statusEffect.EndTurn(_activeCharacter, this);
+                    statusEffect.EndTurn(ActiveCharacter, this);
 
                     //if the effect is expired remove it
-                    if (statusEffect.IsExpired && _activeCharacter.StatusEffects.Contains(statusEffect))
+                    if (statusEffect.IsExpired && ActiveCharacter.StatusEffects.Contains(statusEffect))
                     {
-                        _activeCharacter.StatusEffects.Remove(statusEffect);
+                        ActiveCharacter.StatusEffects.Remove(statusEffect);
 
-                        StatusRemovedEvent?.Invoke(this, new StatusEventArgs(_activeCharacter.Id, statusEffect));
+                        StatusRemovedEvent?.Invoke(this, new StatusEventArgs(ActiveCharacter.Id, statusEffect));
                     }
                 }
             }
 
-            _activeCharacter = GetCharacterAtInitiative(0);
-            _activeCharacter.StartTurn();
+            ActiveCharacter = GetCharacterAtInitiative(0);
+            ActiveCharacter.StartTurn();
 
             //apply any status effects for the new active character that trigger at the start of thier turn.
-            foreach (var statusEffect in _activeCharacter.StatusEffects)
+            foreach (var statusEffect in ActiveCharacter.StatusEffects)
             {
-                statusEffect.StartTurn(_activeCharacter, this);
+                statusEffect.StartTurn(ActiveCharacter, this);
             }
 
             //apply any status effects for characters that apply whenever initiative moves.
@@ -730,20 +711,10 @@ namespace HexWork.Gameplay
                     statusEffect.Tick(character, this);
                 }
             }
-
-            if (!_activeCharacter.IsHero)
-                Phase = GamePhase.EnemyTurn;
-            else
-            {
-                Phase = GamePhase.Playing;
-            }
-
-            if (!Heroes.Any() || !Enemies.Any())
-                Phase = GamePhase.GameOver;
-
+            
             EndTurnEvent?.Invoke(this, new EndTurnEventArgs(GetInitiativeList().ToList()));
 
-            if(_activeCharacter == Commander)
+            if(ActiveCharacter == Commander)
                 GainPotential();
 
             var zk = _characters.FirstOrDefault(c => !c.IsHero && c.MonsterType == MonsterType.ZombieKing);
@@ -756,11 +727,9 @@ namespace HexWork.Gameplay
 
             if (!Commander.IsAlive)
             {
-
                 SendMessage("Commander Defaated");
                 GameOverEvent?.Invoke(this, new MessageEventArgs("You Lose."));
             }
-
         }
 
         #region Gamestate Transforms
@@ -944,7 +913,7 @@ namespace HexWork.Gameplay
             ComboEvent?.Invoke(this, new ComboEventArgs(targetCharacter.Id, combo));
 
             //if the player scores a combo they gain potential. if their commander gets comboed they lose potential (uh-oh!)
-            if (_activeCharacter.IsHero)
+            if (ActiveCharacter.IsHero)
                 GainPotential();
 
             if (targetCharacter == Commander)
@@ -1066,7 +1035,7 @@ namespace HexWork.Gameplay
 
         public bool IsTileEmpty(HexCoordinate position)
         {
-			return !_characters.Any(character => character.Position == position && character.IsAlive);
+			return !LivingCharacters.Any(character => character.Position == position);
         }
 
         public Character GetCharacterAtInitiative(int initiative)
@@ -1127,7 +1096,7 @@ namespace HexWork.Gameplay
             {
                 for (var i = 0; i < range; i++)
                 {
-                    var hexToCheck = _activeCharacter.Position + (direction * (i + 1));
+                    var hexToCheck = ActiveCharacter.Position + (direction * (i + 1));
 
                     if (!Map.ContainsKey(hexToCheck))
                         break;
@@ -1153,7 +1122,7 @@ namespace HexWork.Gameplay
             {
                 for (var i = 0; i < range; i++)
                 {
-                    var hexToCheck = _activeCharacter.Position + (direction * (i + 1));
+                    var hexToCheck = ActiveCharacter.Position + (direction * (i + 1));
 
                     if (!Map.ContainsKey(hexToCheck))
                         break;
@@ -1179,7 +1148,7 @@ namespace HexWork.Gameplay
             {
                 for (var i = 0; i < range; i++)
                 {
-                    var hexToCheck = _activeCharacter.Position + (direction * (i + 1));
+                    var hexToCheck = ActiveCharacter.Position + (direction * (i + 1));
 
                     if (!Map.ContainsKey(hexToCheck))
                         break;
@@ -1201,7 +1170,7 @@ namespace HexWork.Gameplay
         {
             var targets = new List<HexCoordinate>() { objectCharacter.Position };
 
-            GetVisibleTilesRecursive(targets, objectCharacter.Position, _activeCharacter.Position, range);
+            GetVisibleTilesRecursive(targets, objectCharacter.Position, ActiveCharacter.Position, range);
 
             return targets;
         }
@@ -1213,7 +1182,7 @@ namespace HexWork.Gameplay
         {
             var targets = new List<HexCoordinate>() { objectCharacter.Position };
 
-            GetVisibleTilesRecursive(targets, objectCharacter.Position, _activeCharacter.Position, range, 0, true);
+            GetVisibleTilesRecursive(targets, objectCharacter.Position, ActiveCharacter.Position, range, 0, true);
 
             return targets;
         }
@@ -1350,7 +1319,7 @@ namespace HexWork.Gameplay
 		    //tile validation goes here.
 		    if (!IsHexWalkable(coordinate)) return false;
 
-		    var character = _characters.FirstOrDefault(c => c.Position == coordinate && c.IsAlive);
+		    var character = LivingCharacters.FirstOrDefault(c => c.Position == coordinate);
 		    if (character == null)
 			    return true;
 
@@ -1367,7 +1336,7 @@ namespace HexWork.Gameplay
 						return false;
 					break;
 			    case MovementType.MoveThroughUnits:
-				    break;
+                    return true;
 			    case MovementType.Etheral:
 				    break;
 			    case MovementType.Flying:
@@ -1666,7 +1635,6 @@ namespace HexWork.Gameplay
         private void ZombieKingTurn(Character character)
         {
             var position = character.Position;
-            List<HexCoordinate> shortestPath = null;
             int shortestPathLength = int.MaxValue;
             Character closestHero = null;
 
@@ -1685,7 +1653,6 @@ namespace HexWork.Gameplay
                 if (path.Count >= shortestPathLength) continue;
 
                 shortestPathLength = path.Count;
-                shortestPath = path;
                 closestHero = hero;
             }
 
@@ -1713,7 +1680,7 @@ namespace HexWork.Gameplay
                         }
                     }
                     if (destination != null)
-                        MoveCharacterTo(character, destination, shortestPath);
+                        MoveCharacterTo(character, destination, FindShortestPath(position, destination));
                 }
             }
 
@@ -1746,7 +1713,6 @@ namespace HexWork.Gameplay
             }
             else
             {
-
                 if (zombies.Count == 0) return;
 
                 var zombie = zombies[rand.Next(0, zombies.Count)];
@@ -1762,23 +1728,7 @@ namespace HexWork.Gameplay
                 zombie2.EndTurn();
             }
         }
-
-        private void SpawnHero(HexCoordinate position)
-        {
-            if (Characters.Any(character => character.Position == position))
-                return;
-
-            var hero = Heroes.FirstOrDefault();
-            if (hero == null) return;
-
-            if (!IsHexPassable(position))
-                return;
-
-            hero.SpawnAt(position);
-
-            SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs() { CharacterId = hero.Id, TargetPosition = position });
-        }
-
+        
         #endregion
 
         #endregion

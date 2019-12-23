@@ -10,7 +10,12 @@ using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Screens
 {
-    
+    enum RoomType
+    {
+        Battle,
+        Event,
+
+    }
 
     public class BattleSelectionScreen : Screen
     {
@@ -22,12 +27,7 @@ namespace HexWork.Screens
             _hexGame = (HexWork)_screenManager.Game;
             _gameState = GameStateManager.CurrentGameState;
         }
-
-        public BattleSelectionScreen(IScreenManager _screenManager, PlayerIndex? _controllingPlayer) : base(_screenManager, _controllingPlayer)
-        {
-            _hexGame = (HexWork)_screenManager.Game;
-        }
-
+        
         public override void Draw(GameTime gameTime)
         {
             

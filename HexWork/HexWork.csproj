@@ -75,11 +75,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScreenManager.cs" />
-    <Compile Include="Screens\BattleScreen.cs" />
     <Compile Include="Screens\BattleSelectionScreen.cs" />
     <Compile Include="Screens\LevelUpScreen.cs" />
     <Compile Include="Screens\MainMenuScreen.cs" />
-    <Compile Include="Screens\MapScreen.cs" />
     <Compile Include="Screens\MenuScreen.cs" />
     <Compile Include="Screens\RewardsScreen.cs" />
     <Compile Include="Screens\Screen.cs" />
@@ -98,7 +96,7 @@
     <Compile Include="UI\UiCharacter.cs" />
     <Compile Include="UI\UiStatusEffect.cs" />
     <Compile Include="UI\UiTileEffect.cs" />
-    <Compile Include="UI\UserInterface.cs" />
+    <Compile Include="Screens\BattleScreen.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">
