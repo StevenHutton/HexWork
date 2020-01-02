@@ -152,9 +152,9 @@ namespace HexWork.UI
 		/// </summary>
 		/// <param name="character"></param>
 		/// <param name="targetPosition"></param>
-        public void MoveCharacterTo(Character character, HexCoordinate targetPosition, List<HexCoordinate> path = null)
+        public void MoveCharacterTo(Character character, HexCoordinate targetPosition)
         {
-            path = path ?? _gameState.FindShortestPath(character.Position, targetPosition);
+            var path = _gameState.FindShortestPath(character.Position, targetPosition);
 	        ResolveTileEffects(character, path);
             ResolveTerrainEffects(character, path);
         }
@@ -319,8 +319,9 @@ namespace HexWork.UI
                 0.0f);
         }
 
-        public void ApplyCombo(Character targetCharacter, ComboAction combo)
+        public int ApplyCombo(Character targetCharacter, ComboAction combo)
         {
+            return 0;
         }
 
         public void ApplyPush(Character character, HexCoordinate direction, int pushForce = 0)

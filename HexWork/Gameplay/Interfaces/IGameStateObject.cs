@@ -22,7 +22,7 @@ namespace HexWork.Gameplay.Interfaces
 
 		void NotifyAction(HexAction action, Character character);
 
-        void MoveCharacterTo(Character character, HexCoordinate targetPosition, List<HexCoordinate> path = null);
+        void MoveCharacterTo(Character character, HexCoordinate targetPosition);
 
         void TeleportCharacterTo(Character character, HexCoordinate position);
 
@@ -32,7 +32,7 @@ namespace HexWork.Gameplay.Interfaces
 
         void ApplyStatus(Character character, StatusEffect effect);
 
-        void ApplyCombo(Character character, ComboAction combo);
+        int ApplyCombo(Character character, ComboAction combo);
 
         void ApplyPush(Character character, HexCoordinate direction, int pushForce);
 

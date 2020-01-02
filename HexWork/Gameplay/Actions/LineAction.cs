@@ -56,12 +56,13 @@ namespace HexWork.Gameplay.Actions
 
                 if (AllySafe && targetCharacter.IsHero == character.IsHero)
                     continue;
-
+                
+                if (Combo != null)
+                    await Combo.TriggerAsync(character, new DummyInputProvider(targetPosition), gameState);
                 gameState.ApplyDamage(targetCharacter, Power * character.Power);
                 gameState.ApplyStatus(targetCharacter, StatusEffect);
 
-                if (Combo != null)
-                    await Combo.TriggerAsync(character, new DummyInputProvider(targetPosition), gameState);
+                
             }
 
             if (PotentialCost != 0)

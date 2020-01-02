@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using HexWork.Gameplay;
+﻿using HexWork.Gameplay;
 using HexWork.Interfaces;
+using HexWork.UI;
 using Microsoft.Xna.Framework;
 using MonoGameTestProject.Gameplay;
 
@@ -14,20 +10,39 @@ namespace HexWork.Screens
     {
         Battle,
         Event,
-
     }
 
-    public class BattleSelectionScreen : Screen
+    public class BattleSelectionScreen : MenuScreen
     {
         private HexWork _hexGame;
         private GameState _gameState;
 
-        public BattleSelectionScreen(IScreenManager _screenManager) : base(_screenManager)
+        public BattleSelectionScreen(IScreenManager _screenManager) : base(_screenManager, null)
         {
             _hexGame = (HexWork)_screenManager.Game;
             _gameState = GameStateManager.CurrentGameState;
+
+            menu.Add(new MenuEntry("Easy", EasyMission));
+            menu.Add(new MenuEntry("Medium", MediumMission));
+            menu.Add(new MenuEntry("Hard", HardMission));
         }
-        
+
+        private void EasyMission(object sender, PlayerIndexEventArgs args)
+        {
+            screenManager.AddScreen(new BattleScreen(screenManager, 1));
+            Exit();
+        }
+        private void MediumMission(object sender, PlayerIndexEventArgs args)
+        {
+            screenManager.AddScreen(new BattleScreen(screenManager, 2));
+            Exit();
+        }
+        private void HardMission(object sender, PlayerIndexEventArgs args)
+        {
+            screenManager.AddScreen(new BattleScreen(screenManager, 3));
+            Exit();
+        }
+
         public override void Draw(GameTime gameTime)
         {
             

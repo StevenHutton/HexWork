@@ -32,7 +32,7 @@ namespace HexWork.UI
         private Vector2 _offset;
 
         private SpriteFont _font;
-
+        
         //how long to display this effect in seconds.
         public float Duration = 0.5f;
 
@@ -52,7 +52,7 @@ namespace HexWork.UI
 
         public Vector2 Position
         {
-            get => _position;
+            get => _position + PositionModifier;
             set => _position = value;
         }
 
@@ -64,12 +64,18 @@ namespace HexWork.UI
 
         public SpriteFont Font => _font;
 
-        public Vector2 Offset => _offset;
+        public Vector2 Offset
+        {
+            get => _offset;
+            set => _offset = value;
+        }
+
+        public Vector2 PositionModifier = Vector2.Zero;
 
         #endregion
 
         #region Methods
-        
+
         public TextEffect(string text, SpriteFont font, TextAlignment alignment = TextAlignment.Center)
         {
             _font = font;

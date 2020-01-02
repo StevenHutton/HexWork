@@ -95,6 +95,7 @@ namespace HexWork.UI
         //distance between buttons in pixels
         private readonly int _buttonMargin = 2;
         private SpriteBatch _spriteBatch;
+        private int _difficulty;
 
         #endregion
 
@@ -116,9 +117,11 @@ namespace HexWork.UI
 
         #region Initialisation Methods
 
-        public BattleScreen(IScreenManager _screenManager)
+        public BattleScreen(IScreenManager _screenManager, int difficulty)
             : base(_screenManager)
         {
+            _difficulty = difficulty;
+
             var game = (HexWork)_screenManager.Game;
             _hexGame = game;
             
@@ -134,6 +137,7 @@ namespace HexWork.UI
             var gameState = GameStateManager.CurrentGameState;
             
             gameState.CharacterMoveEvent += OnCharacterMove;
+            gameState.CharacterTeleportEvent += OnCharacterTeleport;
             gameState.EndTurnEvent += OnEndTurn;
             gameState.SpawnCharacterEvent += OnCharacterSpawn;
             gameState.CharacterDiedEvent += OnCharacterDied;
@@ -147,7 +151,6 @@ namespace HexWork.UI
             gameState.GameOverEvent += OnGameOver;
             gameState.SpawnTileEffectEvent += OnTileEffectSpawn;
             gameState.RemoveTileEffectEvent += OnRemoveTileEffect;
-
         }
 
         public override void LoadContent(Game game)
@@ -174,13 +177,14 @@ namespace HexWork.UI
             _spriteBatch = new SpriteBatch(game.GraphicsDevice);
 	        _gameStateProxy = new PreviewGameStateProxy(_hexGame);
 
-            GameStateManager.CurrentGameState.StartGame();
+            GameStateManager.CurrentGameState.StartGame(_difficulty);
         }
 
         #region Private Load Content Methods
 
         private void LoadCharacterDictionary(Game game)
         {
+            _uiCharacterDictionary.Clear();
             var gameState = GameStateManager.CurrentGameState;
             foreach (var character in gameState.Characters)
             {
@@ -981,33 +985,31 @@ namespace HexWork.UI
 
         private void OnCharacterMove(object sender, MoveEventArgs e)
         {
-            var sprite = _uiCharacterDictionary[e.ActiveCharacterId];
-
-            if (e.Path == null)
-            {
-                sprite.Position = GetHexScreenPosition(e.Destination);
-                return;
-            }
-
+            var sprite = _uiCharacterDictionary[e.CharacterId];
+            
             //get the path that the sprite will take in screen space relative to it's starting position
-            var movementPath = e.Path.Select(GetHexScreenPosition);
             var action = new UiAction
 	        {
 		        Sprite = sprite,
-				Animation = new MovementAnimation()
-		        {
-			        MovementPath = movementPath.ToList()
-		        }
+				Animation = new MovementAnimation(GetHexScreenPosition(e.Destination))
 	        };
             _uiActions.Add(action);
         }
 
+        private void OnCharacterTeleport(object sender, MoveEventArgs e)
+        {
+            var sprite = _uiCharacterDictionary[e.CharacterId];
+            sprite.Position = GetHexScreenPosition(e.Destination);
+        }
+
         private void OnCharacterSpawn(object sender, SpawnChracterEventArgs e)
         {
-            if (_uiCharacterDictionary.ContainsKey(e.CharacterId))
+            if (_uiCharacterDictionary.ContainsKey(e.Character.Id))
             {
-                var sprite = _uiCharacterDictionary[e.CharacterId];
-                sprite.Position = GetHexScreenPosition(e.TargetPosition);
+                var sprite = _uiCharacterDictionary[e.Character.Id];
+                sprite.Position = GetHexScreenPosition(e.Character.Position);
+                sprite.MaxHealth = e.Character.MaxHealth;
+                sprite.Health = e.Character.Health;
                 return;
             }
 			
@@ -1015,11 +1017,12 @@ namespace HexWork.UI
             var portraitTex = e.MonsterType == MonsterType.Zombie ? _monsterPortraitTexture
                 : _monsterPortraitTexture_ZombieKing;
 
-            var sprite2 = new UiCharacter(tex, portraitTex, GetHexScreenPosition(e.TargetPosition), e.MaxHealth)
+            var sprite2 = new UiCharacter(tex, portraitTex, GetHexScreenPosition(e.Character.Position), e.Character.MaxHealth)
             {
-                Scale = new Vector2(_hexScale * 0.9f)
+                Scale = new Vector2(_hexScale * 0.9f),
+                Health = e.Character.Health
             };
-            _uiCharacterDictionary.Add(e.CharacterId, sprite2);
+            _uiCharacterDictionary.Add(e.Character.Id, sprite2);
         }
 
         private void OnCharacterDied(object sender, InteractionRequestEventArgs e)
@@ -1027,7 +1030,7 @@ namespace HexWork.UI
             var character = _uiCharacterDictionary[e.TargetCharacterId];
 
             var action = new UiAction();
-            action.Effect = new TextEffect("DEAD", _damageFont, TextAlignment.Center)
+            action.Effect = new TextEffect("DEAD", _damageFont)
             {
                 Position = character.Position + new Vector2(10.0f, -25.0f)
             };
@@ -1044,11 +1047,12 @@ namespace HexWork.UI
             var character = _uiCharacterDictionary[args.TargetCharacterId];
 
             var action = new UiAction();
+            action.Sprite = character;
 
             //todo - the values here are set based on the character's position at the moment it is called not when it is SHOWN.
             action.Effect = new TextEffect(args.DamageTaken.ToString(), _damageFont)
             {
-                Position = character.Position + new Vector2(10.0f, -25.0f)
+                PositionModifier = new Vector2(10.0f, -25.0f)
             };
 
             action.ActionCompleteCallback += () =>
@@ -1186,8 +1190,9 @@ namespace HexWork.UI
 
             gameOver.ActionCompleteCallback += () =>
             {
+                Exit();
+                screenManager.AddScreen(new RewardsScreen(screenManager, _difficulty));
                 screenManager.RemoveScreen(this);
-                screenManager.AddScreen(new RewardsScreen(screenManager, new Random().Next(1, 4)));
             };
 
             _uiActions.Add(gameOver);

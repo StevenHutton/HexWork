@@ -45,14 +45,12 @@ namespace HexWork.Gameplay.Actions
 			//determine direction of push
 		    var nearestNeighbor = gameState.GetNearestNeighbor(character.Position, targetCharacter.Position);
 		    var direction = targetCharacter.Position - nearestNeighbor;
-
-			gameState.ApplyDamage(targetCharacter, Power * character.Power);
-		    gameState.ApplyPush(targetCharacter, direction, PushForce);
-
+            
             if(Combo != null)
                 await Combo.TriggerAsync(character, new DummyInputProvider(targetCharacter.Position), gameState);
-
+			gameState.ApplyDamage(targetCharacter, Power * character.Power);
 		    gameState.ApplyStatus(targetCharacter, StatusEffect);
+		    gameState.ApplyPush(targetCharacter, direction, PushForce);
 
 		    if (PotentialCost != 0)
 			    gameState.LosePotential(PotentialCost);

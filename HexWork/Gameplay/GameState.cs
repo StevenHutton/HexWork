@@ -32,8 +32,7 @@ namespace HexWork.Gameplay
 
 	public class MoveEventArgs : EventArgs
 	{
-		public Guid ActiveCharacterId;
-		public List<HexCoordinate> Path;
+		public Guid CharacterId;
         public HexCoordinate Destination;
     }
 
@@ -60,13 +59,9 @@ namespace HexWork.Gameplay
 
     public class SpawnChracterEventArgs
     {
-        public Guid CharacterId;
-
-        public HexCoordinate TargetPosition;
-
+        public Character Character;
+        
         public MonsterType MonsterType;
-
-        public int MaxHealth;
     }
 
     public class EndTurnEventArgs : EventArgs
@@ -144,6 +139,8 @@ namespace HexWork.Gameplay
         /// </summary>
         public Character ActiveCharacter;
 
+        private int _difficulty = 1;
+
         #region Gameplay Actions
 
         private HexAction _moveAction;
@@ -180,6 +177,8 @@ namespace HexWork.Gameplay
         #region Events
 
         public event EventHandler<MoveEventArgs> CharacterMoveEvent;
+
+        public event EventHandler<MoveEventArgs> CharacterTeleportEvent;
 
         public event EventHandler<SpawnChracterEventArgs> SpawnCharacterEvent;
 
@@ -233,12 +232,7 @@ namespace HexWork.Gameplay
         {
             get => _characters.Where(character => !character.IsHero && character.IsAlive);
         }
-
-
-
-        /// <summary>
-        ///
-        /// </summary>
+        
         public Character Commander { get; set; }
         
         public int TeamSize { get; set; } = 5;
@@ -281,12 +275,14 @@ namespace HexWork.Gameplay
 
             _potentialGainAction = new PotentialGainAction("Wind", null, null, null, null);
 
-            InitialiseEnemies();
             InitialiseHeroes();
         }
 
-        public void StartGame()
+        public void StartGame(int difficulty = 1)
         {
+            _difficulty = difficulty; 
+            InitialiseEnemies();
+
             foreach (var character in _characters.Where(c => !c.IsHero))
             {
                 var coordinate = _map.GetRandomCoordinateInMap();
@@ -298,7 +294,12 @@ namespace HexWork.Gameplay
                 }
 
                 character.SpawnAt(coordinate);
-                SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs() { CharacterId = character.Id, TargetPosition = coordinate });
+                SpawnCharacterEvent?.Invoke(this, 
+                    new SpawnChracterEventArgs()
+                    {
+                        MonsterType = character.MonsterType,
+                        Character = character
+                    });
             }
 
             var spawnPoint = new HexCoordinate(-2, -2, 4);
@@ -319,7 +320,7 @@ namespace HexWork.Gameplay
                 }
 
                 character.SpawnAt(position);
-                SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs() { CharacterId = character.Id, TargetPosition = position });
+                SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs() { Character = character });
             }
 
             MaxPotential = Commander.Command;
@@ -332,14 +333,19 @@ namespace HexWork.Gameplay
 
         private void InitialiseEnemies()
         {
-            var zombieKing = new Character("Zom-boy King", 160, 140, 2, 1)
+            Characters.RemoveAll(cha => !cha.IsHero);
+
+            for (int i = 0; i < _difficulty; i++)
             {
-                MonsterType = MonsterType.ZombieKing
-            };
-            zombieKing.AddAction(_moveAction);
-            zombieKing.AddAction(_zombieGrab);
-            zombieKing.AddAction(_zombieBite);
-            Characters.Add(zombieKing);
+                var zombieKing = new Character($"Zom-boy King {i}", 160, 140, 2, 1)
+                {
+                    MonsterType = MonsterType.ZombieKing
+                };
+                zombieKing.AddAction(_moveAction);
+                zombieKing.AddAction(_zombieGrab);
+                zombieKing.AddAction(_zombieBite);
+                Characters.Add(zombieKing);
+            }
 
             for (var i = 0; i < 5; i++)
             {
@@ -347,7 +353,6 @@ namespace HexWork.Gameplay
                 zombie.AddAction(_moveAction);
                 zombie.AddAction(_zombieGrab);
                 zombie.AddAction(_zombieBite);
-
                 Characters.Add(zombie);
             }
         }
@@ -358,7 +363,6 @@ namespace HexWork.Gameplay
             zombie.AddAction(_moveAction);
             zombie.AddAction(_zombieGrab);
             zombie.AddAction(_zombieBite);
-
             return zombie;
         }
 
@@ -589,9 +593,9 @@ namespace HexWork.Gameplay
 
         private void CreateBarbarian()
         {
-            var statusCombo = new SpreadStatusCombo { AllySafe = true };
+            var spreadStatusCombo = new SpreadStatusCombo { AllySafe = true, Power = 3};
             var detonatingSlash =
-              new HexAction("Detonating Strike! (1)", TargetingHelper.GetValidTargetTilesLos, null, statusCombo)
+              new HexAction("Detonating Strike! (1)", TargetingHelper.GetValidTargetTilesLos, null, spreadStatusCombo)
                   {
                       Range = 1,
                       PotentialCost = 1
@@ -717,93 +721,104 @@ namespace HexWork.Gameplay
             if(ActiveCharacter == Commander)
                 GainPotential();
 
-            var zk = _characters.FirstOrDefault(c => !c.IsHero && c.MonsterType == MonsterType.ZombieKing);
-
-            if (zk == null || !zk.IsAlive)
+            if (Enemies.All(c => c.MonsterType != MonsterType.ZombieKing))
             {
-                SendMessage("Enemy Leader Defaated");
+                SendMessage("Enemy Leader(s) Defeated");
                 GameOverEvent?.Invoke(this, new MessageEventArgs("You Win!"));
+                GameOver();
             }
 
             if (!Commander.IsAlive)
             {
-                SendMessage("Commander Defaated");
+                SendMessage("Commander Defeated - Game Over");
                 GameOverEvent?.Invoke(this, new MessageEventArgs("You Lose."));
+                GameOver();
             }
         }
 
         #region Gamestate Transforms
 
-        public void MoveCharacterTo(Character character, HexCoordinate position, List<HexCoordinate> path = null)
+        private void GameOver()
         {
-            path = path ?? FindShortestPath(character.Position, position, character.MovementType);
+            _characters.RemoveAll(ch => !ch.IsHero);
+        }
 
-            CharacterMoveEvent?.Invoke(this,
-                new MoveEventArgs
+        public void CharacterGainPower(Guid characterId)
+        {
+            var character = FindCharacterById(characterId);
+
+            if (character == null)
+                return;
+
+            character.Power += 1;
+        }
+
+        public void CharacterGainHealth(Guid characterId)
+        {
+            var character = FindCharacterById(characterId);
+
+            if (character == null)
+                return;
+
+            character.MaxHealth += 10;
+            character.Health += 10;
+
+            if (character.Health >= character.MaxHealth)
+                character.Health = character.MaxHealth;
+        }
+
+        public void MoveCharacterTo(Character character, HexCoordinate position)
+        {
+            var path = FindShortestPath(character.Position, position, character.MovementType);
+            
+            foreach (var coordinate in path)
+            {
+                CharacterMoveEvent?.Invoke(this, new MoveEventArgs
                 {
-                    ActiveCharacterId = character.Id,
-                    Path = path,
-                    Destination = position
+                    CharacterId = character.Id,
+                    Destination = coordinate
                 });
 
-	        ResolveTileEffects(character, path);
-			ResolveTerrainEffects(character, path);
-            character.MoveTo(position);
+                character.MoveTo(coordinate);
+                ResolveTileEffects(character, coordinate);
+                ResolveTerrainEffects(character, coordinate);
+            }
         }
 
         public void TeleportCharacterTo(Character character, HexCoordinate position)
         {
-            CharacterMoveEvent?.Invoke(this,
+            CharacterTeleportEvent?.Invoke(this,
                 new MoveEventArgs
                 {
-                    ActiveCharacterId = character.Id,
-                    Path = null,
+                    CharacterId = character.Id,
                     Destination = position
                 });
 
-	        ResolveTileEffects(character, new List<HexCoordinate>{ position});
-
-			ResolveTerrainEffects(character, new List<HexCoordinate>{ position });
+	        ResolveTileEffects(character, position);
+			ResolveTerrainEffects(character, position);
             character.MoveTo(position);
         }
 
-	    private void ResolveTileEffects(Character character, List<HexCoordinate> path)
+	    private void ResolveTileEffects(Character character, HexCoordinate position)
 	    {
-		    //don't count terrain effects from a tile you're standing. We don't punish players for e.g. leaving lava.
-		    if (path.First() == character.Position)
-		    {
-			    path.Remove(character.Position);
-		    }
+            var tileEffect = TileEffects.FirstOrDefault(data => data.Position == position);
 
-			foreach (var tile in path)
-		    {
-			    var tileEffect = TileEffects.FirstOrDefault(data => data.Position == tile);
+			if(tileEffect == null)
+				return;
 
-				if(tileEffect == null)
-					continue;
-
-				tileEffect.TriggerEffect(this, character);
-			    TileEffects.Remove(tileEffect);
-				RemoveTileEffectEvent?.Invoke(this, new RemoveTileEffectEventArgs(){Id = tileEffect.Guid});
-		    }
+			tileEffect.TriggerEffect(this, character);
+			TileEffects.Remove(tileEffect);
+			RemoveTileEffectEvent?.Invoke(this, new RemoveTileEffectEventArgs(){Id = tileEffect.Guid});
 	    }
 
         //when a character moves into a tile check to see if there're any terrain effects for moving into that tile.
-        private void ResolveTerrainEffects(Character character, List<HexCoordinate> path)
+        private void ResolveTerrainEffects(Character character, HexCoordinate destination)
         {
             //don't count terrain effects from a tile you're standing. We don't punish players for leaving lava.
-            if (path.First() == character.Position)
-            {
-                path.Remove(character.Position);
-            }
-
-            foreach (var position in path)
-            {
-                ResolveTerrainEffect(character, Map[position]);
-            }
+            ResolveTerrainEnterEffect(character, Map[destination]);
         }
 
-        private void ResolveTerrainEffect(Character character, Tile tile)
+        private void ResolveTerrainEnterEffect(Character character, Tile tile)
         {
             switch (tile.TerrainType)
             {
@@ -905,10 +920,10 @@ namespace HexWork.Gameplay
         /// </summary>
         /// <param name="targetCharacter"></param>
         /// <param name="combo"></param>
-        public void ApplyCombo(Character targetCharacter, ComboAction combo)
+        public int ApplyCombo(Character targetCharacter, ComboAction combo)
         {
             if (!targetCharacter.HasStatus)
-                return;
+                return 0;
 
             ComboEvent?.Invoke(this, new ComboEventArgs(targetCharacter.Id, combo));
 
@@ -924,6 +939,8 @@ namespace HexWork.Gameplay
 
             var status = targetCharacter.StatusEffects.First();
 
+            var count = targetCharacter.StatusEffects.Count(e => e.StatusEffectType == status.StatusEffectType);
+
             foreach (var statusEffect in targetCharacter.StatusEffects.Where(s =>
                 s.StatusEffectType == status.StatusEffectType).ToList())
             {
@@ -931,6 +948,8 @@ namespace HexWork.Gameplay
 
                 StatusRemovedEvent?.Invoke(this, new StatusEventArgs(targetCharacter.Id, statusEffect));
             }
+
+            return count;
         }
 
         public void ApplyPush(Character targetCharacter, HexCoordinate direction, int distance = 0)
@@ -1222,7 +1241,7 @@ namespace HexWork.Gameplay
 
         /// <summary>
         /// Get the shortest traversable path between two points on the map.
-        /// If no path can be found returns null
+        /// If no path can be found returns null.
         ///
         /// A* is fuckin' rad.
         ///
@@ -1307,6 +1326,7 @@ namespace HexWork.Gameplay
             }
 
             path.Reverse();
+            path.RemoveAt(0);
             return path;
         }
 
@@ -1319,7 +1339,7 @@ namespace HexWork.Gameplay
 		    //tile validation goes here.
 		    if (!IsHexWalkable(coordinate)) return false;
 
-		    var character = LivingCharacters.FirstOrDefault(c => c.Position == coordinate);
+            var character = LivingCharacters.FirstOrDefault(c => c.Position == coordinate);
 		    if (character == null)
 			    return true;
 
@@ -1559,7 +1579,9 @@ namespace HexWork.Gameplay
         private void ZombieTurn(Character character)
         {
             var position = character.Position;
+            int characterMovement = character.Movement;
             List<HexCoordinate> shortestPath = null;
+            List<HexCoordinate> pathToWalk = new List<HexCoordinate>();
             int shortestPathLength = int.MaxValue;
             Character closestHero = null;
 
@@ -1587,19 +1609,17 @@ namespace HexWork.Gameplay
 
             //loop through available actions
             foreach (var action in character.Actions.Where(a => a.IsAvailable(character)))
-            {
+            { 
+                //if we can hit the hero, hit them now and end turn. - don't move.
                 if (action.IsValidTarget(character, closestHero.Position, this) &&
                     action.IsDetonator == closestHero.HasStatus
                     && action.IsDetonator == closestHero.HasStatus && action.IsAvailable(character))
                 {
-                    //if we can hit the hero, hit them now and end turn.
                     NotifyAction(action, character);
                     ApplyDamage(closestHero, action.Power * character.Power);
                     ApplyStatus(closestHero, action.StatusEffect);
-                    if (action.Combo != null)
-                    {
-                        action.Combo.TriggerAsync(character, new DummyInputProvider(closestHero.Position), this);
-                    }
+
+                    action.Combo?.TriggerAsync(character, new DummyInputProvider(closestHero.Position), this);
 
                     return;
                 }
@@ -1607,14 +1627,28 @@ namespace HexWork.Gameplay
 
             //if we couldn't reach the closest hero move towards them.
             //if we found a path to a hero
-            if (shortestPath == null || !character.CanMove) return;
+            if (!character.CanMove) return;
 
-            while (shortestPath.Count > character.Movement + 1)
+            //get all the tiles to which the zombie COULD move
+            var tilesInRange = GetValidDestinations(character, character.Movement);
+
+            float shortestDistance = 100;
+            HexCoordinate destination = null;
+
+            //look at all the possible destinations and get the one which is closest to a hero
+            foreach (var tile in tilesInRange)
             {
-                shortestPath.RemoveAt(character.Movement + 1);
-            }
+                var distanceToHeroes = Heroes.Select(data => _map.DistanceBetweenPoints(tile, data.Position));
 
-            MoveCharacterTo(character, shortestPath.Last(), shortestPath);
+                var distance = (float)distanceToHeroes.Sum() / (float)Heroes.Count();
+                if (distance < shortestDistance)
+                {
+                    shortestDistance = distance;
+                    destination = tile;
+                }
+            }
+            if (destination != null)
+                MoveCharacterTo(character, destination);
 
             foreach (var action in character.Actions.Where(action =>
                 action.IsValidTarget(character, closestHero.Position, this)
@@ -1623,10 +1657,8 @@ namespace HexWork.Gameplay
                 NotifyAction(action, character);
                 ApplyDamage(closestHero, action.Power * character.Power);
                 ApplyStatus(closestHero, action.StatusEffect);
-                if (action.Combo != null)
-                {
-                    action.Combo.TriggerAsync(character, new DummyInputProvider(closestHero.Position), this);
-                }
+
+                action.Combo?.TriggerAsync(character, new DummyInputProvider(closestHero.Position), this);
 
                 return;
             }
@@ -1680,7 +1712,7 @@ namespace HexWork.Gameplay
                         }
                     }
                     if (destination != null)
-                        MoveCharacterTo(character, destination, FindShortestPath(position, destination));
+                        MoveCharacterTo(character, destination);
                 }
             }
 
@@ -1704,8 +1736,8 @@ namespace HexWork.Gameplay
                         Characters.Add(zombie);
                         SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs
                         {
-                            CharacterId = zombie.Id, TargetPosition = tile,
-                            MaxHealth = zombie.MaxHealth, MonsterType = MonsterType.Zombie
+                            MonsterType = MonsterType.Zombie,
+                            Character = zombie
                         });
                         break;
                     }
@@ -1733,28 +1765,6 @@ namespace HexWork.Gameplay
 
         #endregion
 
-	    public void CharacterGainPower(Guid characterId)
-	    {
-		    var character = FindCharacterById(characterId);
 
-		    if (character == null)
-			    return;
-
-		    character.Power += 1;
-	    }
-
-	    public void CharacterGainHealth(Guid characterId)
-	    {
-		    var character = FindCharacterById(characterId);
-
-		    if (character == null)
-			    return;
-
-		    character.MaxHealth += 10;
-		    character.Health += 10;
-
-		    if (character.Health >= character.MaxHealth)
-			    character.Health = character.MaxHealth;
-	    }
 	}
 }

@@ -43,6 +43,12 @@ namespace HexWork
             name = text;
         }
 
+        public MenuEntry(string text, EventHandler<PlayerIndexEventArgs> onSelected)
+        {
+            name = text;
+            selected += onSelected;
+        }
+
 		#endregion
 
 		#region Updating

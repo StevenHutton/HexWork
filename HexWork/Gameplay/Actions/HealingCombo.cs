@@ -28,8 +28,9 @@ namespace HexWork.Gameplay.Actions
 
             if (!targetCharacter.HasStatus)
                 return;
-
-            gameState.ApplyHealing(character, Power);
+            
+            var powerBonus = gameState.ApplyCombo(targetCharacter, this);
+            gameState.ApplyHealing(character, (Power + powerBonus) * character.Power);
         }
     }
 }

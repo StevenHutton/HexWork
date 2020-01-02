@@ -133,7 +133,7 @@ namespace HexWork.Screens
         {
             if (!_characterPortraits.Any(p => p.HasReward))
             {
-                screenManager.AddScreen(new BattleScreen(this.screenManager));
+                screenManager.AddScreen(new BattleSelectionScreen(screenManager));
                 Exit();
             }
 

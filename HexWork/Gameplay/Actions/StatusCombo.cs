@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
 
@@ -31,9 +27,9 @@ namespace HexWork.Gameplay.Actions
             if (!targetCharacter.HasStatus)
                 return;
 
-            gameState.ApplyCombo(targetCharacter, this);
-
+            var powerBonus = gameState.ApplyCombo(targetCharacter, this);
             gameState.ApplyStatus(targetCharacter, Effect);
+            gameState.ApplyDamage(targetCharacter, (Power + powerBonus) * character.Power);
         }
     }
 }

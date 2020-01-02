@@ -19,7 +19,7 @@ namespace HexWork.Gameplay.Actions
 	            new HexCoordinate(0, -1),
 	            new HexCoordinate(-1, 1),
 	            new HexCoordinate(1, -1));
-			Power = 4;
+			Power = 3;
         }
 
         public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
@@ -36,7 +36,7 @@ namespace HexWork.Gameplay.Actions
             if (!targetCharacter.HasStatus)
                 return;
 
-            gameState.ApplyCombo(targetCharacter, this);
+            var powerBonus = gameState.ApplyCombo(targetCharacter, this);
 
             var nearestNeighbor = gameState.GetNearestNeighbor(character.Position, targetCharacter.Position);
 
@@ -58,7 +58,7 @@ namespace HexWork.Gameplay.Actions
 	            if (AllySafe && targetCharacter.IsHero == character.IsHero)
 		            continue;
 
-				gameState.ApplyDamage(newTargetCharacter, Power * character.Power);
+				gameState.ApplyDamage(newTargetCharacter, (Power+ powerBonus) * character.Power);
             }
         }
     }

@@ -19,7 +19,7 @@ namespace HexWork.UI
 
         public void Start()
         {
-            if (Sprite != null && (Effect != null))
+            if (Sprite != null && Effect != null)
                 Effect.Position = Sprite.Position;
         }
 

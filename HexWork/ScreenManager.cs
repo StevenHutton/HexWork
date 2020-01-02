@@ -134,8 +134,7 @@ namespace HexWork
                 screensToUpdate[i].Update(_gameTime);
 
                 //check if this screen is active or becoming active
-                if (screensToUpdate[i].State == ScreenState.Active ||
-                    screensToUpdate[i].State == ScreenState.Activating)
+                if (screensToUpdate[i].State == ScreenState.Active)
                 {
                     //if this is the first active screen we've found
                     if (!activeScreenFound)
@@ -155,7 +154,7 @@ namespace HexWork
                 else if (screenCovered && (screensToUpdate[i].State == ScreenState.Inactive ))
                 {
                     //if this screen is inactive and is fully covered by another screen then we don't need it                    
-                    screens.Remove(screens[i]);
+                    RemoveScreen(screens[i]);
                 }
             }
 

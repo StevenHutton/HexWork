@@ -65,13 +65,10 @@ namespace HexWork.Gameplay.Actions
                     if (AllySafe && targetCharacter.IsHero == character.IsHero)
                         continue;
 
-                    gameState.ApplyDamage(targetCharacter, Power * character.Power);
-                    gameState.ApplyStatus(targetCharacter, StatusEffect);
-
                     if (Combo != null)
                         await Combo.TriggerAsync(character, new DummyInputProvider(targetPosition), gameState);
-
-                    gameState.CheckDied(targetCharacter);
+                    gameState.ApplyDamage(targetCharacter, Power * character.Power);
+                    gameState.ApplyStatus(targetCharacter, StatusEffect);
                 }
             }
 

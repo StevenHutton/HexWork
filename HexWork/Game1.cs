@@ -57,7 +57,6 @@ namespace HexWork
 			Content.RootDirectory = "Content";
             
             GameStateManager.SetGameState(new GameState());
-            GameStateManager.CurrentGameState.StartGame();
         }
 
 		/// <summary>
@@ -71,7 +70,7 @@ namespace HexWork
 			this.IsMouseVisible = true;
 			base.Initialize();
 
-            _screenManager.AddScreen(new BattleScreen(_screenManager));
+            _screenManager.AddScreen(new BattleSelectionScreen(_screenManager));
         }
 
 		/// <summary>

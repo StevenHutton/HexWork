@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 
 namespace HexWork.Gameplay
@@ -55,6 +56,7 @@ namespace HexWork.Gameplay
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
+            
             return X == other.X && Y == other.Y;
         }
 

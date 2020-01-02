@@ -45,17 +45,15 @@ namespace HexWork.Gameplay.Actions
             gameState.NotifyAction(this, character);
 
             //swap positions of character and target character.
-            var characterPosition = character.Position;
+            var characterPosition = character.Position; 
+            
             gameState.TeleportCharacterTo(character, targetPosition);
             gameState.TeleportCharacterTo(target, characterPosition);
 
+            if (Combo != null)
+                await Combo.TriggerAsync(character, new DummyInputProvider(characterPosition), gameState);
             gameState.ApplyDamage(target, Power * character.Power);
             gameState.ApplyStatus(target, StatusEffect);
-            if (Combo != null)
-                await Combo.TriggerAsync(character, new DummyInputProvider(targetPosition), gameState);
-
-
-            gameState.CheckDied(target);
         }
     }
 }

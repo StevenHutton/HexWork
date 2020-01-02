@@ -35,7 +35,7 @@ namespace HexWork.Gameplay.Actions
             if (!targetCharacter.HasStatus)
                 return;
 
-            gameState.ApplyCombo(targetCharacter, this);
+            var powerBonus = gameState.ApplyCombo(targetCharacter, this);
 
             var nearestNeighbor = gameState.GetNearestNeighbor(character.Position, targetCharacter.Position);
 
@@ -61,7 +61,7 @@ namespace HexWork.Gameplay.Actions
                 gameState.ApplyDamage(newTargetCharacter, Power * character.Power);
             }
 
-            gameState.ApplyDamage(targetCharacter, Power * character.Power);
+            gameState.ApplyDamage(targetCharacter, (powerBonus + Power) * character.Power);
         }
     }
 }
