@@ -116,9 +116,9 @@ namespace HexWork.Gameplay
         }
     }
     
-    public class HexGrid
+    public class HexGrid : Dictionary<HexCoordinate, Tile>
     {
-        #region Attributesa
+        #region Attributes
 
         public static readonly HexCoordinate[] Directions = {
             new HexCoordinate(+1, -1, 0),
@@ -129,8 +129,6 @@ namespace HexWork.Gameplay
             new HexCoordinate(0, -1, +1)
         };
         
-        public Dictionary<HexCoordinate, Tile> Map = new Dictionary<HexCoordinate, Tile>();
-
         private int _cols, _rows;
 
         #endregion
@@ -166,13 +164,13 @@ namespace HexWork.Gameplay
 
                     var coord = new HexCoordinate(x, y);
 
-                    Map.Add(coord, new Tile());
+                    this.Add(coord, new Tile());
                 }
             }
             
             RandomizeTerrain();
 
-            foreach (var tile in Map.Values)
+            foreach (var tile in Values)
             {
                 switch (tile.TerrainType)
                 {
@@ -233,7 +231,7 @@ namespace HexWork.Gameplay
             Random rand = new Random(DateTime.Now.Millisecond);
 
             //loop through the map once and seed with terrain
-            foreach (var tile in Map.Values)
+            foreach (var tile in Values)
             {
                 if (rand.Next(10000) <= 1500 && tile.TerrainType == TerrainType.Ground) //make X% of tiles into a random non-ground terrain type
                 {
@@ -242,7 +240,7 @@ namespace HexWork.Gameplay
             }
 
             //go through again and check the neighbors for terrain
-            foreach (var entry in Map)
+            foreach (var entry in this)
             {
                 var neighbors = GetNeighborTiles(entry.Key);
 
@@ -261,7 +259,7 @@ namespace HexWork.Gameplay
             }
 
             //go through again and check the neighbors for terrain
-            foreach (var entry in Map)
+            foreach (var entry in this)
             {
                 var neighbors = GetNeighborTiles(entry.Key);
 
@@ -292,9 +290,9 @@ namespace HexWork.Gameplay
             for (int i = 0; i < 6; i++)
             {
                 HexCoordinate neighbourCoordinate = position + Directions[i];
-                if (Map.ContainsKey(neighbourCoordinate))
+                if (this.ContainsKey(neighbourCoordinate))
                 {
-                    tiles.Add(Map[neighbourCoordinate]);
+                    tiles.Add(this[neighbourCoordinate]);
                 }
             }
 
@@ -309,7 +307,7 @@ namespace HexWork.Gameplay
             for (int i = 0; i < 6; i++)
             {
                 HexCoordinate neighbourCoordinate = position + Directions[i];
-                if (Map.ContainsKey(neighbourCoordinate))
+                if (this.ContainsKey(neighbourCoordinate))
                 {
                     coordinates.Add(neighbourCoordinate);
                 }

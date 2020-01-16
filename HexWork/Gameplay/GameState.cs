@@ -146,6 +146,11 @@ namespace HexWork.Gameplay
         private HexAction _moveAction;
         private HexAction _moveActionEx;
 
+        private TileEffect _fireEffect = new TileEffect()
+        {
+
+        };
+
         private HexAction _zombieGrab;
 
         private HexAction _zombieBite;
@@ -212,11 +217,8 @@ namespace HexWork.Gameplay
 
         public IEnumerable<Character> Heroes => LivingCharacters.Where(character => character.IsHero);
 
-        public Dictionary<HexCoordinate, Tile> Map
-        {
-            get => _map.Map;
-        }
-
+        public HexGrid Map => _map;
+        
         public List<Character> Characters
         {
             get => _characters;
@@ -288,7 +290,7 @@ namespace HexWork.Gameplay
                 var coordinate = _map.GetRandomCoordinateInMap();
 
                 //one unit per tile and only deploy to walkable spaces.
-                while (Characters.Select(cha => cha.Position).Contains(coordinate) || !_map.Map[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
+                while (Characters.Select(cha => cha.Position).Contains(coordinate) || !_map[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
                 {
                     coordinate = _map.GetRandomCoordinateInMap();
                 }
@@ -437,7 +439,8 @@ namespace HexWork.Gameplay
                 _cornerPattern)
             {
                 PotentialCost = 1,
-                Range = 2
+                Range = 2,
+                TileEffect = TileEffectType.Wind
             };
 
             var shovingSnipeAction = new PushAction(name: "Shoving Snipe",
@@ -1034,7 +1037,7 @@ namespace HexWork.Gameplay
 
         public Tile GetTileAtCoordinate(HexCoordinate coordinate)
 	    {
-		    return _map.Map[coordinate];
+		    return _map[coordinate];
 	    }
 
         public Character GetCharacter(Guid characterId)
@@ -1258,7 +1261,7 @@ namespace HexWork.Gameplay
         /// </summary>
         public List<HexCoordinate> FindShortestPath(HexCoordinate start, HexCoordinate destination, MovementType movementType = MovementType.NormalMove)
         {
-            if (!_map.Map.ContainsKey(start) || !_map.Map.ContainsKey(destination))
+            if (!_map.ContainsKey(start) || !_map.ContainsKey(destination))
                 return null;
 
             //data structure map such that key : a tile we've looked at one or more times, value : the previous tile in the shortest path to the hex in the key.
@@ -1290,15 +1293,15 @@ namespace HexWork.Gameplay
                         continue;
 
                     //check if the tile is water or lava.
-                    if ((_map.Map[neighbor].TerrainType == TerrainType.Water
-                        || _map.Map[neighbor].TerrainType == TerrainType.Lava)
+                    if ((_map[neighbor].TerrainType == TerrainType.Water
+                        || _map[neighbor].TerrainType == TerrainType.Lava)
                         && neighbor != destination)
                         continue;
 
 	                //nodes are always one space away - hexgrid!
                     //BUT hexes have different movement costs to move through!
                     //the path from the start to the tile we're looking at now is the path the
-                    var pathLengthToNeighbor = pathValues[current] + _map.Map[neighbor].MovementCost;
+                    var pathLengthToNeighbor = pathValues[current] + (int)GetTileMovementCost(neighbor);
 
                     //estimate the neighbor and add it to the list of estimates or update it if it's already in the list
                     if (!pathValues.ContainsKey(neighbor) || pathValues[neighbor] > pathLengthToNeighbor)
@@ -1339,7 +1342,7 @@ namespace HexWork.Gameplay
 
         #region Private Helper Methods
 
-       private bool IsTilePassable(MovementType movementType, HexCoordinate coordinate)
+        private bool IsTilePassable(MovementType movementType, HexCoordinate coordinate)
 	    {
 		    //tile validation goes here.
 		    if (!IsHexWalkable(coordinate)) return false;
@@ -1373,6 +1376,15 @@ namespace HexWork.Gameplay
 		    return true;
 	    }
 
+        private float GetTileMovementCost(HexCoordinate coordinate)
+        {
+            if (!TileEffects.Any(te => te.Position == coordinate))
+                return _map[coordinate].MovementCost;
+
+            return TileEffects.Where(te => te.Position == coordinate).Sum(te => te.MovementModifier) +
+                   _map[coordinate].MovementCost;
+        }
+
         private void SendMessage(string message)
         {
             MessageEvent?.Invoke(this, new MessageEventArgs(message));
@@ -1390,12 +1402,12 @@ namespace HexWork.Gameplay
 
 	    private bool IsHexWalkable(HexCoordinate co)
         {
-		    return _map.Map[co].IsWalkable;
+		    return _map[co].IsWalkable;
 	    }
 
         private bool IsHexOpaque(HexCoordinate coordinate)
         {
-            return _map.Map[coordinate].BlocksLOS;
+            return _map[coordinate].BlocksLOS;
         }
 
         private bool BlocksLineOfSight(HexCoordinate coordinate)
@@ -1431,8 +1443,8 @@ namespace HexWork.Gameplay
             {
 	            if (!IsTilePassable(movementType, coord)) continue;
 
-                int movementCost = (int) _map.Map[coord].MovementCost;
-                TerrainType terrainType = _map.Map[coord].TerrainType;
+                int movementCost = (int)GetTileMovementCost(coord);
+                TerrainType terrainType = _map[coord].TerrainType;
 
                 //if this tile is not already in the list
                 if (!neighbours.Contains(coord)

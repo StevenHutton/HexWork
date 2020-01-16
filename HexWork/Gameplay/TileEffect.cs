@@ -19,23 +19,22 @@ namespace HexWork.Gameplay
 
         public TileEffectType Type = TileEffectType.Fire;
 
+        public int Damage = 5;
+
+        public StatusEffect Effect = new DotEffect();
+
+        public float MovementModifier = 0.1f;
+
 	    public virtual async void TriggerEffect(IGameStateObject gameState, Character character)
 	    {
-		    gameState.ApplyDamage(character, 5);
-		    gameState.ApplyStatus(character, new DotEffect());
+		    gameState.ApplyDamage(character, Damage);
+		    gameState.ApplyStatus(character, Effect);
 	    }
-
+        public TileEffect() { }
+        
         public TileEffect(HexCoordinate pos)
         {
             Position = pos;
         }
-    }
-
-    public class WindEffect : TileEffect
-    {
-        public override async void TriggerEffect(IGameStateObject gameState, Character character)
-        { }
-
-        public WindEffect(HexCoordinate pos) : base(pos) { }
     }
 }
