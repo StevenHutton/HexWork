@@ -157,11 +157,6 @@ namespace HexWork
                     RemoveScreen(screens[i]);
                 }
             }
-
-	        if (!activeScreenFound)
-	        {
-		        screensToUpdate.Last().State = ScreenState.Activating;
-	        }
         }
 		#endregion
 

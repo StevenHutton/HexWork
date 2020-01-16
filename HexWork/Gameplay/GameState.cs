@@ -479,7 +479,7 @@ namespace HexWork.Gameplay
         {
             var shurikenHailAction = new HexAction("Shuriken",
                 TargetingHelper.GetValidTargetTilesLos,
-                new DotEffect()
+                new DotEffect
                 {
                     Name = "Bleeding",
                     Damage = 5,
@@ -487,18 +487,19 @@ namespace HexWork.Gameplay
                     StatusEffectType = StatusEffectType.Bleeding
                 })
             {
-                Range = 2
+                Range = 2,
+                FollowUpAction = new MoveAction("Shift", TargetingHelper.GetDestinationTargetTiles) { Range = 1, IsFixedMovement = true }
             };
 
             var shurikenPattern = new TargetPattern(new HexCoordinate(-1, 1), new HexCoordinate(0, -1),
                 new HexCoordinate(1, 0));
             var shurikenHailActionEx = new HexAction("Shuriken Hail! (1)",
                 TargetingHelper.GetValidTargetTilesLosIgnoreUnits,
-                new DotEffect()
+                new DotEffect
                 {
                     Name = "Bleeding",
                     Damage = 5,
-                    Duration = 3,
+                    Duration = 2,
                     StatusEffectType = StatusEffectType.Bleeding
                 },
                 null, shurikenPattern)
@@ -674,7 +675,11 @@ namespace HexWork.Gameplay
             //if we have an active character then update all the initiative values
             if (ActiveCharacter != null)
             {
+
+                ResolveTileEffects(ActiveCharacter, ActiveCharacter.Position);
+                ResolveTerrainEffects(ActiveCharacter, ActiveCharacter.Position);
                 ActiveCharacter.EndTurn();
+
                 var deltaTime = ActiveCharacter.TurnTimer;
                 foreach (var character in _characters)
                 {
@@ -1006,7 +1011,7 @@ namespace HexWork.Gameplay
             PotentialChangeEvent?.Invoke(this, new PotentialEventArgs(-potential));
         }
 
-        public void CreateTileEffect(HexCoordinate location)
+        public void CreateTileEffect(HexCoordinate location, TileEffectType effectType)
         {
             var tileEffect = new TileEffect(location);
             TileEffects.Add(tileEffect);
@@ -1015,7 +1020,7 @@ namespace HexWork.Gameplay
             {
                 Id = tileEffect.Guid,
                 Position = location,
-                Type = TileEffectType.Fire
+                Type = effectType
             });
         }
 
@@ -1734,6 +1739,7 @@ namespace HexWork.Gameplay
                     {
                         zombie.SpawnAt(tile);
                         Characters.Add(zombie);
+                        MoveCharacterTo(zombie, position);
                         SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs
                         {
                             MonsterType = MonsterType.Zombie,

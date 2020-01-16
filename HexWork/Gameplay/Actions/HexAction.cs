@@ -21,6 +21,8 @@ namespace HexWork.Gameplay.Actions
         public int PotentialCost = 0;
         public ComboAction Combo = null;
 
+        public HexAction FollowUpAction = null;
+
         #endregion
 
         #region Properties
@@ -100,7 +102,7 @@ namespace HexWork.Gameplay.Actions
 		        var targetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
 
                 if (TileEffect != TileEffectType.None && gameState.IsHexPassable(targetTile))
-                    gameState.CreateTileEffect(targetTile);
+                    gameState.CreateTileEffect(targetTile, TileEffect);
 
                 //if no one is there, next tile
                 if (targetCharacter == null)
@@ -115,7 +117,7 @@ namespace HexWork.Gameplay.Actions
 		        gameState.ApplyStatus(targetCharacter, StatusEffect);
 
                 if (TileEffect != TileEffectType.None && gameState.IsHexPassable(targetTile))
-                    gameState.CreateTileEffect(targetTile);
+                    gameState.CreateTileEffect(targetTile, TileEffect);
             }
         }
 

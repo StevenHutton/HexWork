@@ -7,7 +7,8 @@ namespace HexWork.Gameplay
     public enum TileEffectType
     {
         None,
-        Fire
+        Fire,
+        Wind
     }
 
     public class TileEffect
@@ -18,7 +19,7 @@ namespace HexWork.Gameplay
 
         public TileEffectType Type = TileEffectType.Fire;
 
-	    public async void TriggerEffect(IGameStateObject gameState, Character character)
+	    public virtual async void TriggerEffect(IGameStateObject gameState, Character character)
 	    {
 		    gameState.ApplyDamage(character, 5);
 		    gameState.ApplyStatus(character, new DotEffect());
@@ -28,5 +29,13 @@ namespace HexWork.Gameplay
         {
             Position = pos;
         }
+    }
+
+    public class WindEffect : TileEffect
+    {
+        public override async void TriggerEffect(IGameStateObject gameState, Character character)
+        { }
+
+        public WindEffect(HexCoordinate pos) : base(pos) { }
     }
 }

@@ -298,7 +298,7 @@ namespace HexWork.UI
 		        0.0f);
 		}
 
-        public void CreateTileEffect(HexCoordinate location)
+        public void CreateTileEffect(HexCoordinate location, TileEffectType effectType)
         {
             var statusTexture = _hexGame.Content.Load<Texture2D>("FireIcon");
             var position = GetHexScreenPosition(location);

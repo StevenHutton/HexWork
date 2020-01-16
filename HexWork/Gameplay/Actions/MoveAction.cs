@@ -7,7 +7,14 @@ using MonoGameTestProject.Gameplay;
 namespace HexWork.Gameplay.Actions
 {
 	public class MoveAction : HexAction
-	{
+    {
+        public bool IsFixedMovement = false;
+
+        private int GetMovementRange(Character c)
+        {
+            return IsFixedMovement ? Range : c.Movement + Range;
+        }
+
 		public MoveAction(string name,
 			GetValidTargetsDelegate targetDelegate,
 			StatusEffect statusEffect = null,
@@ -27,7 +34,7 @@ namespace HexWork.Gameplay.Actions
 			if (targetPosition == null || character.Position == targetPosition)
 				return;
 
-			if (gameState.IsValidDestination(character, targetPosition, character.Movement + this.Range))
+			if (gameState.IsValidDestination(character, targetPosition, GetMovementRange(character)))
 				gameState.MoveCharacterTo(character, targetPosition);
 		}
 
@@ -43,12 +50,12 @@ namespace HexWork.Gameplay.Actions
 		/// </summary>
 		public override List<HexCoordinate> GetValidTargets(Character character, IGameStateObject gameState)
 		{
-			return _getValidTargets?.Invoke(character, character.Movement + this.Range, gameState);
+			return _getValidTargets?.Invoke(character, GetMovementRange(character), gameState);
 		}
 
 		public override bool IsValidTarget(Character character, HexCoordinate targetCoordinate, IGameStateObject gameState)
 		{
-			return _getValidTargets != null && _getValidTargets.Invoke(character, character.Movement + this.Range, gameState).Contains(targetCoordinate);
+			return _getValidTargets != null && _getValidTargets.Invoke(character, GetMovementRange(character), gameState).Contains(targetCoordinate);
 		}
 	}
 }

@@ -238,6 +238,7 @@ namespace HexWork.UI
 
         public override void Update(GameTime gameTime)
         {
+            base.Update(gameTime);
             GameStateManager.CurrentGameState.Update(gameTime);
             foreach (var character in _uiCharacterDictionary.Values)
             {
@@ -848,6 +849,13 @@ namespace HexWork.UI
                     async (input) =>
                     {
                         await action.TriggerAsync(_selectedCharacter, input, GameStateManager.CurrentGameState);
+                        var followUpAction = action.FollowUpAction;
+                        while (followUpAction != null)
+                        {
+                            await followUpAction.TriggerAsync(_selectedCharacter, input,
+                                GameStateManager.CurrentGameState);
+                            followUpAction = followUpAction.FollowUpAction;
+                        }
                     },
                     () => action.IsAvailable(_selectedCharacter));
             }
