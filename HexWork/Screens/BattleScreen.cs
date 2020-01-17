@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using HexWork.Gameplay;
@@ -345,13 +346,15 @@ namespace HexWork.UI
             _spriteBatch.Begin();
             foreach (var tileEffect in _tileEffectDictionary.Values)
             {
+
+                var scaleFactor = 256.0f / tileEffect.Texture.Height * 0.35f;
                 _spriteBatch.Draw(tileEffect.Texture,
                     tileEffect.Position,
                     null,
                     Color.White,
                     0.0f,
                     tileEffect.Origin,
-                    new Vector2(0.3f), 
+                    new Vector2(scaleFactor), 
                     SpriteEffects.None,
                     0.0f);
             }
@@ -508,6 +511,8 @@ namespace HexWork.UI
                     _hexCenter, _hexScaleV, SpriteEffects.None, 0.0f);
 
                 var terrainName = tile.TerrainType.ToString();
+                if (tile.TerrainType == TerrainType.Ground) continue;
+
                 _spriteBatch.DrawString(_uiFont, terrainName, renderPosition, Color.White, 0.0f, _uiFont.MeasureString(terrainName) / 2, Vector2.One, SpriteEffects.None, 0.0f);
             }
             _spriteBatch.End();
@@ -535,7 +540,7 @@ namespace HexWork.UI
                 _spriteBatch.Draw(_hexagonTexture, renderPosition, null, color, 0.0f,
                     _hexCenter, _hexScaleV, SpriteEffects.None, 0.0f);
 
-                var movementCost = tile.MovementCost.ToString();
+                var movementCost = gameState.GetTileMovementCost(coordinate).ToString(CultureInfo.InvariantCulture);
                 _spriteBatch.DrawString(_uiFont, movementCost, renderPosition, Color.White, 0.0f, _uiFont.MeasureString(movementCost) / 2, Vector2.One, SpriteEffects.None, 0.0f);
             }
             
@@ -1030,6 +1035,7 @@ namespace HexWork.UI
                 Scale = new Vector2(_hexScale * 0.9f),
                 Health = e.Character.Health
             };
+            
             _uiCharacterDictionary.Add(e.Character.Id, sprite2);
         }
 
@@ -1216,7 +1222,22 @@ namespace HexWork.UI
 
         private void OnTileEffectSpawn(object sender, SpawnTileEffectEventArgs e)
         {
-            var tileEffect = new UiTileEffect(e.Id, _hexGame.Content.Load<Texture2D>("FireIcon"))
+            Texture2D tex = null;
+            switch (e.Type)
+            {
+                case TileEffectType.None:
+                    break;
+                case TileEffectType.Fire:
+                    tex = _hexGame.Content.Load<Texture2D>("FireIcon");
+                    break;
+                case TileEffectType.Wind:
+                    tex = _hexGame.Content.Load<Texture2D>("whirlwind");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            var tileEffect = new UiTileEffect(e.Id, tex)
             {
                 Position =  GetHexScreenPosition(e.Position)
             };

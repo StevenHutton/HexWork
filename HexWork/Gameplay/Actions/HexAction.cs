@@ -11,7 +11,7 @@ namespace HexWork.Gameplay.Actions
     {
         #region Attributes
 
-        public TileEffectType TileEffect = TileEffectType.None;
+        public TileEffect TileEffect = null;
 
         protected readonly GetValidTargetsDelegate _getValidTargets;
 
@@ -101,7 +101,7 @@ namespace HexWork.Gameplay.Actions
 	        {
 		        var targetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
 
-                if (TileEffect != TileEffectType.None && gameState.IsHexPassable(targetTile))
+                if (TileEffect != null)
                     gameState.CreateTileEffect(targetTile, TileEffect);
 
                 //if no one is there, next tile
@@ -116,8 +116,6 @@ namespace HexWork.Gameplay.Actions
                 gameState.ApplyDamage(targetCharacter, Power * character.Power);
 		        gameState.ApplyStatus(targetCharacter, StatusEffect);
 
-                if (TileEffect != TileEffectType.None && gameState.IsHexPassable(targetTile))
-                    gameState.CreateTileEffect(targetTile, TileEffect);
             }
         }
 

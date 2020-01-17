@@ -34,6 +34,9 @@ namespace HexWork.Gameplay.Actions
 			if (targetPosition == null || character.Position == targetPosition)
 				return;
 
+			if(TileEffect != null)
+				gameState.CreateTileEffect(character.Position, TileEffect);
+
 			if (gameState.IsValidDestination(character, targetPosition, GetMovementRange(character)))
 				gameState.MoveCharacterTo(character, targetPosition);
 		}

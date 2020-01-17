@@ -298,23 +298,40 @@ namespace HexWork.UI
 		        0.0f);
 		}
 
-        public void CreateTileEffect(HexCoordinate location, TileEffectType effectType)
+        public void CreateTileEffect(HexCoordinate location, TileEffect effect)
         {
-            var statusTexture = _hexGame.Content.Load<Texture2D>("FireIcon");
+            Texture2D statusTexture = null; 
+            switch (effect.Type)
+            {
+                case TileEffectType.None:
+                    break;
+                case TileEffectType.Fire:
+                    statusTexture = _hexGame.Content.Load<Texture2D>("FireIcon");
+                    break;
+                case TileEffectType.Wind:
+                    statusTexture = _hexGame.Content.Load<Texture2D>("whirlwind");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            if (statusTexture == null)
+                return;
+
             var position = GetHexScreenPosition(location);
 
             var width = (float)statusTexture.Width;
             var height = (float)statusTexture.Height;
+            var scaleFactor = 256.0f / height * 0.35f;
 
             var origin = new Vector2(width / 2, height - (width / 2));
-
             _spriteBatch.Draw(statusTexture,
                 position,
                 null,
                 Color.White,
                 0.0f,
                 origin,
-                new Vector2(0.3f), 
+                new Vector2(scaleFactor), 
                 SpriteEffects.None,
                 0.0f);
         }

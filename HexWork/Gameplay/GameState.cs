@@ -148,7 +148,17 @@ namespace HexWork.Gameplay
 
         private TileEffect _fireEffect = new TileEffect()
         {
+            Damage = 5,
+            Effect = new DotEffect(),
+            Type = TileEffectType.Fire
+        };
 
+        private TileEffect _windEffect = new TileEffect()
+        {
+            Damage = 0,
+            Effect = null,
+            Type = TileEffectType.Wind,
+            MovementModifier = -1
         };
 
         private HexAction _zombieGrab;
@@ -393,7 +403,7 @@ namespace HexWork.Gameplay
             {
                 PotentialCost = 1,
                 Range = 3,
-                TileEffect = TileEffectType.Fire
+                TileEffect = _fireEffect
             };
 
 	        var ringofFire = new HexAction("Ring of Fire! (2)",
@@ -403,7 +413,7 @@ namespace HexWork.Gameplay
 	        {
 		        PotentialCost = 2,
 		        Range = 3,
-                TileEffect = TileEffectType.Fire
+                TileEffect = _fireEffect
             };
 
 			var lightningBolt = new HexAction("Lightning Bolt (1)", TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo())
@@ -440,7 +450,7 @@ namespace HexWork.Gameplay
             {
                 PotentialCost = 1,
                 Range = 2,
-                TileEffect = TileEffectType.Wind
+                TileEffect = _windEffect
             };
 
             var shovingSnipeAction = new PushAction(name: "Shoving Snipe",
@@ -491,7 +501,7 @@ namespace HexWork.Gameplay
                 })
             {
                 Range = 2,
-                FollowUpAction = new MoveAction("Shift", TargetingHelper.GetDestinationTargetTiles) { Range = 1, IsFixedMovement = true }
+                FollowUpAction = new MoveAction("Shift", TargetingHelper.GetDestinationTargetTiles) { Range = 1, IsFixedMovement = true, TileEffect = _windEffect }
             };
 
             var shurikenPattern = new TargetPattern(new HexCoordinate(-1, 1), new HexCoordinate(0, -1),
@@ -779,7 +789,8 @@ namespace HexWork.Gameplay
         {
             var path = FindShortestPath(character.Position, position, character.MovementType);
             
-            foreach (var coordinate in path)
+            foreach (var coordinate in 
+                path)
             {
                 CharacterMoveEvent?.Invoke(this, new MoveEventArgs
                 {
@@ -1014,16 +1025,19 @@ namespace HexWork.Gameplay
             PotentialChangeEvent?.Invoke(this, new PotentialEventArgs(-potential));
         }
 
-        public void CreateTileEffect(HexCoordinate location, TileEffectType effectType)
+        public void CreateTileEffect(HexCoordinate location, TileEffect effect)
         {
-            var tileEffect = new TileEffect(location);
+            if (!IsHexWalkable(location))
+                return;
+
+            var tileEffect = new TileEffect(effect, location);
             TileEffects.Add(tileEffect);
 
             SpawnTileEffectEvent?.Invoke(this, new SpawnTileEffectEventArgs()
             {
                 Id = tileEffect.Guid,
                 Position = location,
-                Type = effectType
+                Type = effect.Type
             });
         }
 
@@ -1376,7 +1390,7 @@ namespace HexWork.Gameplay
 		    return true;
 	    }
 
-        private float GetTileMovementCost(HexCoordinate coordinate)
+        public float GetTileMovementCost(HexCoordinate coordinate)
         {
             if (!TileEffects.Any(te => te.Position == coordinate))
                 return _map[coordinate].MovementCost;
@@ -1446,9 +1460,11 @@ namespace HexWork.Gameplay
                 int movementCost = (int)GetTileMovementCost(coord);
                 TerrainType terrainType = _map[coord].TerrainType;
 
+                if(neighbours.Contains(coord))
+                    continue;
+
                 //if this tile is not already in the list
-                if (!neighbours.Contains(coord)
-                    && searchDepth + movementCost <= maxSearchDepth //and we have enough movement to walk to this tile
+                if (searchDepth + movementCost <= maxSearchDepth //and we have enough movement to walk to this tile
                     && IsTileEmpty(coord)) //and the tile is empty
                 {
                     neighbours.Add(coord);//then add it to the list.
@@ -1751,12 +1767,12 @@ namespace HexWork.Gameplay
                     {
                         zombie.SpawnAt(tile);
                         Characters.Add(zombie);
-                        MoveCharacterTo(zombie, position);
                         SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs
                         {
                             MonsterType = MonsterType.Zombie,
                             Character = zombie
                         });
+                        TeleportCharacterTo(zombie, position);
                         break;
                     }
                 }

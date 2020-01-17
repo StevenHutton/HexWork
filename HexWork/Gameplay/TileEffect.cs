@@ -13,21 +13,18 @@ namespace HexWork.Gameplay
 
     public class TileEffect
     {
-        public HexCoordinate Position;
-
         public Guid Guid = Guid.NewGuid();
-
+        public HexCoordinate Position;
         public TileEffectType Type = TileEffectType.Fire;
-
         public int Damage = 5;
-
         public StatusEffect Effect = new DotEffect();
-
         public float MovementModifier = 0.1f;
 
 	    public virtual async void TriggerEffect(IGameStateObject gameState, Character character)
 	    {
-		    gameState.ApplyDamage(character, Damage);
+            if(Damage > 0)
+                gameState.ApplyDamage(character, Damage);
+
 		    gameState.ApplyStatus(character, Effect);
 	    }
         public TileEffect() { }
@@ -35,6 +32,15 @@ namespace HexWork.Gameplay
         public TileEffect(HexCoordinate pos)
         {
             Position = pos;
+        }
+
+        public TileEffect(TileEffect effectToCopy, HexCoordinate pos)
+        {
+            Position = pos;
+            Type = effectToCopy.Type;
+            Damage = effectToCopy.Damage;
+            Effect = effectToCopy.Effect;
+            MovementModifier = effectToCopy.MovementModifier;
         }
     }
 }
