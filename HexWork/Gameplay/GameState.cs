@@ -979,7 +979,12 @@ namespace HexWork.Gameplay
             var destinationPos = targetCharacterPos + direction;
             while (distance > 0)
             {
-                if (IsHexPassable(destinationPos))
+                if (!Map.ContainsKey(destinationPos))
+                {
+                    ApplyDamage(targetCharacter, distance * 15, "IMPACT");
+                    distance = 0;
+                }
+                else if (IsHexPassable(destinationPos))
                 {
                     MoveCharacterTo(targetCharacter, destinationPos);
 
@@ -1062,6 +1067,11 @@ namespace HexWork.Gameplay
         public Character GetCharacterAtCoordinate(HexCoordinate coordinate)
         {
             return LivingCharacters.FirstOrDefault(character => character.Position == coordinate);
+        }
+
+        public bool IsHexInMap(HexCoordinate coord)
+        {
+            return Map.ContainsKey(coord);
         }
 
         /// <summary>
@@ -1242,9 +1252,10 @@ namespace HexWork.Gameplay
 
         public List<HexCoordinate> GetValidDestinations(Character objectCharacter, int range)
         {
-            List<HexCoordinate> visitedHexes = new List<HexCoordinate>();
-            GetWalkableNeighboursRecursive(visitedHexes, objectCharacter.Position, objectCharacter.MovementType, range);
-            return visitedHexes;
+            Dictionary<HexCoordinate, int> pathValues = new Dictionary<HexCoordinate, int> { { objectCharacter.Position, 0 } };
+
+            GetWalkableNeighboursRecursive(pathValues, objectCharacter.Position, objectCharacter.MovementType, range);
+            return pathValues.Keys.ToList();
         }
 
 	    public bool IsValidTarget(Character objectCharacter, HexCoordinate targetPosition, int range, GetValidTargetsDelegate targetDelegate)
@@ -1446,33 +1457,47 @@ namespace HexWork.Gameplay
             }
         }
 
-        private void GetWalkableNeighboursRecursive(List<HexCoordinate> neighbours, HexCoordinate position, MovementType movementType, int maxSearchDepth, int searchDepth = 0)
+        private void GetWalkableNeighboursRecursive(Dictionary<HexCoordinate, int> neighbours, HexCoordinate position, MovementType movementType, int maxSearchDepth, int searchDepth = 0)
         {
             if (searchDepth >= maxSearchDepth)
                 return;
 
             var adjacentTiles = _map.GetNeighborCoordinates(position);
+            var tilesToSearch = new List<HexCoordinate>();
 
             foreach (var coord in adjacentTiles)
             {
 	            if (!IsTilePassable(movementType, coord)) continue;
-
+                
                 int movementCost = (int)GetTileMovementCost(coord);
-                TerrainType terrainType = _map[coord].TerrainType;
 
-                if(neighbours.Contains(coord))
+                //if we don't have enough movement to reach this tile skip it.
+                if (searchDepth + movementCost > maxSearchDepth) continue;
+
+                if(!neighbours.ContainsKey(coord) || neighbours[coord] > searchDepth + movementCost)
+                    tilesToSearch.Add(coord);
+
+                if (!IsTileEmpty(coord))
                     continue;
 
-                //if this tile is not already in the list
-                if (searchDepth + movementCost <= maxSearchDepth //and we have enough movement to walk to this tile
-                    && IsTileEmpty(coord)) //and the tile is empty
-                {
-                    neighbours.Add(coord);//then add it to the list.
+                //if we've never looked at this tile or we found a shorter path to the tile add it to the list.
+                if (!neighbours.ContainsKey(coord)) 
+                { 
+                    neighbours.Add(coord, searchDepth + movementCost);//then add it to the list.
                 }
+                else if (neighbours[coord] > searchDepth + movementCost)
+                { 
+                    neighbours[coord] = searchDepth + movementCost;//or adjust the cost
+                }
+            }
 
+            foreach (var coord in tilesToSearch)
+            {
+                TerrainType terrainType = _map[coord].TerrainType;
                 if (terrainType == TerrainType.Water
                     || terrainType == TerrainType.Lava)
                     continue;
+                int movementCost = (int)GetTileMovementCost(coord);
 
                 GetWalkableNeighboursRecursive(neighbours, coord, movementType,
                     maxSearchDepth,
@@ -1772,7 +1797,7 @@ namespace HexWork.Gameplay
                             MonsterType = MonsterType.Zombie,
                             Character = zombie
                         });
-                        TeleportCharacterTo(zombie, position);
+                        TeleportCharacterTo(zombie, tile);
                         break;
                     }
                 }

@@ -354,6 +354,13 @@ namespace HexWork.UI
                 var rotation = (float)Math.Atan2(pushVector.Y, pushVector.X);
                 var drawPosition = characterScreenPos + (pushVector * 0.8f);
 
+                if (!IsHexInMap(destinationPos))
+                {
+                    _spriteBatch.Draw(_damageTexture, characterScreenPos, null, Color.White, 0.0f, new Vector2(128),
+                        _hexScaleV, SpriteEffects.None, 0.0f);
+                    pushForce = 0;
+                    break;
+                }
                 if (IsHexPassable(destinationPos))
                 {
                     _spriteBatch.Draw(_arrowTexture, drawPosition, null, Color.White, rotation, new Vector2(64, 64), _hexScale, SpriteEffects.None, 0.0f);
@@ -427,7 +434,12 @@ namespace HexWork.UI
             return _gameState.IsTileEmpty(coordinate);
         }
 
-	    public Tile GetTileAtCoordinate(HexCoordinate coordinate)
+        public bool IsHexInMap(HexCoordinate coordinate)
+        {
+            return _gameState.IsHexInMap(coordinate);
+        }
+
+        public Tile GetTileAtCoordinate(HexCoordinate coordinate)
 	    {
 		    return _gameState.GetTileAtCoordinate(coordinate);
 	    }

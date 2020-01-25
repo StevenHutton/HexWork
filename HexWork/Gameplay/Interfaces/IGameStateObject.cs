@@ -99,5 +99,7 @@ namespace HexWork.Gameplay.Interfaces
         bool IsTileEmpty(HexCoordinate coordinate);
 
 	    Tile GetTileAtCoordinate(HexCoordinate coordinate);
+        
+        bool IsHexInMap(HexCoordinate destinationPos);
     }
 }
