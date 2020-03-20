@@ -58,7 +58,7 @@ namespace HexWork.Gameplay.Actions
                     continue;
                 
                 if (Combo != null)
-                    await Combo.TriggerAsync(character, new DummyInputProvider(targetPosition), gameState);
+                    await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState);
                 gameState.ApplyDamage(targetCharacter, Power * character.Power);
                 gameState.ApplyStatus(targetCharacter, StatusEffect);
 

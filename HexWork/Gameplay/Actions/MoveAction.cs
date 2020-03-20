@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using HexWork.Gameplay.Interfaces;
+using HexWork.UI;
 using HexWork.UI.Interfaces;
 using MonoGameTestProject.Gameplay;
 
@@ -34,11 +35,13 @@ namespace HexWork.Gameplay.Actions
 			if (targetPosition == null || character.Position == targetPosition)
 				return;
 
-			if(TileEffect != null)
-				gameState.CreateTileEffect(character.Position, TileEffect);
-
+            var position = character.Position;
+			
 			if (gameState.IsValidDestination(character, targetPosition, GetMovementRange(character)))
 				gameState.MoveCharacterTo(character, targetPosition);
+            
+            if(TileEffect != null)
+				gameState.CreateTileEffect(position, TileEffect);
 		}
 
 		public override bool IsAvailable(Character character)

@@ -29,14 +29,12 @@ namespace HexWork.Gameplay.Actions
                 return;
 
             var targetCharacter = gameState.GetCharacterAtCoordinate(targetPosition);
-            if (targetCharacter == null)
-                return;
 
-            if (!targetCharacter.HasStatus)
+            var statusEffect = targetCharacter?.StatusEffects.FirstOrDefault();
+            if (statusEffect == null)
                 return;
 
             var powerBonus = gameState.ApplyCombo(targetCharacter, this);
-
             var nearestNeighbor = gameState.GetNearestNeighbor(character.Position, targetCharacter.Position);
 
             var direction = targetCharacter.Position - nearestNeighbor;

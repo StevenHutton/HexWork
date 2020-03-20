@@ -1020,7 +1020,7 @@ namespace HexWork.Gameplay
             PotentialChangeEvent?.Invoke(this, new PotentialEventArgs(potential));
         }
 
-        public void LosePotential(int potential)
+        public void LosePotential(int potential = 1)
         {
             if (Potential >= potential)
             {
@@ -1032,7 +1032,7 @@ namespace HexWork.Gameplay
 
         public void CreateTileEffect(HexCoordinate location, TileEffect effect)
         {
-            if (!IsHexWalkable(location))
+            if (!IsHexWalkable(location) || !IsTileEmpty(location))
                 return;
 
             var tileEffect = new TileEffect(effect, location);
@@ -1610,18 +1610,23 @@ namespace HexWork.Gameplay
 
             int distance = 1000;
             HexCoordinate nearest = null;
-
-            foreach (var neighbor in neighbours)
+            bool found = false;
+            while (!found)
             {
-                if(!IsHexPassable(neighbor))
-                    continue;
-
-                var delta = _map.DistanceBetweenPoints(start, neighbor);
-                if (delta < distance)
+                foreach (var neighbor in neighbours)
                 {
-                    nearest = neighbor;
-                    distance = delta;
+                    var delta = _map.DistanceBetweenPoints(start, neighbor);
+                    if (delta < distance)
+                    {
+                        nearest = neighbor;
+                        distance = delta;
+                        
+                        if (IsHexPassable(neighbor))
+                            found = true;
+                    }
                 }
+
+                neighbours = _map.GetNeighborCoordinates(nearest);
             }
 
             return nearest;
