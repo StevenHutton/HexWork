@@ -16,7 +16,7 @@ namespace HexWork.Gameplay.Actions
         public VampiricAction(string name,
             GetValidTargetsDelegate targetDelegate,
             StatusEffect statusEffect = null,
-            ComboAction combo = null, TargetPattern targetPattern = null) : base(name,
+            DamageComboAction combo = null, TargetPattern targetPattern = null) : base(name,
             targetDelegate,
             statusEffect,
             combo, targetPattern)

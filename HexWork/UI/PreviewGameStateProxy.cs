@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
@@ -12,9 +13,11 @@ namespace HexWork.UI
 {
     public class PreviewGameStateProxy : IGameStateObject, IDisposable
     {
-        private IGameStateObject _gameState;
+        public IGameStateObject gameState;
 
 	    private SpriteBatch _spriteBatch;
+
+        private SpriteFont _font;
 		
 		private Texture2D _invalidTexture;
 	    private Texture2D _blankTexture;
@@ -44,12 +47,6 @@ namespace HexWork.UI
 		#region Properties
 
 		public List<TileEffect> TileEffects { get; set; }
-
-		public IGameStateObject GameState
-	    {
-		    get => _gameState;
-		    set => _gameState = value;
-	    }
 
 		#endregion
 
@@ -81,6 +78,8 @@ namespace HexWork.UI
 
 	        _fireIconTexture = game.Content.Load<Texture2D>("FireIcon");
             _iconOrigin = new Vector2(_fireIconTexture.Width/2, _fireIconTexture.Height/2);
+            
+            _font = game.Content.Load<SpriteFont>("Nunito-Bold");
 
             var data = new[] { Color.White, Color.White, Color.White, Color.White };
 			_blankTexture = new Texture2D(game.GraphicsDevice, 2, 2);
@@ -89,14 +88,22 @@ namespace HexWork.UI
             _hexGame = (HexWork) game;
         }
 
-	    public List<HexCoordinate> GetValidDestinations(Character objectCharacter, int range)
+	    public List<HexCoordinate> GetValidDestinations(Character objectCharacter)
 	    {
-		    return _gameState.GetValidDestinations(objectCharacter, range);
-	    }
+		    var destinations =  gameState.GetValidDestinations(objectCharacter);
+            foreach (var coord in destinations)
+            {
+                var movementCost = GetPathLengthToTile(objectCharacter, coord).ToString();
+                
+                _spriteBatch.DrawString(_font, movementCost, GetHexScreenPosition(coord), Color.White, 0.0f, _font.MeasureString(movementCost) / 2, Vector2.One, SpriteEffects.None, 0.0f);
+            }
+            
+            return destinations;
+        }
 
-	    public bool IsValidDestination(Character objectCharacter, HexCoordinate targetPosition, int range)
+	    public bool IsValidDestination(Character objectCharacter, HexCoordinate targetPosition)
         {
-			var isValid = _gameState.IsValidDestination(objectCharacter, targetPosition, range);
+			var isValid = GetValidDestinations(objectCharacter).Contains(targetPosition);
 
 	        if (!isValid)
 	        {
@@ -114,7 +121,7 @@ namespace HexWork.UI
 
 	    public bool IsValidTarget(Character objectCharacter, HexCoordinate targetPosition, int range, GetValidTargetsDelegate targetDelegate)
 	    {
-		    var isValid = _gameState.IsValidTarget(objectCharacter, targetPosition, range, targetDelegate);
+		    var isValid = gameState.IsValidTarget(objectCharacter, targetPosition, range, targetDelegate);
 
 		    if (!isValid)
 		    {
@@ -128,7 +135,7 @@ namespace HexWork.UI
 
 		public List<HexCoordinate> FindShortestPath(HexCoordinate startPosition, HexCoordinate destination, MovementType movementType = MovementType.NormalMove)
 	    {
-			var path = _gameState.FindShortestPath(startPosition, destination, movementType);
+			var path = gameState.FindShortestPath(startPosition, destination, movementType);
 		    if (path == null)
 			    return null;
 
@@ -144,7 +151,7 @@ namespace HexWork.UI
 
 	    public List<HexCoordinate> GetAxisTilesInRange(Character objectCharacter, int range)
 	    {
-		    return _gameState.GetAxisTilesInRange(objectCharacter, range);
+		    return gameState.GetAxisTilesInRange(objectCharacter, range);
 	    }
 
 	    /// <summary>
@@ -154,7 +161,7 @@ namespace HexWork.UI
 		/// <param name="targetPosition"></param>
         public void MoveCharacterTo(Character character, HexCoordinate targetPosition)
         {
-            var path = _gameState.FindShortestPath(character.Position, targetPosition);
+            var path = gameState.FindShortestPath(character.Position, targetPosition);
 	        ResolveTileEffects(character, path);
             ResolveTerrainEffects(character, path);
         }
@@ -175,7 +182,7 @@ namespace HexWork.UI
 
 		    foreach (var tile in path)
 		    {
-			    var tileEffect = _gameState.TileEffects.FirstOrDefault(data => data.Position == tile);
+			    var tileEffect = gameState.TileEffects.FirstOrDefault(data => data.Position == tile);
 
 			    if (tileEffect == null)
 				    continue;
@@ -203,7 +210,7 @@ namespace HexWork.UI
 
         private void ResolveTerrainEffect(Character character, HexCoordinate position)
         {
-            var tile = _gameState.GetTileAtCoordinate(position);
+            var tile = gameState.GetTileAtCoordinate(position);
             switch (tile.TerrainType)
             {
                 case TerrainType.Ground:
@@ -242,7 +249,7 @@ namespace HexWork.UI
         public Character GetCharacterAtCoordinate(HexCoordinate coordinate)
         {
             //throw new System.NotImplementedException();
-	        return _gameState.GetCharacterAtCoordinate(coordinate);
+	        return gameState.GetCharacterAtCoordinate(coordinate);
         }
 
         public int ApplyDamage(Character character, int power, string message = null)
@@ -336,7 +343,7 @@ namespace HexWork.UI
                 0.0f);
         }
 
-        public int ApplyCombo(Character targetCharacter, ComboAction combo)
+        public int ApplyCombo(Character targetCharacter, DamageComboAction combo)
         {
             return 0;
         }
@@ -395,53 +402,58 @@ namespace HexWork.UI
 
 	    public List<HexCoordinate> GetVisibleAxisTilesInRange(Character objectCharacter, int range)
 	    {
-		    return _gameState.GetVisibleAxisTilesInRange(objectCharacter, range);
+		    return gameState.GetVisibleAxisTilesInRange(objectCharacter, range);
 	    }
 
 	    public List<HexCoordinate> GetVisibleAxisTilesInRangeIgnoreUnits(Character objectCharacter, int range)
 		{
-			return _gameState.GetVisibleAxisTilesInRangeIgnoreUnits(objectCharacter, range);
+			return gameState.GetVisibleAxisTilesInRangeIgnoreUnits(objectCharacter, range);
 		}
 
 		public List<HexCoordinate> GetVisibleTilesInRange(Character objectCharacter, int range)
 		{
-			return _gameState.GetVisibleTilesInRange(objectCharacter, range);
+			return gameState.GetVisibleTilesInRange(objectCharacter, range);
 
 		}
 
 		public List<HexCoordinate> GetVisibleTilesInRangeIgnoreUnits(Character objectCharacter, int range)
 		{
-			return _gameState.GetVisibleTilesInRangeIgnoreUnits(objectCharacter, range);
+			return gameState.GetVisibleTilesInRangeIgnoreUnits(objectCharacter, range);
 		}
 
 		public List<HexCoordinate> GetTilesInRange(Character objectCharacter, int range)
 		{
-			return _gameState.GetTilesInRange(objectCharacter, range);
+			return gameState.GetTilesInRange(objectCharacter, range);
 		}
 
 	    public HexCoordinate GetNearestNeighbor(HexCoordinate start, HexCoordinate end)
 	    {
-		    return _gameState.GetNearestNeighbor(start, end);
+		    return gameState.GetNearestNeighbor(start, end);
 	    }
 
         public bool IsHexPassable(HexCoordinate coordinate)
         {
-            return _gameState.IsHexPassable(coordinate);
+            return gameState.IsHexPassable(coordinate);
         }
 
         public bool IsTileEmpty(HexCoordinate coordinate)
         {
-            return _gameState.IsTileEmpty(coordinate);
+            return gameState.IsTileEmpty(coordinate);
         }
 
         public bool IsHexInMap(HexCoordinate coordinate)
         {
-            return _gameState.IsHexInMap(coordinate);
+            return gameState.IsHexInMap(coordinate);
+        }
+
+        public TileEffect GetTileEffectAtCoordinate(HexCoordinate targetPosition)
+        {
+            return gameState.GetTileEffectAtCoordinate(targetPosition);
         }
 
         public Tile GetTileAtCoordinate(HexCoordinate coordinate)
 	    {
-		    return _gameState.GetTileAtCoordinate(coordinate);
+		    return gameState.GetTileAtCoordinate(coordinate);
 	    }
 
         #region HelperMethods
@@ -453,6 +465,13 @@ namespace HexWork.UI
 
 		    return new Vector2(posX, posY) + _screenCenter;
 	    }
+
+        private int GetPathLengthToTile(Character objectCharacter, HexCoordinate destination)
+        {
+            var path = gameState.FindShortestPath(objectCharacter.Position, destination, objectCharacter.MovementType);
+
+            return path.Select((coord, index) => (int) gameState.GetTileAtCoordinate(coord).MovementCostModifier + GameState.MovementSpeedNormal[index]).Sum();
+        }
 
         #endregion
 

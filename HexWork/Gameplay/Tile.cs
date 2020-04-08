@@ -30,7 +30,7 @@ namespace HexWork.Gameplay
         // ReSharper disable once InconsistentNaming
         public bool BlocksLOS { get; set; } = false;
 
-        public float MovementCost { get; set; }
+        public float MovementCostModifier { get; set; }
 
         public Tile()
         {

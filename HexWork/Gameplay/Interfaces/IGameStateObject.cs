@@ -16,6 +16,13 @@ namespace HexWork.Gameplay.Interfaces
 		Flying
 	}
 
+    public enum MovementSpeed
+    {
+		Slow,
+		Normal,
+		Fast
+    }
+
 	public interface IGameStateObject
     {
 		List<TileEffect> TileEffects { get; set; }
@@ -32,7 +39,7 @@ namespace HexWork.Gameplay.Interfaces
 
         void ApplyStatus(Character character, StatusEffect effect);
 
-        int ApplyCombo(Character character, ComboAction combo);
+        int ApplyCombo(Character character, DamageComboAction combo);
 
         void ApplyPush(Character character, HexCoordinate direction, int pushForce);
 
@@ -70,13 +77,13 @@ namespace HexWork.Gameplay.Interfaces
 	    /// </summary>
 	    List<HexCoordinate> GetTilesInRange(Character objectCharacter, int range);
 
-	    List<HexCoordinate> GetValidDestinations(Character objectCharacter, int range);
+	    List<HexCoordinate> GetValidDestinations(Character objectCharacter);
 
 	    /// <summary>
 	    /// Returns a boolean indicating if the selected tile is reachable from the start position in
 	    /// a number of steps =< range.
 	    /// </summary>
-	    bool IsValidDestination(Character objectCharacter, HexCoordinate targetPosition, int range);
+	    bool IsValidDestination(Character objectCharacter, HexCoordinate targetPosition);
 
 	    bool IsValidTarget(Character objectCharacter, HexCoordinate targetPosition, int range, GetValidTargetsDelegate targetDelegate);
 
@@ -101,5 +108,6 @@ namespace HexWork.Gameplay.Interfaces
 	    Tile GetTileAtCoordinate(HexCoordinate coordinate);
         
         bool IsHexInMap(HexCoordinate destinationPos);
+        TileEffect GetTileEffectAtCoordinate(HexCoordinate targetPosition);
     }
 }

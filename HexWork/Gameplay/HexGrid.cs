@@ -177,47 +177,45 @@ namespace HexWork.Gameplay
                     case TerrainType.Water:
                         tile.Color = Color.CadetBlue;
                         tile.IsWalkable = true;
-                        tile.MovementCost = 1;
+                        tile.MovementCostModifier = 0;
                         break;
                     case TerrainType.Ground:
                         tile.Color =  Color.SaddleBrown;
                         tile.IsWalkable = true;
-                        tile.MovementCost = 1;
+                        tile.MovementCostModifier = 0;
                         break;
                     case TerrainType.Lava:
                         tile.Color =  Color.Orange;
                         tile.IsWalkable = true;
-                        tile.MovementCost = 1.1f;
+                        tile.MovementCostModifier = 0.1f;
                         break;
                     case TerrainType.Ice:
                         tile.Color =  Color.LightBlue;
                         tile.IsWalkable = true;
-                        tile.MovementCost = 2;
+                        tile.MovementCostModifier = 1;
                         break;
                     case TerrainType.ThinIce:
                         tile.Color =  Color.LightSteelBlue;
                         tile.IsWalkable = true;
-                        tile.MovementCost = 2;
+                        tile.MovementCostModifier = 1;
                         break;
                     case TerrainType.Snow:
                         tile.Color =  Color.DarkGray;
                         tile.IsWalkable = true;
-                        tile.MovementCost = 2;
+                        tile.MovementCostModifier = 1;
                         break;
                     case TerrainType.Sand:
                         tile.Color =  Color.SandyBrown;
                         tile.IsWalkable = true;
-                        tile.MovementCost = 2;
+                        tile.MovementCostModifier = 1;
                         break;
                     case TerrainType.Pit:
                         tile.Color =  Color.DarkSlateGray;
                         tile.IsWalkable = false;
-                        tile.MovementCost = 0;
                         break;
                     case TerrainType.Wall:
                         tile.Color = Color.Black;
                         tile.IsWalkable = false;
-                        tile.MovementCost = 0;
                         tile.BlocksLOS = true;
                         break;
                     default:

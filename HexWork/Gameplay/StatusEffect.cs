@@ -21,26 +21,31 @@ namespace HexWork.Gameplay
         void Tick(Character character, GameState state);
 
         void EndTurn(Character character, GameState state);
+
+        void Reset();
     }
 
     public class StatusEffect : IStatusEffect
     {
 	    public StatusEffectType StatusEffectType { get; set; }
 
-		public int Duration { get; set; } = 1;
+        public int LifeSpan = 1;
 
-        public string Name { get; set; }
+		public int Duration = 1;
+
+        public string Name;
 
         public bool IsExpired => (Duration <= 0);
 	    public Guid Id { get; set; } = Guid.NewGuid();
 
 	    public StatusEffect()
         {
-
+            Duration = LifeSpan;
         }
 
         public StatusEffect(StatusEffect effect)
         {
+            this.LifeSpan = effect.LifeSpan;
             this.Duration = effect.Duration;
             this.Name = effect.Name;
 	        this.StatusEffectType = effect.StatusEffectType;
@@ -66,6 +71,11 @@ namespace HexWork.Gameplay
         public virtual void EndTurn(Character character, GameState state)
         {
             Duration -= 1;
+        }
+
+        public void Reset()
+        {
+            Duration = LifeSpan;
         }
     }
 
@@ -105,12 +115,14 @@ namespace HexWork.Gameplay
 
         public DotEffect()
         {
+            LifeSpan = 3;
             Duration = 3;
 	        Name = "Burning";
 		}
 
         public DotEffect(DotEffect effect)
         {
+            this.LifeSpan = effect.LifeSpan;
             this.Duration = effect.Duration;
             this.Name = effect.Name;
             this.Damage = effect.Damage;

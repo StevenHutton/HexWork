@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework;
 using HexWork.Interfaces;
+using HexWork.UI;
 
 namespace HexWork.Screens
 {
@@ -44,7 +42,7 @@ namespace HexWork.Screens
 
         private void StartGame(object sender, EventArgs args)
         {
-            screenManager.AddScreen(new TeamSelectionScreen(screenManager));
+            screenManager.AddScreen(new BattleScreen(screenManager, 2));
             screenManager.RemoveScreen(this);
         }
 

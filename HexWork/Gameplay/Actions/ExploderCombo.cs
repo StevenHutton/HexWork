@@ -6,7 +6,7 @@ using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Gameplay.Actions
 {
-    public class ExploderCombo : ComboAction
+    public class ExploderCombo : DamageComboAction
     {
         private TargetPattern _targetPattern;
 

@@ -7,7 +7,7 @@ using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Gameplay.Actions
 {
-    public class SpreadStatusCombo : ComboAction
+    public class SpreadStatusCombo : DamageComboAction
     {
         public SpreadStatusCombo()
         {
@@ -24,42 +24,59 @@ namespace HexWork.Gameplay.Actions
         public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
         {
             var targetPosition = await input.GetTargetAsync(this);
-
             if (targetPosition == null)
                 return;
 
-            var targetCharacter = gameState.GetCharacterAtCoordinate(targetPosition);
-
-            var statusEffect = targetCharacter?.StatusEffects.FirstOrDefault();
-            if (statusEffect == null)
-                return;
-
-            var powerBonus = gameState.ApplyCombo(targetCharacter, this);
-            var nearestNeighbor = gameState.GetNearestNeighbor(character.Position, targetCharacter.Position);
-
-            var direction = targetCharacter.Position - nearestNeighbor;
+            var nearestNeighbor = gameState.GetNearestNeighbor(character.Position, targetPosition);
+            var direction = targetPosition - nearestNeighbor;
 
             while (Pattern.Pattern.All(coord => coord != direction))
             {
                 Pattern.RotateClockwise();
             }
 
+            var targetCharacter = gameState.GetCharacterAtCoordinate(targetPosition);
+            var statusEffect = targetCharacter?.StatusEffects.FirstOrDefault();
+            if (statusEffect != null)
+            {
+                var powerBonus = gameState.ApplyCombo(targetCharacter, this);
+
+                foreach (var targetTile in GetTargetTiles(targetPosition))
+                {
+                    var newTargetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
+
+                    //if no one is there, next tile
+                    if (newTargetCharacter == null)
+                        continue;
+
+                    if (AllySafe && newTargetCharacter.IsHero == character.IsHero)
+                        continue;
+
+                    gameState.ApplyStatus(newTargetCharacter, statusEffect);
+                    gameState.ApplyDamage(newTargetCharacter, Power * character.Power);
+                    gameState.ApplyDamage(targetCharacter, (powerBonus + Power) * character.Power);
+                }
+            }
+
+            var tileEffect = gameState.GetTileEffectAtCoordinate(targetPosition);
+            if (tileEffect == null)
+                return;
+            
             foreach (var targetTile in GetTargetTiles(targetPosition))
             {
                 var newTargetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
 
                 //if no one is there, next tile
-                if (newTargetCharacter == null)
-                    continue;
+                if (newTargetCharacter != null)
+                {
+                    if (AllySafe && newTargetCharacter.IsHero == character.IsHero)
+                        continue;
 
-                if (AllySafe && newTargetCharacter.IsHero == character.IsHero)
-                    continue;
-
-                gameState.ApplyStatus(newTargetCharacter, targetCharacter.StatusEffects.FirstOrDefault());
-                gameState.ApplyDamage(newTargetCharacter, Power * character.Power);
+                    tileEffect.TriggerEffect(gameState, newTargetCharacter);
+                }
+                else
+                    gameState.CreateTileEffect(targetTile, tileEffect);
             }
-
-            gameState.ApplyDamage(targetCharacter, (powerBonus + Power) * character.Power);
         }
     }
 }

@@ -12,7 +12,7 @@ namespace HexWork.Gameplay.Actions
         public LineAction(string name,
             GetValidTargetsDelegate targetDelegate,
             StatusEffect statusEffect = null,
-            ComboAction combo = null, TargetPattern targetPattern = null) :
+            DamageComboAction combo = null, TargetPattern targetPattern = null) :
             base(name,
                 targetDelegate,
                 statusEffect,
@@ -48,21 +48,7 @@ namespace HexWork.Gameplay.Actions
 
             foreach (var targetTile in targetTiles)
             {
-                var targetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
-
-                //if no one is there, next tile
-                if (targetCharacter == null)
-                    continue;
-
-                if (AllySafe && targetCharacter.IsHero == character.IsHero)
-                    continue;
-                
-                if (Combo != null)
-                    await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState);
-                gameState.ApplyDamage(targetCharacter, Power * character.Power);
-                gameState.ApplyStatus(targetCharacter, StatusEffect);
-
-                
+                ApplyToTile(targetTile, gameState, character);
             }
 
             if (PotentialCost != 0)

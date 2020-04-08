@@ -15,7 +15,7 @@ namespace HexWork.Gameplay.Actions
         public SwapAction(string name,
             GetValidTargetsDelegate targetDelegate,
             StatusEffect statusEffect = null,
-            ComboAction combo = null, TargetPattern targetPattern = null) :
+            DamageComboAction combo = null, TargetPattern targetPattern = null) :
             base(name,
                 targetDelegate,
                 statusEffect,

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
 using HexWork.UI.Interfaces;
@@ -17,7 +13,7 @@ namespace HexWork.Gameplay.Actions
         public PushAction(string name,
             GetValidTargetsDelegate targetDelegate,
             StatusEffect statusEffect = null,
-            ComboAction combo = null, TargetPattern targetPattern = null) : 
+            DamageComboAction combo = null, TargetPattern targetPattern = null) : 
             base(name,
             targetDelegate,
             statusEffect,

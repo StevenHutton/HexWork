@@ -47,12 +47,6 @@ namespace HexWork.Gameplay
             return gameState.GetAxisTilesInRange(objectCharacter, range);
         }
 
-        public static List<HexCoordinate> GetDestinationTargetTiles(Character objectCharacter, int range,
-            IGameStateObject gameState)
-        {
-            return gameState.GetValidDestinations(objectCharacter, range);
-        }
-
         #endregion
     }
 }

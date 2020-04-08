@@ -4,7 +4,7 @@ using HexWork.UI.Interfaces;
 
 namespace HexWork.Gameplay.Actions
 {
-    public class StatusCombo : ComboAction
+    public class StatusCombo : DamageComboAction
     {
         public StatusEffect Effect = null;
 

@@ -328,7 +328,7 @@ namespace HexWork.UI
 			//Draw Preview
 	        if (_cursorPosition != null)
 	        {
-		        _gameStateProxy.GameState = GameStateManager.CurrentGameState; ;
+		        _gameStateProxy.gameState = GameStateManager.CurrentGameState;
 
 				_gameStateProxy.SpriteBatchBegin();
 
@@ -539,9 +539,6 @@ namespace HexWork.UI
 
                 _spriteBatch.Draw(_hexagonTexture, renderPosition, null, color, 0.0f,
                     _hexCenter, _hexScaleV, SpriteEffects.None, 0.0f);
-
-                var movementCost = gameState.GetTileMovementCost(coordinate).ToString(CultureInfo.InvariantCulture);
-                _spriteBatch.DrawString(_uiFont, movementCost, renderPosition, Color.White, 0.0f, _uiFont.MeasureString(movementCost) / 2, Vector2.One, SpriteEffects.None, 0.0f);
             }
             
             _spriteBatch.End();

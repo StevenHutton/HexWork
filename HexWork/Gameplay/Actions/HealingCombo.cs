@@ -8,7 +8,7 @@ using HexWork.UI.Interfaces;
 
 namespace HexWork.Gameplay.Actions
 {
-    public class HealingCombo : ComboAction
+    public class HealingCombo : DamageComboAction
     {
         public HealingCombo()
         {

@@ -4,9 +4,9 @@ using HexWork.UI.Interfaces;
 
 namespace HexWork.Gameplay.Actions
 {
-    public class ComboAction : HexAction
+    public class DamageComboAction : HexAction
     {
-        public ComboAction()
+        public DamageComboAction()
         {
             Name = "Damage Combo";
             Power = 5;
