@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Interfaces;
 
-namespace HexWork.Gameplay
+namespace HexWork.Gameplay.Characters
 {
     public enum MonsterType
     {

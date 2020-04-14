@@ -15,12 +15,10 @@ namespace HexWork.Screens
     public class BattleSelectionScreen : MenuScreen
     {
         private HexWork _hexGame;
-        private GameState _gameState;
 
         public BattleSelectionScreen(IScreenManager _screenManager) : base(_screenManager, null)
         {
             _hexGame = (HexWork)_screenManager.Game;
-            _gameState = GameStateManager.CurrentGameState;
 
             menu.Add(new MenuEntry("Easy", EasyMission));
             menu.Add(new MenuEntry("Medium", MediumMission));

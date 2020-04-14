@@ -17,8 +17,8 @@ namespace HexWork
 
 		GraphicsDeviceManager _graphics;
 
-		public readonly int ScreenHeight = 900;
-		public readonly int ScreenWidth = 1600;
+		public readonly int ScreenHeight = 1080;
+		public readonly int ScreenWidth = 1920;
 
 		private IScreenManager _screenManager;
 		private IInputManager _inputManager;
@@ -45,8 +45,9 @@ namespace HexWork
 			{
 				PreferredBackBufferWidth = ScreenWidth,
 				PreferredBackBufferHeight = ScreenHeight
-			};
-            _screenCenterVector = new Vector2((float) ScreenWidth / 2, (float) ScreenHeight / 2);
+            };
+            _graphics.IsFullScreen = true;
+			_screenCenterVector = new Vector2((float) ScreenWidth / 2, (float) ScreenHeight / 2);
 
             _screenManager = new ScreenManager(this);
 			_inputManager = new InputManager(this);
@@ -55,8 +56,6 @@ namespace HexWork
 			Components.Add(_inputManager);
 
 			Content.RootDirectory = "Content";
-            
-            GameStateManager.SetGameState(new GameState());
         }
 
 		/// <summary>

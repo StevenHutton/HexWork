@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
 using MonoGameTestProject.Gameplay;
@@ -36,14 +37,7 @@ namespace HexWork.Gameplay.Actions
             
             if(TileEffect != null)
 				gameState.CreateTileEffect(position, TileEffect);
-		}
-
-		public override bool IsAvailable(Character character)
-		{
-			var gameState = GameStateManager.CurrentGameState;
-
-			return character.IsActive && (PotentialCost <= gameState.Potential) && character.CanMove;
-		}
+		}		
 
         /// <summary>
         /// Get a list of coordinates that are valid target locations for this action for the passed in character

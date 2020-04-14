@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using HexWork.Gameplay.Actions;
-using MonoGameTestProject.Gameplay;
+using HexWork.Gameplay.Characters;
 
 namespace HexWork.Gameplay.Interfaces
 {
@@ -25,7 +25,7 @@ namespace HexWork.Gameplay.Interfaces
 
 	public interface IGameStateObject
     {
-		List<TileEffect> TileEffects { get; set; }
+		List<TileEffect> TileEffects { get; }
 
 		void NotifyAction(HexAction action, Character character);
 

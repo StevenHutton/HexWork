@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
 using HexWork.UI.Interfaces;
@@ -121,13 +122,6 @@ namespace HexWork.Gameplay.Actions
             gameState.ApplyDamage(targetCharacter, Power * character.Power);
             gameState.ApplyStatus(targetCharacter, StatusEffect);
         }
-
-        public virtual bool IsAvailable(Character character)
-		{
-			var gameState = GameStateManager.CurrentGameState;
-
-			return character.IsActive && (this.PotentialCost <= gameState.Potential) && character.CanAttack;
-		}
 
         /// <summary>
         /// Get a list of coordinates that are valid target locations for this action for the passed in character

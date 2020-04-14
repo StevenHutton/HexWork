@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
+using HexWork.Gameplay.Characters;
+using HexWork.GameplayEvents;
 using HexWork.Interfaces;
 using HexWork.Screens;
 using HexWork.UI.Interfaces;
@@ -49,6 +51,8 @@ namespace HexWork.UI
         public event EventHandler<HexCoordinate> OnClickEvent;
 
         private HexAction SelectedHexAction = null;
+
+        private GameStateManager GameState;
 
         #region Rendering Attributes
 
@@ -135,23 +139,25 @@ namespace HexWork.UI
             _hexScale = 0.4f * _screenWidth / 1920;
             _hexScaleV = new Vector2(_hexScale);
 
-            var gameState = GameStateManager.CurrentGameState;
+            GameState = new GameStateManager();
             
-            gameState.CharacterMoveEvent += OnCharacterMove;
-            gameState.CharacterTeleportEvent += OnCharacterTeleport;
-            gameState.EndTurnEvent += OnEndTurn;
-            gameState.SpawnCharacterEvent += OnCharacterSpawn;
-            gameState.CharacterDiedEvent += OnCharacterDied;
-            gameState.TakeDamageEvent += OnTakeDamage;
-            gameState.ActionEvent += OnActionTrigger;
-            gameState.ComboEvent += OnComboTrigger;
-            gameState.StatusAppliedEvent += OnStatusEffectApplied;
-            gameState.StatusRemovedEvent += OnStatusEffectRemoved;
-            gameState.PotentialChangeEvent += OnPotentialChange;
-            gameState.MessageEvent += OnMessage;
-            gameState.GameOverEvent += OnGameOver;
-            gameState.SpawnTileEffectEvent += OnTileEffectSpawn;
-            gameState.RemoveTileEffectEvent += OnRemoveTileEffect;
+            GameState.CharacterMoveEvent += OnCharacterMove;
+            GameState.CharacterTeleportEvent += OnCharacterTeleport;
+            GameState.EndTurnEvent += OnEndTurn;
+            GameState.SpawnCharacterEvent += OnCharacterSpawn;
+            GameState.CharacterDiedEvent += OnCharacterDied;
+            GameState.TakeDamageEvent += OnTakeDamage;
+            GameState.ActionEvent += OnActionTrigger;
+            GameState.ComboEvent += OnComboTrigger;
+            GameState.StatusAppliedEvent += OnStatusEffectApplied;
+            GameState.StatusRemovedEvent += OnStatusEffectRemoved;
+            GameState.PotentialChangeEvent += OnPotentialChange;
+            GameState.MessageEvent += OnMessage;
+            GameState.GameOverEvent += OnGameOver;
+            GameState.SpawnTileEffectEvent += OnTileEffectSpawn;
+            GameState.RemoveTileEffectEvent += OnRemoveTileEffect;
+
+            GameState.CreateCharacters(difficulty);
         }
 
         public override void LoadContent(Game game)
@@ -164,6 +170,7 @@ namespace HexWork.UI
             _hexagonOutlineTexture = game.Content.Load<Texture2D>("hexagonOutline");
 
             LoadBlankTextures(game);
+
             LoadEffects(game);
 
             LoadCharacterDictionary(game);
@@ -178,7 +185,7 @@ namespace HexWork.UI
             _spriteBatch = new SpriteBatch(game.GraphicsDevice);
 	        _gameStateProxy = new PreviewGameStateProxy(_hexGame);
 
-            GameStateManager.CurrentGameState.StartGame(_difficulty);
+            GameState.StartGame();
         }
 
         #region Private Load Content Methods
@@ -186,7 +193,7 @@ namespace HexWork.UI
         private void LoadCharacterDictionary(Game game)
         {
             _uiCharacterDictionary.Clear();
-            var gameState = GameStateManager.CurrentGameState;
+            var gameState = GameState.GameState;
             foreach (var character in gameState.Characters)
             {
                 var tex = character.IsHero ? game.Content.Load<Texture2D>(character.Name) 
@@ -229,8 +236,7 @@ namespace HexWork.UI
 
         public void Initialise()
         {
-            var gameState = GameStateManager.CurrentGameState;
-            UpdateInitiative(gameState.GetInitiativeList());
+            UpdateInitiative(GameState.GameState.Characters);
         }
 
         #endregion
@@ -240,7 +246,7 @@ namespace HexWork.UI
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-            GameStateManager.CurrentGameState.Update(gameTime);
+            GameState.Update();
             foreach (var character in _uiCharacterDictionary.Values)
             {
                 character.Update(gameTime);
@@ -328,7 +334,7 @@ namespace HexWork.UI
 			//Draw Preview
 	        if (_cursorPosition != null)
 	        {
-		        _gameStateProxy.gameState = GameStateManager.CurrentGameState;
+		        _gameStateProxy.gameState = GameState;
 
 				_gameStateProxy.SpriteBatchBegin();
 
@@ -373,14 +379,14 @@ namespace HexWork.UI
 
         private void DrawHud()
         {
-            var gameState = GameStateManager.CurrentGameState;
+            var gameState = GameState;
 
             List<string> rightSideStrings = new List<string>();
-            if (gameState.ActiveCharacter != null)
+            if (gameState.GameState.ActiveCharacter != null)
             {
-                rightSideStrings.Add("Active Character : " + gameState.ActiveCharacter.Name);
+                rightSideStrings.Add("Active Character : " + gameState.GameState.ActiveCharacter.Name);
             }
-            rightSideStrings.Add($"Current Potential : {gameState.Potential}");
+            rightSideStrings.Add($"Current Potential : {gameState.GameState.Potential}");
             if (_selectedCharacter != null)
             {
                 rightSideStrings.Add($"Selected Character : {_selectedCharacter.Name}");
@@ -399,14 +405,14 @@ namespace HexWork.UI
 			        new Vector2(ScreenEdgeMargin, _screenHeight - ScreenEdgeMargin - 20), Color.Black);
 			}
 
-			var startPositionX = _screenCenter.X - ((float)gameState.MaxPotential / 2 * 65);
+			var startPositionX = _screenCenter.X - ((float)gameState.GameState.MaxPotential / 2 * 65);
             var potentialPosY = 100 * _hexScreenScale;
 
             var screenPosition = new Vector2(startPositionX, potentialPosY);
 
-            for (int i = 0; i < gameState.MaxPotential; i++)
+            for (int i = 0; i < gameState.GameState.MaxPotential; i++)
             {
-                var color = gameState.Potential <= i ? Color.LightPink : Color.Red;
+                var color = gameState.GameState.Potential <= i ? Color.LightPink : Color.Red;
 
                 _spriteBatch.Draw(_blankTexture, screenPosition, null, color, 0.0f, Vector2.Zero, new Vector2(30.0f, 2.0f),
                     SpriteEffects.None, 0.0f);
@@ -498,9 +504,9 @@ namespace HexWork.UI
 
         private void DrawMap()
         {
-            var gameState = GameStateManager.CurrentGameState;
+            var gameState = GameState.GameState;
             _spriteBatch.Begin();
-            foreach (var kvp in gameState.Map)
+            foreach (var kvp in gameState)
             {
                 var coordinate = kvp.Key;
                 var tile = kvp.Value;
@@ -520,10 +526,10 @@ namespace HexWork.UI
 
         private void DrawHighlightedMap(List<HexCoordinate> highlightedTiles)
         {
-            var gameState = GameStateManager.CurrentGameState;
+            var gameState = GameState.GameState;
             _spriteBatch.Begin();
 
-            foreach (var kvp in gameState.Map)
+            foreach (var kvp in gameState)
             {
                 var coordinate = kvp.Key;
                 var tile = kvp.Value;
@@ -603,7 +609,7 @@ namespace HexWork.UI
 
         private void DrawCharacters()
         {
-            var gameState = GameStateManager.CurrentGameState;
+            var gameState = GameState.GameState;
             //draw highlighted elements
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend,
                 null, null,
@@ -616,7 +622,7 @@ namespace HexWork.UI
             foreach (var kvp in _uiCharacterDictionary)
             {
                 var sprite = kvp.Value;
-	            var character = gameState.GetCharacter(kvp.Key);
+	            var character = GameState.GetCharacter(kvp.Key);
 
 				if (kvp.Key == _selectedCharacter?.Id)
                 {
@@ -730,7 +736,7 @@ namespace HexWork.UI
         /// <param name="clickPosition">The position of the click in screen space.</param>
         private void MouseUp(Point clickPosition)
         {
-            var gameState = GameStateManager.CurrentGameState;
+            var gameState = GameState.GameState;
             //get mouse position in hex space
             var mouseOffsetX = clickPosition.X - (_screenWidth / 2);
             var mouseOffsetY = clickPosition.Y - (_screenHeight / 2);
@@ -741,7 +747,7 @@ namespace HexWork.UI
                 && _focusedTile == cursorPosition 
                 && OnClickEvent == null)
             {
-                var ch = gameState.GetCharacterAtCoordinate(cursorPosition);
+                var ch = GameState.GetCharacterAtCoordinate(cursorPosition);
                 SelectCharacter(ch);
             }
 
@@ -765,7 +771,7 @@ namespace HexWork.UI
             var initButton = _initiativeTrack.FirstOrDefault(b => b.Rect.Contains(clickPosition));
             if (initButton != null)
             {
-                SelectCharacter(gameState.GetCharacter(initButton.CharacterId));
+                SelectCharacter(GameState.GetCharacter(initButton.CharacterId));
             }
         }
 
@@ -850,16 +856,15 @@ namespace HexWork.UI
                 AddButton(action.Name,
                     async (input) =>
                     {
-                        await action.TriggerAsync(_selectedCharacter, input, GameStateManager.CurrentGameState);
+                        await action.TriggerAsync(_selectedCharacter, input, GameState);
                         var followUpAction = action.FollowUpAction;
                         while (followUpAction != null)
                         {
                             await followUpAction.TriggerAsync(_selectedCharacter, input,
-                                GameStateManager.CurrentGameState);
+                                GameState);
                             followUpAction = followUpAction.FollowUpAction;
                         }
-                    },
-                    () => action.IsAvailable(_selectedCharacter));
+                    });
             }
 
             AddButton("End Turn", OnEndTurn, IsActiveCharacterSelected);
@@ -900,26 +905,26 @@ namespace HexWork.UI
 		/// <returns></returns>
 		private List<HexCoordinate> GetHighlightedCoordinates()
 		{
-            var gameState = GameStateManager.CurrentGameState;
-            return SelectedHexAction?.GetValidTargets(_selectedCharacter, gameState);
+            var gameState = GameState.GameState;
+            return SelectedHexAction?.GetValidTargets(_selectedCharacter, GameState);
 		}
 
 		private bool IsActiveCharacterSelected()
         {
-            var gameState = GameStateManager.CurrentGameState;
+            var gameState = GameState.GameState;
             return _selectedCharacter != null
                    && _selectedCharacter == gameState.ActiveCharacter;
         }
 
 		private HexCoordinate GetHexCoordinate(float posX, float posY)
         {
-            var gameState = GameStateManager.CurrentGameState;
+            var gameState = GameState.GameState;
             var x = (_sqrt3 / 3 * posX - 1.0f / 3 * posY) / (_hexHalfSize * _hexScale);
 		    var z = 2.0f / 3 * posY / (_hexHalfSize * _hexScale);
 		    var y = -(x + z);
 
 		    var result = GetNearestCoord(x, y, z);
-		    return gameState.Map.ContainsKey(result) ? result : null;
+		    return gameState.ContainsKey(result) ? result : null;
 	    }
 
 	    private HexCoordinate GetHexCoordinate(Vector2 position)
@@ -965,8 +970,8 @@ namespace HexWork.UI
 
 		private void OnEndTurn(IInputProvider input)
         {
-            var gameState = GameStateManager.CurrentGameState;
-            gameState.NextTurn();
+            var gameState = GameState.GameState;
+            //gameState.NextTurn();
         }
 
         private void OnMessage(object sender, MessageEventArgs args)

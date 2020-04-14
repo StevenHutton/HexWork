@@ -18,16 +18,16 @@ namespace HexWork.Screens
 			var gainPower = new MenuEntry("Gain Power");
 			var gainHealth = new MenuEntry("Gain Health");
 
-			gainPower.selected += (sender, args) =>
-				{
-					GameStateManager.CurrentGameState.CharacterGainPower(characterId);
-					this.Exit();
-				};
-			gainHealth.selected += (sender, args) =>
-				{
-					GameStateManager.CurrentGameState.CharacterGainHealth(characterId);
-					this.Exit();
-				};
+			//gainPower.selected += (sender, args) =>
+			//	{
+			//		GameStateManager.GameState.CharacterGainPower(characterId);
+			//		this.Exit();
+			//	};
+			//gainHealth.selected += (sender, args) =>
+			//	{
+			//		GameStateManager.GameState.CharacterGainHealth(characterId);
+			//		this.Exit();
+			//	};
 
 			menu.Add(gainPower);
 			menu.Add(gainHealth);

@@ -1,4 +1,5 @@
 ﻿using System;
+using HexWork.Gameplay.Characters;
 
 namespace HexWork.Gameplay
 {
@@ -16,11 +17,11 @@ namespace HexWork.Gameplay
 
         StatusEffect Copy();
 
-        void StartTurn(Character character, GameState state);
+        void StartTurn(Character character, GameStateManager state);
 
-        void Tick(Character character, GameState state);
+        void Tick(Character character, GameStateManager state);
 
-        void EndTurn(Character character, GameState state);
+        void EndTurn(Character character, GameStateManager state);
 
         void Reset();
     }
@@ -58,17 +59,17 @@ namespace HexWork.Gameplay
             return new StatusEffect(this);
         }
 
-        public virtual void StartTurn(Character character, GameState state)
+        public virtual void StartTurn(Character character, GameStateManager state)
         {
 
         }
 
-        public virtual void Tick(Character character, GameState state)
+        public virtual void Tick(Character character, GameStateManager state)
         {
 
         }
 
-        public virtual void EndTurn(Character character, GameState state)
+        public virtual void EndTurn(Character character, GameStateManager state)
         {
             Duration -= 1;
         }
@@ -98,7 +99,7 @@ namespace HexWork.Gameplay
 		        Name = StatusEffectType.ToString();
 		}
 
-        public override void StartTurn(Character character, GameState state)
+        public override void StartTurn(Character character, GameStateManager state)
         {
             character.CanMove = false;
         }
@@ -131,7 +132,7 @@ namespace HexWork.Gameplay
 		        Name = StatusEffectType.ToString();
 		}
 
-        public override void StartTurn(Character character, GameState state)
+        public override void StartTurn(Character character, GameStateManager state)
         {
             state.ApplyDamage(character, Damage, Name);
         }
@@ -161,7 +162,7 @@ namespace HexWork.Gameplay
         }
 
 
-        public override void StartTurn(Character character, GameState state)
+        public override void StartTurn(Character character, GameStateManager state)
         {
             character.HasActed = true;
             character.CanAttack = false;

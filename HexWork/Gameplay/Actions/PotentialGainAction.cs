@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
 using MonoGameTestProject.Gameplay;
@@ -25,13 +26,6 @@ namespace HexWork.Gameplay.Actions
         {
             gameState.GainPotential();
             gameState.NextTurn();
-        }
-
-        public override bool IsAvailable(Character character)
-        {
-            var gameState = GameStateManager.CurrentGameState;
-
-            return character.IsActive && character.CanMove && character.CanAttack;
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
+using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -470,7 +471,7 @@ namespace HexWork.UI
         {
             var path = gameState.FindShortestPath(objectCharacter.Position, destination, objectCharacter.MovementType);
 
-            return path.Select((coord, index) => (int) gameState.GetTileAtCoordinate(coord).MovementCostModifier + GameState.MovementSpeedNormal[index]).Sum();
+            return path.Select((coord, index) => (int) gameState.GetTileAtCoordinate(coord).MovementCostModifier + GameStateManager.MovementSpeedNormal[index]).Sum();
         }
 
         #endregion

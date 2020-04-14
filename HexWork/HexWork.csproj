@@ -56,10 +56,13 @@
     <Compile Include="Gameplay\Actions\StatusCombo.cs" />
     <Compile Include="Gameplay\Actions\SwapAction.cs" />
     <Compile Include="Gameplay\Actions\VampiricAction.cs" />
+    <Compile Include="Gameplay\Characters\CharacterFactory.cs" />
     <Compile Include="Gameplay\GameStateManager.cs" />
     <Compile Include="Gameplay\Actions\HexAction.cs" />
-    <Compile Include="Gameplay\Character.cs" />
+    <Compile Include="Gameplay\Characters\Character.cs" />
     <Compile Include="Gameplay\GameState.cs" />
+    <Compile Include="Gameplay\GamplayEvents.cs" />
+    <Compile Include="Gameplay\HexCoordinate.cs" />
     <Compile Include="Gameplay\HexGrid.cs" />
     <Compile Include="Gameplay\Interfaces\IGameStateObject.cs" />
     <Compile Include="Gameplay\StatusEffect.cs" />
