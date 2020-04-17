@@ -109,5 +109,10 @@ namespace HexWork.Gameplay.Interfaces
         
         bool IsHexInMap(HexCoordinate destinationPos);
         TileEffect GetTileEffectAtCoordinate(HexCoordinate targetPosition);
+
+        int GetPathLengthToTile(Character character, HexCoordinate destination);
+
+        List<HexCoordinate> GetWalkableAdjacentTiles(HexCoordinate position, MovementType movementType);
+
     }
 }

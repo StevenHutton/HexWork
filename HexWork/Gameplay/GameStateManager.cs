@@ -149,8 +149,6 @@ namespace HexWork.Gameplay
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-
-                NextTurn();
             }
         }
 
@@ -191,6 +189,9 @@ namespace HexWork.Gameplay
             //get the new active character
             activeCharacter = GetCharacterAtInitiative(0);
             activeCharacter.StartTurn();
+
+            if (activeCharacter.IsHero)
+                GainPotential(1);
 
             //apply any status effects for the new active character that trigger at the start of thier turn.
             foreach (var statusEffect in activeCharacter.StatusEffects)
@@ -413,7 +414,7 @@ namespace HexWork.Gameplay
 
             //if the player scores a combo they gain potential. if their commander gets comboed they lose potential (uh-oh!)
             if (GameState.ActiveCharacter.IsHero)
-                GainPotential();
+                GainPotential(2);
             
             var status = targetCharacter.StatusEffects.First();
 
@@ -565,10 +566,10 @@ namespace HexWork.Gameplay
         {
             var initiativeList = new List<Character>();
             var turnTimerToBeat = int.MaxValue;
-            var orderedList = GameState.Characters.Where(cha => cha.IsAlive).OrderBy(cha => cha.TurnTimer);
-            Character characterToBeat = orderedList?.First();
+            GameState.Characters = GameState.Characters.OrderBy(cha => cha.TurnTimer).ToList();
+            Character characterToBeat = GameState.Characters?.First();
 
-            var iterator = orderedList.GetEnumerator();
+            var iterator = GameState.Characters.GetEnumerator();
             var endOfList = !iterator.MoveNext();
 
             while (!endOfList)
@@ -595,7 +596,7 @@ namespace HexWork.Gameplay
                     turnTimerToBeat = turnTimerToBeat + characterToBeat.TurnCooldown;
                 }
             }
-
+            iterator.Dispose();
             return initiativeList;
         }
 
@@ -732,11 +733,15 @@ namespace HexWork.Gameplay
         /// </summary>
         public bool IsValidDestination(Character objectCharacter, HexCoordinate targetPosition)
         {
-            return GetValidDestinations(objectCharacter).Contains(targetPosition);
+            var reachable = GetValidDestinations(objectCharacter).Contains(targetPosition);
+
+            var inRange = (this.GameState.Potential >= GetPathLengthToTile(objectCharacter, targetPosition));
+
+            return (reachable && inRange);
         }
 
         /// <summary>
-        /// Get the shortest traversable path between two points on the map.
+        /// Get the shortest traverseable path between two points on the map.
         /// If no path can be found returns null.
         ///
         /// A* is fuckin' rad.
@@ -970,6 +975,22 @@ namespace HexWork.Gameplay
             }
         }
 
+        public List<HexCoordinate> GetWalkableAdjacentTiles(HexCoordinate position, MovementType movementType)
+        {
+            var walkableNeighbours = new List<HexCoordinate>();
+
+            var neighbours = GameState.GetNeighborCoordinates(position);
+
+            foreach (var coordinate in neighbours)
+            {
+                if (!IsTilePassable(movementType, coordinate)) continue;
+
+                walkableNeighbours.Add(coordinate);
+            }
+
+            return walkableNeighbours;
+        }
+
         private HexCoordinate GetNearestEmptyNeighbourRecursive(HexCoordinate position, int maxSearchDepth, int searchDepth = 0)
         {
             if (searchDepth >= maxSearchDepth)
@@ -1110,7 +1131,40 @@ namespace HexWork.Gameplay
             return GameState.Characters.FirstOrDefault(cha => cha.Id == characterId);
         }
 
-        #region Private Update Methods
+        public int GetPathLengthToTile(Character objectCharacter, HexCoordinate destination)
+        {
+            var path = FindShortestPath(objectCharacter.Position, destination, objectCharacter.MovementType);
+
+            switch (objectCharacter.MovementSpeed)
+            {
+                case MovementSpeed.Slow:
+                    return path.Select((coord, index) => (int)GetTileAtCoordinate(coord).MovementCostModifier + GetMoveSpeedCost(MovementSpeed.Slow, index)).Sum();
+                case MovementSpeed.Normal:
+                    return path.Select((coord, index) => (int)GetTileAtCoordinate(coord).MovementCostModifier + GetMoveSpeedCost(MovementSpeed.Normal, index)).Sum();
+                case MovementSpeed.Fast:
+                    return path.Select((coord, index) => (int)GetTileAtCoordinate(coord).MovementCostModifier + GetMoveSpeedCost(MovementSpeed.Fast, index)).Sum();
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private int GetMoveSpeedCost(MovementSpeed ms, int distance)
+        {
+            if (distance >= 7)
+                return 4;
+
+            switch (ms)
+            {
+                case MovementSpeed.Slow:
+                    return MovementSpeedSlow[distance];
+                case MovementSpeed.Normal:
+                    return MovementSpeedNormal[distance];
+                case MovementSpeed.Fast:
+                    return MovementSpeedFast[distance];
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
 
         #endregion
 
@@ -1118,14 +1172,11 @@ namespace HexWork.Gameplay
 
         #endregion
 
-        #endregion
-
-        
         #region Movement Attibutes
 
-        public static readonly int[] MovementSpeedSlow = { 1, 2, 2, 3, 3, 3, 3 };
-        public static readonly int[] MovementSpeedNormal = { 1, 1, 2, 3, 3, 3, 3, 3 };
-        public static readonly int[] MovementSpeedFast = { 0, 1, 1, 2, 3, 3, 3, 3, 3 };
+        public static readonly int[] MovementSpeedSlow = { 1, 1, 2, 3, 3, 3, 3 };
+        public static readonly int[] MovementSpeedNormal = { 0, 1, 2, 3, 3, 3, 3 };
+        public static readonly int[] MovementSpeedFast = { 0, 1, 1, 2, 2, 3, 3 };
 
         #endregion
     }

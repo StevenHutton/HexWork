@@ -178,7 +178,7 @@ namespace HexWork.Gameplay.Characters
 
             var shurikenPattern = new TargetPattern(new HexCoordinate(-1, 1), new HexCoordinate(0, -1),
                 new HexCoordinate(1, 0));
-            var shurikenHailActionEx = new HexAction("Shuriken Hail! (1)",
+            var shurikenHailActionEx = new HexAction("Shuriken Hail!",
                 TargetingHelper.GetValidTargetTilesLosIgnoreUnits,
                 new DotEffect
                 {
@@ -189,7 +189,7 @@ namespace HexWork.Gameplay.Characters
                 },
                 null, shurikenPattern)
             {
-                PotentialCost = 1,
+                PotentialCost = 2,
                 Range = 3
             };
 
@@ -207,7 +207,7 @@ namespace HexWork.Gameplay.Characters
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes
             };
-
+            ninjaCharacter.MovementSpeed = MovementSpeed.Fast;
             ninjaCharacter.AddAction(_moveAction);
             ninjaCharacter.AddAction(shurikenHailAction);
             ninjaCharacter.AddAction(shurikenHailActionEx);

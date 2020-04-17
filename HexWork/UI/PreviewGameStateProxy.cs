@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
@@ -8,7 +7,6 @@ using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameTestProject.Gameplay;
 
 namespace HexWork.UI
 {
@@ -467,11 +465,9 @@ namespace HexWork.UI
 		    return new Vector2(posX, posY) + _screenCenter;
 	    }
 
-        private int GetPathLengthToTile(Character objectCharacter, HexCoordinate destination)
+        public int GetPathLengthToTile(Character objectCharacter, HexCoordinate destination)
         {
-            var path = gameState.FindShortestPath(objectCharacter.Position, destination, objectCharacter.MovementType);
-
-            return path.Select((coord, index) => (int) gameState.GetTileAtCoordinate(coord).MovementCostModifier + GameStateManager.MovementSpeedNormal[index]).Sum();
+            return gameState.GetPathLengthToTile(objectCharacter, destination);
         }
 
         #endregion
@@ -485,6 +481,11 @@ namespace HexWork.UI
         public void Dispose()
         {
             _spriteBatch?.Dispose();
+        }
+
+        public List<HexCoordinate> GetWalkableAdjacentTiles(HexCoordinate position, MovementType movementType)
+        {
+            return gameState.GetWalkableAdjacentTiles(position, movementType);
         }
 
         #endregion

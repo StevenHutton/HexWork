@@ -42,12 +42,12 @@ namespace HexWork.Gameplay.Actions
         /// </summary>
         public override List<HexCoordinate> GetValidTargets(Character character, IGameStateObject gameState)
         {
-            return gameState.GetValidDestinations(character);
+            return gameState.GetWalkableAdjacentTiles(character.Position, character.MovementType);
         }
 
         public override bool IsValidTarget(Character character, HexCoordinate targetCoordinate, IGameStateObject gameState)
         {
-            return gameState.GetValidDestinations(character).Contains(targetCoordinate);
+            return gameState.GetWalkableAdjacentTiles(character.Position, character.MovementType).Contains(targetCoordinate);
         }
 	}
 }

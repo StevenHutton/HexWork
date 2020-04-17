@@ -32,6 +32,7 @@ namespace HexWork.Gameplay.Actions
 
             if (gameState.IsValidDestination(character, targetPosition))
             {
+                gameState.LosePotential(gameState.GetPathLengthToTile(character, targetPosition));
                 gameState.MoveCharacterTo(character, targetPosition);
             }
             

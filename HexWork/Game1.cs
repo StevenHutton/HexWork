@@ -46,7 +46,7 @@ namespace HexWork
 				PreferredBackBufferWidth = ScreenWidth,
 				PreferredBackBufferHeight = ScreenHeight
             };
-            _graphics.IsFullScreen = true;
+           // _graphics.IsFullScreen = true;
 			_screenCenterVector = new Vector2((float) ScreenWidth / 2, (float) ScreenHeight / 2);
 
             _screenManager = new ScreenManager(this);

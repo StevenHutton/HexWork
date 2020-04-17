@@ -38,6 +38,7 @@ namespace HexWork.Gameplay.Characters
         
         public int Movement;
         public MovementType MovementType = MovementType.NormalMove;
+        public MovementSpeed MovementSpeed = MovementSpeed.Normal;
 
         public bool IsHero = false;
         public bool IsAlive = true;

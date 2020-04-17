@@ -15,7 +15,7 @@ namespace HexWork.Gameplay
 
         public int Difficulty = 0;
         public int MaxPotential = 11;
-        public int Potential = 3;
+        public int Potential = 6;
 
         #endregion
 

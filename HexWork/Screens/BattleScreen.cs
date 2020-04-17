@@ -867,7 +867,7 @@ namespace HexWork.UI
                     });
             }
 
-            AddButton("End Turn", OnEndTurn, IsActiveCharacterSelected);
+            AddButton("End Turn", OnEndTurn);
             UpdateButtonPositions();
         }
         
@@ -908,13 +908,6 @@ namespace HexWork.UI
             var gameState = GameState.GameState;
             return SelectedHexAction?.GetValidTargets(_selectedCharacter, GameState);
 		}
-
-		private bool IsActiveCharacterSelected()
-        {
-            var gameState = GameState.GameState;
-            return _selectedCharacter != null
-                   && _selectedCharacter == gameState.ActiveCharacter;
-        }
 
 		private HexCoordinate GetHexCoordinate(float posX, float posY)
         {
@@ -970,14 +963,12 @@ namespace HexWork.UI
 
 		private void OnEndTurn(IInputProvider input)
         {
-            var gameState = GameState.GameState;
-            //gameState.NextTurn();
+            GameState.NextTurn();
         }
 
         private void OnMessage(object sender, MessageEventArgs args)
         {
             var action = new UiAction();
-
             if (args?.Character != null)
             {
                 var character = _uiCharacterDictionary[args.Character.Id];

@@ -19,7 +19,7 @@ namespace HexWork.Gameplay.Actions
         protected bool CanRotateTargetting = true;
 
         public TargetPattern Pattern;
-        public int PotentialCost = 0;
+        public int PotentialCost = 1;
         public DamageComboAction Combo = null;
 
         public HexAction FollowUpAction = null;
