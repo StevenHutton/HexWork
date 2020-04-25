@@ -43,6 +43,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Game1.cs" />
+    <Compile Include="Gameplay\Actions\CommandAction.cs" />
     <Compile Include="Gameplay\Actions\ExploderCombo.cs" />
     <Compile Include="Gameplay\Actions\FixedMoveAction.cs" />
     <Compile Include="Gameplay\Actions\HealingCombo.cs" />

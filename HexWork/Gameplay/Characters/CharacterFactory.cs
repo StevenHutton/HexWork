@@ -343,7 +343,7 @@ namespace HexWork.Gameplay.Characters
                 characters.Add(zombieKing);
             }
 
-            for (var i = 0; i < difficulty; i++)
+            for (var i = 0; i < difficulty+3; i++)
             {
                 var zombie = CreateZombie(i);
                 characters.Add(zombie);
@@ -362,6 +362,7 @@ namespace HexWork.Gameplay.Characters
             zombieKing.AddAction(_zombieGrab);
             zombieKing.AddAction(_zombieBite);
             zombieKing.AddAction(new SpawnAction(){Name = "Summon Zombie"});
+            zombieKing.AddAction(new CommandAction(){Name = "Zombie Rush"});
             zombieKing.DoTurn = ZombieKingTurn;
             return zombieKing;
         }
@@ -505,15 +506,8 @@ namespace HexWork.Gameplay.Characters
             }
             else
             {
-                if (zombies.Count == 0) return;
-                var zombie = zombies[rand.Next(0, zombies.Count)];
-                var zombie2 = zombies[rand.Next(0, zombies.Count)];
-                zombie.StartTurn();
-                ZombieTurn(gameState, zombie);
-                zombie.EndTurn();
-                zombie2.StartTurn();
-                ZombieTurn(gameState, zombie2);
-                zombie2.EndTurn();
+                character.Actions.FirstOrDefault(data => data.Name == "Zombie Rush")
+                    ?.TriggerAsync(character, null, gameState);
             }
         }
 
