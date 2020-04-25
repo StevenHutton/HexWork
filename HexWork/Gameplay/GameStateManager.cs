@@ -136,7 +136,11 @@ namespace HexWork.Gameplay
                 return;
 
             //if they can move take their actions and end turn
-            if (activeCharacter.HasActed) return;
+            if (activeCharacter.HasActed)
+            {
+                NextTurn();
+                return;
+            }
 
             activeCharacter.DoTurn(this, activeCharacter);
             activeCharacter.HasActed = true;

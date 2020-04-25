@@ -359,6 +359,7 @@ namespace HexWork.Gameplay.Characters
             zombieKing.AddAction(_moveAction);
             zombieKing.AddAction(_zombieGrab);
             zombieKing.AddAction(_zombieBite);
+            zombieKing.DoTurn = ZombieTurn;
             return zombieKing;
         }
 
@@ -418,7 +419,7 @@ namespace HexWork.Gameplay.Characters
             if (!character.CanMove) return;
 
             //get all the tiles to which the zombie COULD move
-            var tilesInRange = gameState.GetValidDestinations(character);
+            var tilesInRange = character.Actions.FirstOrDefault(data => data.Name == "Shamble")?.GetValidTargets(character, gameState) ?? new List<HexCoordinate>();
 
             float shortestDistance = 100;
             HexCoordinate destination = null;
