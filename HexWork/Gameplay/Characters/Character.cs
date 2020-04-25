@@ -53,6 +53,8 @@ namespace HexWork.Gameplay.Characters
 
         private static Random _rand;
 
+        public Action<IGameStateObject, Character> DoTurn { get; set; }
+
         #endregion
 
         #region Properties
@@ -122,10 +124,5 @@ namespace HexWork.Gameplay.Characters
         }
 
         #endregion
-
-        public virtual void DoTurn(IGameStateObject gameStateManager)
-        {
-            
-        }
     }
 }

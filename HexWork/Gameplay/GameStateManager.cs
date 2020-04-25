@@ -13,8 +13,8 @@ namespace HexWork.Gameplay
     {
         #region Attributes
 
-        public GameState GameState;
-        public List<TileEffect> TileEffects => GameState.TileEffects;
+        public GameState CurrentGameState { get; set; }
+        public List<TileEffect> TileEffects => CurrentGameState.TileEffects;
 
         #endregion
 
@@ -58,14 +58,14 @@ namespace HexWork.Gameplay
         
         public GameStateManager()
         {
-            GameState = new GameState();
+            CurrentGameState = new GameState();
         }
 
         public void CreateCharacters(int difficulty = 1)
         {
             var characterFactory = new CharacterFactory();
-            GameState.Characters.AddRange(characterFactory.CreateHeroes());
-            GameState.Characters.AddRange(characterFactory.CreateEnemies(difficulty));
+            CurrentGameState.Characters.AddRange(characterFactory.CreateHeroes());
+            CurrentGameState.Characters.AddRange(characterFactory.CreateEnemies(difficulty));
         }
 
         #endregion
@@ -74,17 +74,17 @@ namespace HexWork.Gameplay
         
         public void StartGame()
         {
-            var characters = GameState.Characters;
+            var characters = CurrentGameState.Characters;
 
             //spawn enemies
-            foreach (var character in GameState.Characters.Where(c => !c.IsHero))
+            foreach (var character in CurrentGameState.Characters.Where(c => !c.IsHero))
             {
-                var coordinate = GameState.GetRandomCoordinateInMap();
+                var coordinate = CurrentGameState.GetRandomCoordinateInMap();
 
                 //one unit per tile and only deploy to walkable spaces.
-                while (characters.Select(cha => cha.Position).Contains(coordinate) || !GameState[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
+                while (characters.Select(cha => cha.Position).Contains(coordinate) || !CurrentGameState[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
                 {
-                    coordinate = GameState.GetRandomCoordinateInMap();
+                    coordinate = CurrentGameState.GetRandomCoordinateInMap();
                 }
 
                 character.SpawnAt(coordinate);
@@ -98,7 +98,7 @@ namespace HexWork.Gameplay
 
             //spawn heroes
             var spawnPoint = new HexCoordinate(-2, -2, 4);
-            foreach (var character in GameState.Heroes)
+            foreach (var character in CurrentGameState.Heroes)
             {
                 var position = spawnPoint;
                 var validTile = IsHexPassable(position);
@@ -108,7 +108,7 @@ namespace HexWork.Gameplay
                     position = GetNearestEmptyNeighbourRecursive(position, 9);
                     //tiles are only valid so long as they're walkable and have at least one passable neighbor.
                     validTile = IsHexPassable(position) &&
-                                GameState.GetNeighborCoordinates(position).Any(IsHexPassable);
+                                CurrentGameState.GetNeighborCoordinates(position).Any(IsHexPassable);
                 }
 
                 character.SpawnAt(position);
@@ -124,7 +124,7 @@ namespace HexWork.Gameplay
         
         public void Update()
         {
-            var activeCharacter = GameState.ActiveCharacter;
+            var activeCharacter = CurrentGameState.ActiveCharacter;
 
             if (!activeCharacter.IsAlive)
             {
@@ -136,15 +136,15 @@ namespace HexWork.Gameplay
                 return;
 
             //if they can move take their actions and end turn
-            if (!activeCharacter.HasActed)
-            {
-                activeCharacter.DoTurn(this);
-            }
+            if (activeCharacter.HasActed) return;
+
+            activeCharacter.DoTurn(this, activeCharacter);
+            activeCharacter.HasActed = true;
         }
 
         public void NextTurn()
         {
-            var activeCharacter = GameState.ActiveCharacter;
+            var activeCharacter = CurrentGameState.ActiveCharacter;
 
             //if we have an active character then update all the initiative values
             if (activeCharacter != null)
@@ -154,7 +154,7 @@ namespace HexWork.Gameplay
                 activeCharacter.EndTurn();
 
                 var deltaTime = activeCharacter.TurnTimer;
-                foreach (var character in GameState.Characters)
+                foreach (var character in CurrentGameState.Characters)
                 {
                     character.TurnTimer -= deltaTime;
                 }
@@ -190,7 +190,7 @@ namespace HexWork.Gameplay
             }
 
             //apply any status effects for characters that apply whenever initiative moves.
-            foreach (var character in GameState.Characters)
+            foreach (var character in CurrentGameState.Characters)
             {
                 foreach (var statusEffect in character.StatusEffects)
                 {
@@ -200,7 +200,7 @@ namespace HexWork.Gameplay
 
             EndTurnEvent?.Invoke(this, new EndTurnEventArgs(GetInitiativeList().ToList()));
             
-            if (GameState.Enemies.All(c => c.MonsterType != MonsterType.ZombieKing))
+            if (CurrentGameState.Enemies.All(c => c.MonsterType != MonsterType.ZombieKing))
             {
                 SendMessage("Enemy Leader(s) Defeated");
                 GameOverEvent?.Invoke(this, new MessageEventArgs("You Win!"));
@@ -275,13 +275,13 @@ namespace HexWork.Gameplay
 
         private void ResolveTileEffects(Character character, HexCoordinate position)
         {
-            var tileEffect = GameState.TileEffects.FirstOrDefault(data => data.Position == position);
+            var tileEffect = CurrentGameState.TileEffects.FirstOrDefault(data => data.Position == position);
 
             if (tileEffect == null)
                 return;
 
             tileEffect.TriggerEffect(this, character);
-            GameState.TileEffects.Remove(tileEffect);
+            CurrentGameState.TileEffects.Remove(tileEffect);
             RemoveTileEffectEvent?.Invoke(this, new RemoveTileEffectEventArgs() { Id = tileEffect.Guid });
         }
 
@@ -289,7 +289,7 @@ namespace HexWork.Gameplay
         private void ResolveTerrainEffects(Character character, HexCoordinate destination)
         {
             //don't count terrain effects from a tile you're standing. We don't punish players for leaving lava.
-            ResolveTerrainEnterEffect(character, GameState[destination]);
+            ResolveTerrainEnterEffect(character, CurrentGameState[destination]);
         }
 
         private void ResolveTerrainEnterEffect(Character character, Tile tile)
@@ -403,7 +403,7 @@ namespace HexWork.Gameplay
             ComboEvent?.Invoke(this, new ComboEventArgs(targetCharacter.Id, combo));
 
             //if the player scores a combo they gain potential. if their commander gets comboed they lose potential (uh-oh!)
-            if (GameState.ActiveCharacter.IsHero)
+            if (CurrentGameState.ActiveCharacter.IsHero)
                 GainPotential(2);
             
             var status = targetCharacter.StatusEffects.First();
@@ -429,7 +429,7 @@ namespace HexWork.Gameplay
             var destinationPos = targetCharacterPos + direction;
             while (distance > 0)
             {
-                if (!GameState.ContainsKey(destinationPos))
+                if (!CurrentGameState.ContainsKey(destinationPos))
                 {
                     ApplyDamage(targetCharacter, distance * 15, "IMPACT");
                     distance = 0;
@@ -438,7 +438,7 @@ namespace HexWork.Gameplay
                 {
                     MoveCharacterTo(targetCharacter, destinationPos);
 
-                    var tile = GameState[destinationPos];
+                    var tile = CurrentGameState[destinationPos];
 
                     if (tile.TerrainType != TerrainType.Ice && tile.TerrainType != TerrainType.ThinIce)
                         distance--;
@@ -462,9 +462,9 @@ namespace HexWork.Gameplay
 
         public void GainPotential(int potential = 1)
         {
-            if (GameState.Potential + potential <= GameState.MaxPotential)
+            if (CurrentGameState.Potential + potential <= CurrentGameState.MaxPotential)
             {
-                GameState.Potential += potential;
+                CurrentGameState.Potential += potential;
             }
 
             PotentialChangeEvent?.Invoke(this, new PotentialEventArgs(potential));
@@ -472,9 +472,9 @@ namespace HexWork.Gameplay
 
         public void LosePotential(int potential = 1)
         {
-            if (GameState.Potential >= potential)
+            if (CurrentGameState.Potential >= potential)
             {
-                GameState.Potential -= potential;
+                CurrentGameState.Potential -= potential;
             }
 
             PotentialChangeEvent?.Invoke(this, new PotentialEventArgs(-potential));
@@ -486,7 +486,7 @@ namespace HexWork.Gameplay
                 return;
 
             var tileEffect = new TileEffect(effect, location);
-            GameState.TileEffects.Add(tileEffect);
+            CurrentGameState.TileEffects.Add(tileEffect);
 
             SpawnTileEffectEvent?.Invoke(this, new SpawnTileEffectEventArgs()
             {
@@ -502,22 +502,22 @@ namespace HexWork.Gameplay
 
         public Tile GetTileAtCoordinate(HexCoordinate coordinate)
         {
-            return GameState[coordinate];
+            return CurrentGameState[coordinate];
         }
 
         public Character GetCharacter(Guid characterId)
         {
-            return GameState.Characters.FirstOrDefault(ch => ch.Id == characterId);
+            return CurrentGameState.Characters.FirstOrDefault(ch => ch.Id == characterId);
         }
 
         public Character GetCharacterAtCoordinate(HexCoordinate coordinate)
         {
-            return GameState.LivingCharacters.FirstOrDefault(character => character.Position == coordinate);
+            return CurrentGameState.LivingCharacters.FirstOrDefault(character => character.Position == coordinate);
         }
 
         public bool IsHexInMap(HexCoordinate coord)
         {
-            return GameState.ContainsKey(coord);
+            return CurrentGameState.ContainsKey(coord);
         }
 
         /// <summary>
@@ -525,7 +525,7 @@ namespace HexWork.Gameplay
         /// </summary>
         public TileEffect GetTileEffectAtCoordinate(HexCoordinate coordinate)
         {
-            return GameState.TileEffects.FirstOrDefault(data => data.Position == coordinate);
+            return CurrentGameState.TileEffects.FirstOrDefault(data => data.Position == coordinate);
         }
 
         /// <summary>
@@ -540,7 +540,7 @@ namespace HexWork.Gameplay
 
         public bool IsTileEmpty(HexCoordinate position)
         {
-            return !GameState.LivingCharacters.Any(character => character.Position == position);
+            return !CurrentGameState.LivingCharacters.Any(character => character.Position == position);
         }
 
         public Character GetCharacterAtInitiative(int initiative)
@@ -556,10 +556,10 @@ namespace HexWork.Gameplay
         {
             var initiativeList = new List<Character>();
             var turnTimerToBeat = int.MaxValue;
-            GameState.Characters = GameState.Characters.OrderBy(cha => cha.TurnTimer).ToList();
-            Character characterToBeat = GameState.Characters?.First();
+            CurrentGameState.Characters = CurrentGameState.Characters.OrderBy(cha => cha.TurnTimer).ToList();
+            Character characterToBeat = CurrentGameState.Characters?.First();
 
-            var iterator = GameState.Characters.GetEnumerator();
+            var iterator = CurrentGameState.Characters.GetEnumerator();
             var endOfList = !iterator.MoveNext();
 
             while (!endOfList)
@@ -601,9 +601,9 @@ namespace HexWork.Gameplay
             {
                 for (var i = 0; i < range; i++)
                 {
-                    var hexToCheck = GameState.ActiveCharacter.Position + (direction * (i + 1));
+                    var hexToCheck = CurrentGameState.ActiveCharacter.Position + (direction * (i + 1));
 
-                    if (!GameState.ContainsKey(hexToCheck))
+                    if (!CurrentGameState.ContainsKey(hexToCheck))
                         break;
 
                     targets.Add(hexToCheck);
@@ -627,9 +627,9 @@ namespace HexWork.Gameplay
             {
                 for (var i = 0; i < range; i++)
                 {
-                    var hexToCheck = GameState.ActiveCharacter.Position + (direction * (i + 1));
+                    var hexToCheck = CurrentGameState.ActiveCharacter.Position + (direction * (i + 1));
 
-                    if (!GameState.ContainsKey(hexToCheck))
+                    if (!CurrentGameState.ContainsKey(hexToCheck))
                         break;
 
                     if (IsHexOpaque(hexToCheck))
@@ -653,9 +653,9 @@ namespace HexWork.Gameplay
             {
                 for (var i = 0; i < range; i++)
                 {
-                    var hexToCheck = GameState.ActiveCharacter.Position + (direction * (i + 1));
+                    var hexToCheck = CurrentGameState.ActiveCharacter.Position + (direction * (i + 1));
 
-                    if (!GameState.ContainsKey(hexToCheck))
+                    if (!CurrentGameState.ContainsKey(hexToCheck))
                         break;
 
                     if (IsHexOpaque(hexToCheck))
@@ -675,7 +675,7 @@ namespace HexWork.Gameplay
         {
             var targets = new List<HexCoordinate>() { objectCharacter.Position };
 
-            GetVisibleTilesRecursive(targets, objectCharacter.Position, GameState.ActiveCharacter.Position, range);
+            GetVisibleTilesRecursive(targets, objectCharacter.Position, CurrentGameState.ActiveCharacter.Position, range);
 
             return targets;
         }
@@ -687,7 +687,7 @@ namespace HexWork.Gameplay
         {
             var targets = new List<HexCoordinate>() { objectCharacter.Position };
 
-            GetVisibleTilesRecursive(targets, objectCharacter.Position, GameState.ActiveCharacter.Position, range, 0, true);
+            GetVisibleTilesRecursive(targets, objectCharacter.Position, CurrentGameState.ActiveCharacter.Position, range, 0, true);
 
             return targets;
         }
@@ -725,7 +725,7 @@ namespace HexWork.Gameplay
         {
             var reachable = GetValidDestinations(objectCharacter).Contains(targetPosition);
 
-            var inRange = (this.GameState.Potential >= GetPathLengthToTile(objectCharacter, targetPosition));
+            var inRange = (this.CurrentGameState.Potential >= GetPathLengthToTile(objectCharacter, targetPosition));
 
             return (reachable && inRange);
         }
@@ -744,7 +744,7 @@ namespace HexWork.Gameplay
         /// </summary>
         public List<HexCoordinate> FindShortestPath(HexCoordinate start, HexCoordinate destination, MovementType movementType = MovementType.NormalMove)
         {
-            if (!GameState.ContainsKey(start) || !GameState.ContainsKey(destination))
+            if (!CurrentGameState.ContainsKey(start) || !CurrentGameState.ContainsKey(destination))
                 return null;
 
             //data structure map such that key : a tile we've looked at one or more times, value : the previous tile in the shortest path to the key.
@@ -769,15 +769,15 @@ namespace HexWork.Gameplay
                     break;
 
                 //look at all of the best estimated tile's neighbors
-                foreach (var neighbor in GameState.GetNeighborCoordinates(current))
+                foreach (var neighbor in CurrentGameState.GetNeighborCoordinates(current))
                 {
                     //tile validation goes here.
                     if (!IsTilePassable(movementType, neighbor))
                         continue;
 
                     //check if the tile is water or lava. - these tiles have a special rule, they stop your movement.
-                    if ((GameState[neighbor].TerrainType == TerrainType.Water
-                        || GameState[neighbor].TerrainType == TerrainType.Lava)
+                    if ((CurrentGameState[neighbor].TerrainType == TerrainType.Water
+                        || CurrentGameState[neighbor].TerrainType == TerrainType.Lava)
                         && neighbor != destination)
                         continue;
 
@@ -793,7 +793,7 @@ namespace HexWork.Gameplay
                         pathValues[neighbor] = (int)pathLengthToNeighbor;
 
                         //heuristic for "distance to destination tile" is just absolute distance between current tile and the destination
-                        float estimate = pathLengthToNeighbor + GameState.DistanceBetweenPoints(neighbor, destination);
+                        float estimate = pathLengthToNeighbor + HexGrid.DistanceBetweenPoints(neighbor, destination);
 
                         ancestorMap[neighbor] = current;
 
@@ -830,7 +830,7 @@ namespace HexWork.Gameplay
             //tile validation goes here.
             if (!IsHexWalkable(coordinate)) return false;
 
-            var character = GameState.LivingCharacters.FirstOrDefault(c => c.Position == coordinate);
+            var character = CurrentGameState.LivingCharacters.FirstOrDefault(c => c.Position == coordinate);
             if (character == null)
                 return true;
 
@@ -861,11 +861,11 @@ namespace HexWork.Gameplay
 
         public float GetTileMovementCostModifier(HexCoordinate coordinate)
         {
-            if (!GameState.TileEffects.Any(te => te.Position == coordinate))
-                return GameState[coordinate].MovementCostModifier;
+            if (!CurrentGameState.TileEffects.Any(te => te.Position == coordinate))
+                return CurrentGameState[coordinate].MovementCostModifier;
 
-            return GameState.TileEffects.Where(te => te.Position == coordinate).Sum(te => te.MovementModifier) +
-                   GameState[coordinate].MovementCostModifier;
+            return CurrentGameState.TileEffects.Where(te => te.Position == coordinate).Sum(te => te.MovementModifier) +
+                   CurrentGameState[coordinate].MovementCostModifier;
         }
 
         private void SendMessage(string message)
@@ -885,12 +885,12 @@ namespace HexWork.Gameplay
 
         private bool IsHexWalkable(HexCoordinate co)
         {
-            return GameState[co].IsWalkable;
+            return CurrentGameState[co].IsWalkable;
         }
 
         private bool IsHexOpaque(HexCoordinate coordinate)
         {
-            return GameState[coordinate].BlocksLOS;
+            return CurrentGameState[coordinate].BlocksLOS;
         }
 
         private bool BlocksLineOfSight(HexCoordinate coordinate)
@@ -903,7 +903,7 @@ namespace HexWork.Gameplay
             if (searchDepth >= range)
                 return;
 
-            var adjacentTiles = GameState.GetNeighborCoordinates(position);
+            var adjacentTiles = CurrentGameState.GetNeighborCoordinates(position);
             foreach (var coord in adjacentTiles)
             {
                 if (!tilesInRange.Contains(coord))
@@ -917,7 +917,7 @@ namespace HexWork.Gameplay
 
         private void GetWalkableNeighboursRecursive(Dictionary<HexCoordinate, int> neighbours, HexCoordinate position, MovementType movementType, int movementCost, int searchDepth)
         {
-            var adjacentTiles = GameState.GetNeighborCoordinates(position);
+            var adjacentTiles = CurrentGameState.GetNeighborCoordinates(position);
             var tilesToSearch = new List<HexCoordinate>();
 
             foreach (var coord in adjacentTiles)
@@ -929,7 +929,7 @@ namespace HexWork.Gameplay
                 var movementCostToCoord = MovementSpeedNormal[searchDepth] + movementCostModifier;
 
                 //if we don't have enough movement to reach this tile skip it.
-                if (movementCostToCoord + movementCost > GameState.Potential) continue;
+                if (movementCostToCoord + movementCost > CurrentGameState.Potential) continue;
 
                 if (!neighbours.ContainsKey(coord) || neighbours[coord] > searchDepth + movementCost)
                     tilesToSearch.Add(coord);
@@ -950,7 +950,7 @@ namespace HexWork.Gameplay
 
             foreach (var coord in tilesToSearch)
             {
-                TerrainType terrainType = GameState[coord].TerrainType;
+                TerrainType terrainType = CurrentGameState[coord].TerrainType;
                 if (terrainType == TerrainType.Water
                     || terrainType == TerrainType.Lava)
                     continue;
@@ -969,7 +969,7 @@ namespace HexWork.Gameplay
         {
             var walkableNeighbours = new List<HexCoordinate>();
 
-            var neighbours = GameState.GetNeighborCoordinates(position);
+            var neighbours = CurrentGameState.GetNeighborCoordinates(position);
 
             foreach (var coordinate in neighbours)
             {
@@ -986,7 +986,7 @@ namespace HexWork.Gameplay
             if (searchDepth >= maxSearchDepth)
                 return null;
 
-            var adjacentTiles = GameState.GetNeighborCoordinates(position);
+            var adjacentTiles = CurrentGameState.GetNeighborCoordinates(position);
 
             foreach (var coord in adjacentTiles)
             {
@@ -1004,14 +1004,14 @@ namespace HexWork.Gameplay
 
         public HexCoordinate GetNearestNeighbor(HexCoordinate start, HexCoordinate end)
         {
-            var neighbours = GameState.GetNeighborCoordinates(end);
+            var neighbours = CurrentGameState.GetNeighborCoordinates(end);
 
             int distance = 100;
             HexCoordinate nearest = null;
 
             foreach (var neighbor in neighbours)
             {
-                var delta = GameState.DistanceBetweenPoints(start, neighbor);
+                var delta = HexGrid.DistanceBetweenPoints(start, neighbor);
                 if (delta < distance)
                 {
                     nearest = neighbor;
@@ -1053,15 +1053,15 @@ namespace HexWork.Gameplay
             if (searchDepth >= maxSearchDepth)
                 return;
 
-            var adjacentTiles = GameState.GetNeighborCoordinates(position);
+            var adjacentTiles = CurrentGameState.GetNeighborCoordinates(position);
 
             foreach (var coord in adjacentTiles)
             {
                 //if the terrain blocks LOS then move on
                 if (IsHexOpaque(coord)) continue;
 
-                var distanceToPoint = GameState.DistanceBetweenPoints(startPosition, position);
-                var distanceToNeighbour = GameState.DistanceBetweenPoints(startPosition, coord);
+                var distanceToPoint = HexGrid.DistanceBetweenPoints(startPosition, position);
+                var distanceToNeighbour = HexGrid.DistanceBetweenPoints(startPosition, coord);
 
                 //only look at neighbouring tiles that're further away from the starting position than the tile we're currently at
                 if (distanceToPoint >= distanceToNeighbour)
@@ -1078,47 +1078,10 @@ namespace HexWork.Gameplay
                 GetVisibleTilesRecursive(neighbours, coord, startPosition, maxSearchDepth, searchDepth + 1);
             }
         }
-
-        //Get nearest adjacent tile to a target destination.
-        private HexCoordinate GetNearestTileAdjacentToDestination(HexCoordinate start, HexCoordinate end)
-        {
-            var neighbours = GameState.GetNeighborCoordinates(end);
-
-            if (neighbours.Contains(start))
-                return start;
-
-            int distance = 1000;
-            HexCoordinate nearest = null;
-            bool found = false;
-            while (!found)
-            {
-                foreach (var neighbor in neighbours)
-                {
-                    var delta = GameState.DistanceBetweenPoints(start, neighbor);
-                    if (delta <= distance)
-                    {
-                        nearest = neighbor;
-                        distance = delta;
-
-                        if (IsHexPassable(neighbor))
-                            found = true;
-                    }
-                }
-
-                neighbours = GameState.GetNeighborCoordinates(nearest);
-                if (neighbours.Contains(end))
-                    neighbours.Remove(end);
-
-                if (neighbours.Contains(start))
-                    neighbours.Remove(start);
-            }
-
-            return nearest;
-        }
-
+        
         private Character FindCharacterById(Guid characterId)
         {
-            return GameState.Characters.FirstOrDefault(cha => cha.Id == characterId);
+            return CurrentGameState.Characters.FirstOrDefault(cha => cha.Id == characterId);
         }
 
         public int GetPathLengthToTile(Character objectCharacter, HexCoordinate destination)

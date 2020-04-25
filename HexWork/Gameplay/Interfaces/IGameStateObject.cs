@@ -25,6 +25,8 @@ namespace HexWork.Gameplay.Interfaces
 
 	public interface IGameStateObject
     {
+		GameState CurrentGameState { get; }
+
 		List<TileEffect> TileEffects { get; }
 
 		void NotifyAction(HexAction action, Character character);

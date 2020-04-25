@@ -20,12 +20,12 @@ namespace HexWork.Screens
 
 			//gainPower.selected += (sender, args) =>
 			//	{
-			//		GameStateManager.GameState.CharacterGainPower(characterId);
+			//		GameStateManager.CurrentGameState.CharacterGainPower(characterId);
 			//		this.Exit();
 			//	};
 			//gainHealth.selected += (sender, args) =>
 			//	{
-			//		GameStateManager.GameState.CharacterGainHealth(characterId);
+			//		GameStateManager.CurrentGameState.CharacterGainHealth(characterId);
 			//		this.Exit();
 			//	};
 

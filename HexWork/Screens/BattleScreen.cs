@@ -193,7 +193,7 @@ namespace HexWork.UI
         private void LoadCharacterDictionary(Game game)
         {
             _uiCharacterDictionary.Clear();
-            var gameState = GameState.GameState;
+            var gameState = GameState.CurrentGameState;
             foreach (var character in gameState.Characters)
             {
                 var tex = character.IsHero ? game.Content.Load<Texture2D>(character.Name) 
@@ -236,7 +236,7 @@ namespace HexWork.UI
 
         public void Initialise()
         {
-            UpdateInitiative(GameState.GameState.Characters);
+            UpdateInitiative(GameState.CurrentGameState.Characters);
         }
 
         #endregion
@@ -382,11 +382,11 @@ namespace HexWork.UI
             var gameState = GameState;
 
             List<string> rightSideStrings = new List<string>();
-            if (gameState.GameState.ActiveCharacter != null)
+            if (gameState.CurrentGameState.ActiveCharacter != null)
             {
-                rightSideStrings.Add("Active Character : " + gameState.GameState.ActiveCharacter.Name);
+                rightSideStrings.Add("Active Character : " + gameState.CurrentGameState.ActiveCharacter.Name);
             }
-            rightSideStrings.Add($"Current Potential : {gameState.GameState.Potential}");
+            rightSideStrings.Add($"Current Potential : {gameState.CurrentGameState.Potential}");
             if (_selectedCharacter != null)
             {
                 rightSideStrings.Add($"Selected Character : {_selectedCharacter.Name}");
@@ -405,14 +405,14 @@ namespace HexWork.UI
 			        new Vector2(ScreenEdgeMargin, _screenHeight - ScreenEdgeMargin - 20), Color.Black);
 			}
 
-			var startPositionX = _screenCenter.X - ((float)gameState.GameState.MaxPotential / 2 * 65);
+			var startPositionX = _screenCenter.X - ((float)gameState.CurrentGameState.MaxPotential / 2 * 65);
             var potentialPosY = 100 * _hexScreenScale;
 
             var screenPosition = new Vector2(startPositionX, potentialPosY);
 
-            for (int i = 0; i < gameState.GameState.MaxPotential; i++)
+            for (int i = 0; i < gameState.CurrentGameState.MaxPotential; i++)
             {
-                var color = gameState.GameState.Potential <= i ? Color.LightPink : Color.Red;
+                var color = gameState.CurrentGameState.Potential <= i ? Color.LightPink : Color.Red;
 
                 _spriteBatch.Draw(_blankTexture, screenPosition, null, color, 0.0f, Vector2.Zero, new Vector2(30.0f, 2.0f),
                     SpriteEffects.None, 0.0f);
@@ -504,7 +504,7 @@ namespace HexWork.UI
 
         private void DrawMap()
         {
-            var gameState = GameState.GameState;
+            var gameState = GameState.CurrentGameState;
             _spriteBatch.Begin();
             foreach (var kvp in gameState)
             {
@@ -526,7 +526,7 @@ namespace HexWork.UI
 
         private void DrawHighlightedMap(List<HexCoordinate> highlightedTiles)
         {
-            var gameState = GameState.GameState;
+            var gameState = GameState.CurrentGameState;
             _spriteBatch.Begin();
 
             foreach (var kvp in gameState)
@@ -609,7 +609,7 @@ namespace HexWork.UI
 
         private void DrawCharacters()
         {
-            var gameState = GameState.GameState;
+            var gameState = GameState.CurrentGameState;
             //draw highlighted elements
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend,
                 null, null,
@@ -736,7 +736,7 @@ namespace HexWork.UI
         /// <param name="clickPosition">The position of the click in screen space.</param>
         private void MouseUp(Point clickPosition)
         {
-            var gameState = GameState.GameState;
+            var gameState = GameState.CurrentGameState;
             //get mouse position in hex space
             var mouseOffsetX = clickPosition.X - (_screenWidth / 2);
             var mouseOffsetY = clickPosition.Y - (_screenHeight / 2);
@@ -905,13 +905,13 @@ namespace HexWork.UI
 		/// <returns></returns>
 		private List<HexCoordinate> GetHighlightedCoordinates()
 		{
-            var gameState = GameState.GameState;
+            var gameState = GameState.CurrentGameState;
             return SelectedHexAction?.GetValidTargets(_selectedCharacter, GameState);
 		}
 
 		private HexCoordinate GetHexCoordinate(float posX, float posY)
         {
-            var gameState = GameState.GameState;
+            var gameState = GameState.CurrentGameState;
             var x = (_sqrt3 / 3 * posX - 1.0f / 3 * posY) / (_hexHalfSize * _hexScale);
 		    var z = 2.0f / 3 * posY / (_hexHalfSize * _hexScale);
 		    var y = -(x + z);

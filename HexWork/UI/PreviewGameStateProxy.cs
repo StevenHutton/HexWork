@@ -45,7 +45,8 @@ namespace HexWork.UI
 
 		#region Properties
 
-		public List<TileEffect> TileEffects { get; set; }
+        public GameState CurrentGameState  => gameState.CurrentGameState;
+        public List<TileEffect> TileEffects { get; set; }
 
 		#endregion
 

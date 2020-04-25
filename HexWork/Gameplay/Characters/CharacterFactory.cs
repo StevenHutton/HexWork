@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Interfaces;
-using HexWork.GameplayEvents;
+using HexWork.UI;
 using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Gameplay.Characters
@@ -364,9 +365,10 @@ namespace HexWork.Gameplay.Characters
         private Character CreateZombie(int i = 0)
         {
             var zombie = new Character($"Zom-boy {i}", 60, 100, 1, 0);
-            zombie.AddAction(_moveAction);
+            zombie.AddAction(new FixedMoveAction("Shamble"){Range = 1});
             zombie.AddAction(_zombieGrab);
             zombie.AddAction(_zombieBite);
+            zombie.DoTurn = ZombieTurn;
             return zombie;
         }
 
@@ -376,9 +378,116 @@ namespace HexWork.Gameplay.Characters
 
         public void ZombieTurn(IGameStateObject gameState, Character character)
         {
+            var position = character.Position;
+            int shortestPathLength = int.MaxValue;
+            Character closestHero = null;
+            var heroes = gameState.CurrentGameState.Heroes;
 
+            //find the closest hero
+            foreach (var hero in heroes)
+            {
+                var nearestNeighbour = GetNearestTileAdjacentToDestination(position, hero.Position, gameState);
+                if (nearestNeighbour == null)
+                    continue;
+                var path = gameState.FindShortestPath(position, nearestNeighbour);
+                if (path == null) continue;
+                if (path.Count >= shortestPathLength) continue;
+                shortestPathLength = path.Count;
+                closestHero = hero;
+            }
+            if (closestHero == null)
+                return;
+
+            //loop through available actions
+            foreach (var action in character.Actions)
+            {
+                //if we can hit the hero, hit them now and end turn. - don't move.
+                if (action.IsValidTarget(character, closestHero.Position, gameState) &&
+                    action.IsDetonator == closestHero.HasStatus
+                    && action.IsDetonator == closestHero.HasStatus)
+                {
+                    gameState.NotifyAction(action, character);
+                    gameState.ApplyDamage(closestHero, action.Power * character.Power);
+                    gameState.ApplyStatus(closestHero, action.StatusEffect);
+                    action.Combo?.TriggerAsync(character, new DummyInputProvider(closestHero.Position), gameState);
+                    return;
+                }
+            }
+            //if we couldn't reach the closest hero move towards them.
+            //if we found a path to a hero
+            if (!character.CanMove) return;
+
+            //get all the tiles to which the zombie COULD move
+            var tilesInRange = gameState.GetValidDestinations(character);
+
+            float shortestDistance = 100;
+            HexCoordinate destination = null;
+            //look at all the possible destinations and get the one which is closest to a hero
+            foreach (var tile in tilesInRange)
+            {
+                var distanceToHeroes = heroes.Select(data => HexGrid.DistanceBetweenPoints(tile, data.Position));
+                var distance = (float)distanceToHeroes.Sum() / (float)heroes.Count();
+                if (distance < shortestDistance)
+                {
+                    shortestDistance = distance;
+                    destination = tile;
+                }
+            }
+            if (destination != null)
+                gameState.MoveCharacterTo(character, destination);
+            foreach (var action in character.Actions.Where(action =>
+                action.IsValidTarget(character, closestHero.Position, gameState)
+                && action.IsDetonator == closestHero.HasStatus))
+            {
+                gameState.NotifyAction(action, character);
+                gameState.ApplyDamage(closestHero, action.Power * character.Power);
+                gameState.ApplyStatus(closestHero, action.StatusEffect);
+                action.Combo?.TriggerAsync(character, new DummyInputProvider(closestHero.Position), gameState);
+                return;
+            }
         }
 
-        #endregion 
+        #region Turn Helper
+
+        private HexCoordinate GetNearestTileAdjacentToDestination(HexCoordinate start, HexCoordinate end, IGameStateObject gameState)
+        {
+            var cgs = gameState.CurrentGameState;
+            var neighbours = cgs.GetNeighborCoordinates(end);
+
+            if (neighbours.Contains(start))
+                return start;
+
+            int distance = 1000;
+            HexCoordinate nearest = null;
+            bool found = false;
+            while (!found)
+            {
+                foreach (var neighbor in neighbours)
+                {
+                    var delta = HexGrid.DistanceBetweenPoints(start, neighbor);
+                    if (delta <= distance)
+                    {
+                        nearest = neighbor;
+                        distance = delta;
+
+                        if (gameState.IsHexPassable(neighbor))
+                            found = true;
+                    }
+                }
+
+                neighbours = cgs.GetNeighborCoordinates(nearest);
+                if (neighbours.Contains(end))
+                    neighbours.Remove(end);
+
+                if (neighbours.Contains(start))
+                    neighbours.Remove(start);
+            }
+
+            return nearest;
+        }
+
+        #endregion
+
+        #endregion
     }
 }

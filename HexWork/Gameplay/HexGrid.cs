@@ -221,7 +221,7 @@ namespace HexWork.Gameplay
             return new HexCoordinate(x, y, z);
         }
 
-        public int DistanceBetweenPoints(HexCoordinate a, HexCoordinate b)
+        public static int DistanceBetweenPoints(HexCoordinate a, HexCoordinate b)
         {
             return (Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y) + Math.Abs(a.Z - b.Z))/2;
         }
