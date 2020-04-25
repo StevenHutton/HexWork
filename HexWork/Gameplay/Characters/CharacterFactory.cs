@@ -371,5 +371,14 @@ namespace HexWork.Gameplay.Characters
         }
 
         #endregion
+
+        #region TurnFunctions
+
+        public void ZombieTurn(IGameStateObject gameState, Character character)
+        {
+
+        }
+
+        #endregion 
     }
 }

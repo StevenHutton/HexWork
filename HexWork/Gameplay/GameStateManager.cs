@@ -138,17 +138,7 @@ namespace HexWork.Gameplay
             //if they can move take their actions and end turn
             if (!activeCharacter.HasActed)
             {
-                switch (activeCharacter.MonsterType)
-                {
-                    case MonsterType.Zombie:
-                        NextTurn();
-                        break;
-                    case MonsterType.ZombieKing:
-                        NextTurn();
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                activeCharacter.DoTurn(this);
             }
         }
 
@@ -1174,9 +1164,9 @@ namespace HexWork.Gameplay
 
         #region Movement Attibutes
 
-        public static readonly int[] MovementSpeedSlow = { 1, 1, 2, 3, 3, 3, 3 };
-        public static readonly int[] MovementSpeedNormal = { 0, 1, 2, 3, 3, 3, 3 };
-        public static readonly int[] MovementSpeedFast = { 0, 1, 1, 2, 2, 3, 3 };
+        public static readonly int[] MovementSpeedSlow = { 0, 1, 2, 3, 3, 3, 3 };
+        public static readonly int[] MovementSpeedNormal = { 0, 1, 1, 2, 3, 3, 3 };
+        public static readonly int[] MovementSpeedFast = { 0, 0, 1, 2, 2, 3, 3 };
 
         #endregion
     }

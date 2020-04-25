@@ -122,5 +122,10 @@ namespace HexWork.Gameplay.Characters
         }
 
         #endregion
+
+        public virtual void DoTurn(IGameStateObject gameStateManager)
+        {
+            
+        }
     }
 }

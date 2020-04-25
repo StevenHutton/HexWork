@@ -30,7 +30,7 @@ namespace HexWork.Gameplay.Actions
 
             var position = character.Position;
 
-            if (gameState.IsValidDestination(character, targetPosition))
+            if (IsValidTarget(character, targetPosition, gameState))
                 gameState.MoveCharacterTo(character, targetPosition);
 
             if (TileEffect != null)
