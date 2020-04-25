@@ -69,7 +69,7 @@ namespace HexWork
 			this.IsMouseVisible = true;
 			base.Initialize();
 
-            _screenManager.AddScreen(new BattleScreen(_screenManager, 2));
+            _screenManager.AddScreen(new BattleScreen(_screenManager, 1));
         }
 
 		/// <summary>

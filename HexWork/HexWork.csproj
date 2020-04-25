@@ -52,6 +52,7 @@
     <Compile Include="Gameplay\Actions\PushAction.cs" />
     <Compile Include="Gameplay\Actions\ComboAction.cs" />
     <Compile Include="Gameplay\Actions\RepeatingAction.cs" />
+    <Compile Include="Gameplay\Actions\SpawnAction.cs" />
     <Compile Include="Gameplay\Actions\SpreadStatusCombo.cs" />
     <Compile Include="Gameplay\Actions\StatusCombo.cs" />
     <Compile Include="Gameplay\Actions\SwapAction.cs" />

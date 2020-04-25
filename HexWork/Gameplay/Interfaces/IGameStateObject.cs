@@ -116,5 +116,7 @@ namespace HexWork.Gameplay.Interfaces
 
         List<HexCoordinate> GetWalkableAdjacentTiles(HexCoordinate position, MovementType movementType);
 
+        void SpawnCharacter(Character character);
+
     }
 }

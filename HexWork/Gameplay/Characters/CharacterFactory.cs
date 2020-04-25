@@ -1,55 +1,57 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Interfaces;
+using HexWork.GameplayEvents;
 using HexWork.UI;
 using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Gameplay.Characters
 {
-    public class CharacterFactory
+    public static class CharacterFactory
     {
         #region Attributes
 
-        private HexAction _moveAction = new MoveAction("Move") { Range = 0 };
+        private static HexAction _moveAction = new MoveAction("Move") { Range = 0 };
         
-        private PotentialGainAction _potentialGainAction = new PotentialGainAction("Wind", null, null, null, null);
+        private static PotentialGainAction _potentialGainAction = new PotentialGainAction("Wind", null, null, null, null);
 
-        private HexAction _zombieGrab = new HexAction(name: "Zombie Grab",
+        private static HexAction _zombieGrab = new HexAction(name: "Zombie Grab",
             statusEffect: new ImmobalisedEffect { StatusEffectType = StatusEffectType.Rooted },
             combo: null,
             targetDelegate: TargetingHelper.GetValidTargetTilesNoLos) { Range = 1, Power = 2 };
 
-        private HexAction _zombieBite = new HexAction(name: "Zombie Bite",
+        private static HexAction _zombieBite = new HexAction(name: "Zombie Bite",
             combo: new DamageComboAction() { Power = 2 },
             targetDelegate: TargetingHelper.GetValidTargetTilesNoLos) { Range = 1, Power = 2 };
-        
-        TargetPattern _whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
+
+        static TargetPattern _whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
             new HexCoordinate(1, -1, 0),
             new HexCoordinate(0, -1, 1),
             new HexCoordinate(-1, 0, 1),
             new HexCoordinate(-1, 1, 0),
             new HexCoordinate(0, 1, -1));
 
-        TargetPattern _xAxisLinePattern = new TargetPattern(new HexCoordinate(0, 0, 0),
+        static TargetPattern _xAxisLinePattern = new TargetPattern(new HexCoordinate(0, 0, 0),
             new HexCoordinate(1, -1), new HexCoordinate(2, -2));
 
-        TargetPattern _rotatingLinePattern = new TargetPattern(new HexCoordinate(0, 0),
+        static TargetPattern _rotatingLinePattern = new TargetPattern(new HexCoordinate(0, 0),
             new HexCoordinate(1, 0),
             new HexCoordinate(-1, 0));
 
-        TargetPattern _cornerPattern = new TargetPattern(new HexCoordinate(0, 0),
+        static TargetPattern _cornerPattern = new TargetPattern(new HexCoordinate(0, 0),
             new HexCoordinate(1, 0),
             new HexCoordinate(0, -1));
 
-        private TileEffect _fireEffect = new TileEffect()
+        private static TileEffect _fireEffect = new TileEffect()
         {
             Damage = 5,
             Effect = new DotEffect(),
             Type = TileEffectType.Fire
         };
 
-        private TileEffect _windEffect = new TileEffect()
+        private static TileEffect _windEffect = new TileEffect()
         {
             Damage = 0,
             Effect = null,
@@ -61,7 +63,7 @@ namespace HexWork.Gameplay.Characters
 
         #region Create Characters
 
-        public Character CreateMajin()
+        public static Character CreateMajin()
         {
             var majinCharacter = new Character("Majin", 100, 100, 3, 5)
             {
@@ -115,7 +117,7 @@ namespace HexWork.Gameplay.Characters
             return majinCharacter;
         }
 
-        public Character CreateGunner()
+        public static Character CreateGunner()
         {
             var shotgunBlast = new LineAction("Shotgun Blast! (1)",
                 TargetingHelper.GetValidAxisTargetTilesLos,
@@ -161,7 +163,7 @@ namespace HexWork.Gameplay.Characters
             return gunnerCharacter;
         }
 
-        public Character CreateNinja()
+        public static Character CreateNinja()
         {
             var shurikenHailAction = new HexAction("Shuriken",
                 TargetingHelper.GetValidTargetTilesLos,
@@ -218,7 +220,7 @@ namespace HexWork.Gameplay.Characters
             return ninjaCharacter;
         }
 
-        public Character CreateIronSoul()
+        public static Character CreateIronSoul()
         {
             var pushingFist = new PushAction("Pushing Fist", TargetingHelper.GetValidTargetTilesLos)
             {
@@ -277,7 +279,7 @@ namespace HexWork.Gameplay.Characters
             return ironSoulCharacter;
         }
 
-        public Character CreateBarbarian()
+        public static Character CreateBarbarian()
         {
             var spreadStatusCombo = new SpreadStatusCombo { AllySafe = true, Power = 3 };
             var detonatingSlash =
@@ -319,7 +321,7 @@ namespace HexWork.Gameplay.Characters
             return barbarianCharacter;
         }
 
-        public IEnumerable<Character> CreateHeroes()
+        public static IEnumerable<Character> CreateHeroes()
         {
             return new List<Character>
             {
@@ -331,7 +333,7 @@ namespace HexWork.Gameplay.Characters
             };
         }
 
-        public IEnumerable<Character> CreateEnemies(int difficulty = 1)
+        public static IEnumerable<Character> CreateEnemies(int difficulty = 1)
         {
             var characters = new List<Character>();
 
@@ -341,7 +343,7 @@ namespace HexWork.Gameplay.Characters
                 characters.Add(zombieKing);
             }
 
-            for (var i = 0; i < difficulty + 4; i++)
+            for (var i = 0; i < difficulty; i++)
             {
                 var zombie = CreateZombie(i);
                 characters.Add(zombie);
@@ -350,7 +352,7 @@ namespace HexWork.Gameplay.Characters
             return characters;
         }
 
-        private Character CreateZombieKing()
+        private static Character CreateZombieKing()
         {
             var zombieKing = new Character($"Zom-boy King", 160, 140, 2, 1)
             {
@@ -359,11 +361,12 @@ namespace HexWork.Gameplay.Characters
             zombieKing.AddAction(_moveAction);
             zombieKing.AddAction(_zombieGrab);
             zombieKing.AddAction(_zombieBite);
-            zombieKing.DoTurn = ZombieTurn;
+            zombieKing.AddAction(new SpawnAction(){Name = "Summon Zombie"});
+            zombieKing.DoTurn = ZombieKingTurn;
             return zombieKing;
         }
 
-        private Character CreateZombie(int i = 0)
+        public static Character CreateZombie(int i = 0)
         {
             var zombie = new Character($"Zom-boy {i}", 60, 100, 1, 0);
             zombie.AddAction(new FixedMoveAction("Shamble"){Range = 1});
@@ -377,7 +380,7 @@ namespace HexWork.Gameplay.Characters
 
         #region TurnFunctions
 
-        public void ZombieTurn(IGameStateObject gameState, Character character)
+        public static void ZombieTurn(IGameStateObject gameState, Character character)
         {
             var position = character.Position;
             int shortestPathLength = int.MaxValue;
@@ -448,9 +451,75 @@ namespace HexWork.Gameplay.Characters
             }
         }
 
+        private static void ZombieKingTurn(IGameStateObject gameState, Character character)
+        {
+            var position = character.Position;
+            int shortestPathLength = int.MaxValue;
+            Character closestHero = null;
+            var heroes = gameState.CurrentGameState.Heroes;
+
+            //find the closest hero
+            foreach (var hero in heroes)
+            {
+                var nearestNeighbour = GetNearestTileAdjacentToDestination(position, hero.Position, gameState);
+                if (nearestNeighbour == null)
+                    continue;
+                var path = gameState.FindShortestPath(position, nearestNeighbour);
+                if (path == null) continue;
+                if (path.Count >= shortestPathLength) continue;
+                shortestPathLength = path.Count;
+                closestHero = hero;
+            }
+            if (closestHero != null && character.CanMove)
+            {
+                //if the closest hero is close then move away.
+                if (shortestPathLength <= 3)
+                {
+                    //get all the tiles to which the zombie COULD move
+                    var tilesInRange = character.Actions.FirstOrDefault(data => data.Name == "Shamble")?.GetValidTargets(character, gameState) ?? new List<HexCoordinate>();
+
+                    float greatestDistance = 0;
+                    HexCoordinate destination = null;
+                    //look at all the possible destinations and get the one which is the furthest average distance away from heroes
+                    foreach (var tile in tilesInRange)
+                    {
+                        var distanceToHeroes = heroes.Select(data => HexGrid.DistanceBetweenPoints(tile, data.Position));
+                        var distance = (float)distanceToHeroes.Sum() / (float)heroes.Count();
+                        if (distance > greatestDistance)
+                        {
+                            greatestDistance = distance;
+                            destination = tile;
+                        }
+                    }
+                    if (destination != null)
+                        gameState.MoveCharacterTo(character, destination);
+                }
+            }
+            var zombies = gameState.CurrentGameState.Enemies.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
+            var rand = new Random(DateTime.Now.Millisecond);
+            
+            if (rand.Next(0, 10) >= zombies.Count)
+            {
+                character.Actions.FirstOrDefault(data => data.Name == "Summon Zombie")?
+                    .TriggerAsync(character, null, gameState);
+            }
+            else
+            {
+                if (zombies.Count == 0) return;
+                var zombie = zombies[rand.Next(0, zombies.Count)];
+                var zombie2 = zombies[rand.Next(0, zombies.Count)];
+                zombie.StartTurn();
+                ZombieTurn(gameState, zombie);
+                zombie.EndTurn();
+                zombie2.StartTurn();
+                ZombieTurn(gameState, zombie2);
+                zombie2.EndTurn();
+            }
+        }
+
         #region Turn Helper
 
-        private HexCoordinate GetNearestTileAdjacentToDestination(HexCoordinate start, HexCoordinate end, IGameStateObject gameState)
+        private static HexCoordinate GetNearestTileAdjacentToDestination(HexCoordinate start, HexCoordinate end, IGameStateObject gameState)
         {
             var cgs = gameState.CurrentGameState;
             var neighbours = cgs.GetNeighborCoordinates(end);

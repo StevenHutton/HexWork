@@ -489,6 +489,11 @@ namespace HexWork.UI
             return gameState.GetWalkableAdjacentTiles(position, movementType);
         }
 
+        public void SpawnCharacter(Character character)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 }

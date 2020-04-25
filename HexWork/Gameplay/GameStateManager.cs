@@ -63,9 +63,8 @@ namespace HexWork.Gameplay
 
         public void CreateCharacters(int difficulty = 1)
         {
-            var characterFactory = new CharacterFactory();
-            CurrentGameState.Characters.AddRange(characterFactory.CreateHeroes());
-            CurrentGameState.Characters.AddRange(characterFactory.CreateEnemies(difficulty));
+            CurrentGameState.Characters.AddRange(CharacterFactory.CreateHeroes());
+            CurrentGameState.Characters.AddRange(CharacterFactory.CreateEnemies(difficulty));
         }
 
         #endregion
@@ -243,6 +242,17 @@ namespace HexWork.Gameplay
 
 
         #region Gamestate Transforms
+
+        public void SpawnCharacter(Character character)
+        {
+            CurrentGameState.Characters.Add(character);
+            SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs
+            {
+                MonsterType = character.MonsterType,
+                Character = character
+            });
+            TeleportCharacterTo(character, character.Position);
+        }
 
         public void MoveCharacterTo(Character character, HexCoordinate position)
         {
