@@ -44,21 +44,20 @@ namespace HexWork.Gameplay.Characters
             new HexCoordinate(1, 0),
             new HexCoordinate(0, -1));
 
-        private static TileEffect _fireEffect = new TileEffect()
-        {
-            Damage = 5,
-            Effect = new DotEffect(),
-            Type = TileEffectType.Fire
-        };
+        #region TileEffects
 
-        private static TileEffect _windEffect = new TileEffect()
-        {
-            Damage = 0,
-            Effect = null,
-            Type = TileEffectType.Wind,
-            MovementModifier = -1
-        };
+        private static TileEffect _fireEffect;
+        private static TileEffect _windEffect;
+
+        #endregion
+
+        #region Status Effects
+
+        private static DotEffect _fireStatus;
+        private static DotEffect _bleedingStatus;
         
+        #endregion
+
         #endregion
 
         #region Create Characters
@@ -72,15 +71,15 @@ namespace HexWork.Gameplay.Characters
             };
 
             var burningBolt = new HexAction("Fire Bolt",
-                TargetingHelper.GetValidAxisTargetTilesLos,
-                new DotEffect())
+                TargetingHelper.GetValidAxisTargetTilesLos)
             {
-                Range = 3
+                Range = 3,
+                StatusEffect = _fireStatus
             };
 
             var exBurningBoltAction = new HexAction("Fire Wall! (1)",
                 TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
-                new DotEffect(), null,
+                _fireStatus, null,
                 _rotatingLinePattern)
             {
                 PotentialCost = 1,
@@ -90,7 +89,7 @@ namespace HexWork.Gameplay.Characters
 
             var ringofFire = new HexAction("Ring of Fire! (2)",
                 TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
-                new DotEffect(), null,
+                _fireStatus, null,
                 _whirlWindTargetPattern)
             {
                 PotentialCost = 2,
@@ -167,13 +166,7 @@ namespace HexWork.Gameplay.Characters
         {
             var shurikenHailAction = new HexAction("Shuriken",
                 TargetingHelper.GetValidTargetTilesLos,
-                new DotEffect
-                {
-                    Name = "Bleeding",
-                    Damage = 5,
-                    Duration = 1,
-                    StatusEffectType = StatusEffectType.Bleeding
-                })
+                _bleedingStatus)
             {
                 Range = 2,
                 FollowUpAction = new FixedMoveAction("Shift") { Range = 1, TileEffect = _windEffect }
@@ -183,13 +176,7 @@ namespace HexWork.Gameplay.Characters
                 new HexCoordinate(1, 0));
             var shurikenHailActionEx = new HexAction("Shuriken Hail!",
                 TargetingHelper.GetValidTargetTilesLosIgnoreUnits,
-                new DotEffect
-                {
-                    Name = "Bleeding",
-                    Damage = 5,
-                    Duration = 2,
-                    StatusEffectType = StatusEffectType.Bleeding
-                },
+                _bleedingStatus,
                 null, shurikenPattern)
             {
                 PotentialCost = 2,
@@ -323,6 +310,8 @@ namespace HexWork.Gameplay.Characters
 
         public static IEnumerable<Character> CreateHeroes()
         {
+            CreateActions();
+
             return new List<Character>
             {
                 CreateMajin(),
@@ -350,6 +339,37 @@ namespace HexWork.Gameplay.Characters
             }
 
             return characters;
+        }
+
+        public static void CreateActions()
+        {
+            _fireEffect = new TileEffect
+            {
+                Damage = 5,
+                Effect = _fireStatus,
+                Type = TileEffectType.Fire
+            };
+
+            _windEffect = new TileEffect
+            {
+                Damage = 0,
+                Effect = null,
+                Type = TileEffectType.Wind,
+                MovementModifier = -1
+            };
+
+            _fireStatus = new DotEffect { Name = "Fire", TileEffect = _fireEffect };
+
+            _bleedingStatus = new DotEffect
+            {
+                Name = "Bleeding",
+                Damage = 5,
+                Duration = 1,
+                StatusEffectType = StatusEffectType.Bleeding
+            };
+
+            _fireEffect.Effect = _fireStatus;
+            _fireStatus.TileEffect = _fireEffect;
         }
 
         private static Character CreateZombieKing()

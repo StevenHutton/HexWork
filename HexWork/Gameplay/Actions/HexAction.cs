@@ -12,17 +12,17 @@ namespace HexWork.Gameplay.Actions
     {
         #region Attributes
 
-        public TileEffect TileEffect = null;
-
         protected readonly GetValidTargetsDelegate _getValidTargets;
 
         protected bool CanRotateTargetting = true;
 
         public TargetPattern Pattern;
         public int PotentialCost = 1;
-        public DamageComboAction Combo = null;
 
+        public StatusEffect StatusEffect = null;
+        public TileEffect TileEffect = null;
         public HexAction FollowUpAction = null;
+        public HexAction Combo = null;
 
         #endregion
 
@@ -31,9 +31,7 @@ namespace HexWork.Gameplay.Actions
         public string Name { get; set; }
 
         public int Range { get; set; } = 2;
-
-        public StatusEffect StatusEffect { get; }
-
+        
         public bool IsDetonator => Combo != null;
 
         public bool IsExtender => PotentialCost > 0;
@@ -48,11 +46,11 @@ namespace HexWork.Gameplay.Actions
 
         public HexAction()
         { }
-
+        
         public HexAction(string name, 
             GetValidTargetsDelegate targetDelegate,
-            StatusEffect statusEffect = null, 
-            DamageComboAction combo = null, TargetPattern targetPattern = null)
+            StatusEffect statusEffect = null,
+            HexAction combo = null, TargetPattern targetPattern = null)
         {
             StatusEffect = statusEffect;
             Combo = combo;
@@ -87,8 +85,7 @@ namespace HexWork.Gameplay.Actions
 	        if (targetPosition == null)
 		        return;
 			//check validity
-	        if (!_getValidTargets.Invoke(character, character.RangeModifier + this.Range, gameState)
-		        .Contains(targetPosition))
+	        if (!IsValidTarget(character, targetPosition, gameState))
 		        return;
 
             if (PotentialCost != 0)

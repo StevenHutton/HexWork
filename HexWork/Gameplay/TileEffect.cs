@@ -18,15 +18,16 @@ namespace HexWork.Gameplay
         public HexCoordinate Position;
         public TileEffectType Type = TileEffectType.Fire;
         public int Damage = 5;
-        public StatusEffect Effect = new DotEffect();
+        public StatusEffect Effect;
         public float MovementModifier = 0.1f;
 
 	    public virtual async void TriggerEffect(IGameStateObject gameState, Character character)
 	    {
             if(Damage > 0)
                 gameState.ApplyDamage(character, Damage);
-
-		    gameState.ApplyStatus(character, Effect);
+            
+            if(Effect != null)
+                gameState.ApplyStatus(character, Effect);
 	    }
         public TileEffect() { }
         

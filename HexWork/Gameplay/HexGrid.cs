@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
 
 namespace HexWork.Gameplay
@@ -77,7 +76,7 @@ namespace HexWork.Gameplay
                     case TerrainType.Lava:
                         tile.Color =  Color.Orange;
                         tile.IsWalkable = true;
-                        tile.MovementCostModifier = 0.1f;
+                        tile.MovementCostModifier = 1.1f;
                         break;
                     case TerrainType.Ice:
                         tile.Color =  Color.LightBlue;
@@ -92,7 +91,7 @@ namespace HexWork.Gameplay
                     case TerrainType.Snow:
                         tile.Color =  Color.DarkGray;
                         tile.IsWalkable = true;
-                        tile.MovementCostModifier = 1;
+                        tile.MovementCostModifier = 2;
                         break;
                     case TerrainType.Sand:
                         tile.Color =  Color.SandyBrown;

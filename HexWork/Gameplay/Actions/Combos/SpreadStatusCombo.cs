@@ -48,7 +48,12 @@ namespace HexWork.Gameplay.Actions
 
                     //if no one is there, next tile
                     if (newTargetCharacter == null)
+                    {
+                        if(statusEffect.TileEffect != null)
+                            gameState.CreateTileEffect(targetTile, statusEffect.TileEffect);
+                        
                         continue;
+                    }
 
                     if (AllySafe && newTargetCharacter.IsHero == character.IsHero)
                         continue;
@@ -66,8 +71,6 @@ namespace HexWork.Gameplay.Actions
             foreach (var targetTile in GetTargetTiles(targetPosition))
             {
                 var newTargetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
-
-                //if no one is there, next tile
                 if (newTargetCharacter != null)
                 {
                     if (AllySafe && newTargetCharacter.IsHero == character.IsHero)

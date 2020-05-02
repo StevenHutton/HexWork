@@ -496,13 +496,14 @@ namespace HexWork.Gameplay
 
         public void CreateTileEffect(HexCoordinate location, TileEffect effect)
         {
-            if (!IsHexWalkable(location) || !IsTileEmpty(location))
+            //don't create a tile effect on unpassable tiles, occupied tiles or tiles that already have effects
+            if (!IsHexWalkable(location) || !IsTileEmpty(location) || CurrentGameState.TileEffects.All(te => te.Position != location))
                 return;
 
             var tileEffect = new TileEffect(effect, location);
             CurrentGameState.TileEffects.Add(tileEffect);
 
-            SpawnTileEffectEvent?.Invoke(this, new SpawnTileEffectEventArgs()
+            SpawnTileEffectEvent?.Invoke(this, new SpawnTileEffectEventArgs
             {
                 Id = tileEffect.Guid,
                 Position = location,

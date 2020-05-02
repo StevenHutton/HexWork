@@ -44,18 +44,18 @@
   <ItemGroup>
     <Compile Include="Game1.cs" />
     <Compile Include="Gameplay\Actions\CommandAction.cs" />
-    <Compile Include="Gameplay\Actions\ExploderCombo.cs" />
+    <Compile Include="Gameplay\Actions\Combos\ExploderCombo.cs" />
     <Compile Include="Gameplay\Actions\FixedMoveAction.cs" />
-    <Compile Include="Gameplay\Actions\HealingCombo.cs" />
+    <Compile Include="Gameplay\Actions\Combos\HealingCombo.cs" />
     <Compile Include="Gameplay\Actions\LineAction.cs" />
     <Compile Include="Gameplay\Actions\MoveAction.cs" />
     <Compile Include="Gameplay\Actions\PotentialGainAction.cs" />
     <Compile Include="Gameplay\Actions\PushAction.cs" />
-    <Compile Include="Gameplay\Actions\ComboAction.cs" />
+    <Compile Include="Gameplay\Actions\Combos\ComboAction.cs" />
     <Compile Include="Gameplay\Actions\RepeatingAction.cs" />
     <Compile Include="Gameplay\Actions\SpawnAction.cs" />
-    <Compile Include="Gameplay\Actions\SpreadStatusCombo.cs" />
-    <Compile Include="Gameplay\Actions\StatusCombo.cs" />
+    <Compile Include="Gameplay\Actions\Combos\SpreadStatusCombo.cs" />
+    <Compile Include="Gameplay\Actions\Combos\StatusCombo.cs" />
     <Compile Include="Gameplay\Actions\SwapAction.cs" />
     <Compile Include="Gameplay\Actions\VampiricAction.cs" />
     <Compile Include="Gameplay\Characters\CharacterFactory.cs" />

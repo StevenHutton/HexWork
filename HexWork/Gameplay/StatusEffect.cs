@@ -39,6 +39,9 @@ namespace HexWork.Gameplay
         public bool IsExpired => (Duration <= 0);
 	    public Guid Id { get; set; } = Guid.NewGuid();
 
+        //The tile effect that corresponds to this status effect (if it has one).
+        public TileEffect TileEffect;
+
 	    public StatusEffect()
         {
             Duration = LifeSpan;
@@ -50,6 +53,7 @@ namespace HexWork.Gameplay
             this.Duration = effect.Duration;
             this.Name = effect.Name;
 	        this.StatusEffectType = effect.StatusEffectType;
+            this.TileEffect = effect.TileEffect;
 	        if (string.IsNullOrWhiteSpace(Name))
 		        Name = StatusEffectType.ToString();
         }
@@ -95,7 +99,8 @@ namespace HexWork.Gameplay
             this.Name = effect.Name;
 
 	        this.StatusEffectType = effect.StatusEffectType;
-	        if (string.IsNullOrWhiteSpace(Name))
+            this.TileEffect = effect.TileEffect;
+            if (string.IsNullOrWhiteSpace(Name))
 		        Name = StatusEffectType.ToString();
 		}
 
@@ -128,7 +133,8 @@ namespace HexWork.Gameplay
             this.Name = effect.Name;
             this.Damage = effect.Damage;
 	        this.StatusEffectType = effect.StatusEffectType;
-	        if (string.IsNullOrWhiteSpace(Name))
+            this.TileEffect = effect.TileEffect;
+            if (string.IsNullOrWhiteSpace(Name))
 		        Name = StatusEffectType.ToString();
 		}
 
@@ -157,6 +163,7 @@ namespace HexWork.Gameplay
             this.Duration = effect.Duration;
             this.Name = effect.Name;
             this.StatusEffectType = effect.StatusEffectType;
+            this.TileEffect = effect.TileEffect;
             if (string.IsNullOrWhiteSpace(Name))
                 Name = StatusEffectType.ToString();
         }
