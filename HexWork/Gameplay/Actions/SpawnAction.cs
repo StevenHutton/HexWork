@@ -22,6 +22,8 @@ namespace HexWork.Gameplay.Actions
                 zombie.SpawnAt(tile);
                 gameState.SpawnCharacter(zombie);
             }
+
+            character.HasActed = true;
         }
     }
 }

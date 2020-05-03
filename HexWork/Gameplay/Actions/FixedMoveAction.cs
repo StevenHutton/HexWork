@@ -35,6 +35,8 @@ namespace HexWork.Gameplay.Actions
 
             if (TileEffect != null)
                 gameState.CreateTileEffect(position, TileEffect);
+
+            character.CanMove = false;
         }
         
         /// <summary>

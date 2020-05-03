@@ -497,7 +497,7 @@ namespace HexWork.Gameplay
         public void CreateTileEffect(HexCoordinate location, TileEffect effect)
         {
             //don't create a tile effect on unpassable tiles, occupied tiles or tiles that already have effects
-            if (!IsHexWalkable(location) || !IsTileEmpty(location) || CurrentGameState.TileEffects.All(te => te.Position != location))
+            if (!IsHexWalkable(location) || !IsTileEmpty(location) || CurrentGameState.TileEffects.Any(te => te.Position == location))
                 return;
 
             var tileEffect = new TileEffect(effect, location);
@@ -766,7 +766,7 @@ namespace HexWork.Gameplay
             var ancestorMap = new Dictionary<HexCoordinate, HexCoordinate> { { start, null } };
 
             //a data structure that holds the shortest distance found to each tile that we've searched
-            var pathValues = new Dictionary<HexCoordinate, int> { { start, 0 } };
+            var pathValues = new Dictionary<HexCoordinate, float> { { start, 0 } };
 
             //data structure holding the estimated path length from the start to the destination for each tile we've searched.
             var tileEstimates = new Dictionary<HexCoordinate, float> { { start, 0 } };
@@ -799,13 +799,13 @@ namespace HexWork.Gameplay
                     //nodes are always one space away - hexgrid!
                     //BUT hexes have different movement costs to move through!
                     //the path from the start to the tile we're looking at now is the path the
-                    var pathLengthToNeighbor = pathValues[current] + (int)GetTileMovementCostModifier(neighbor);
+                    var pathLengthToNeighbor = pathValues[current] + GetTileMovementCostModifier(neighbor);
 
                     //estimate the neighbor and add it to the list of estimates or update it if it's already in the list
                     if (!pathValues.ContainsKey(neighbor) || pathValues[neighbor] > pathLengthToNeighbor)
                     {
                         //deliberate truncation in cast.
-                        pathValues[neighbor] = (int)pathLengthToNeighbor;
+                        pathValues[neighbor] = pathLengthToNeighbor;
 
                         //heuristic for "distance to destination tile" is just absolute distance between current tile and the destination
                         float estimate = pathLengthToNeighbor + HexGrid.DistanceBetweenPoints(neighbor, destination);
@@ -879,8 +879,11 @@ namespace HexWork.Gameplay
             if (!CurrentGameState.TileEffects.Any(te => te.Position == coordinate))
                 return CurrentGameState[coordinate].MovementCostModifier;
 
-            return CurrentGameState.TileEffects.Where(te => te.Position == coordinate).Sum(te => te.MovementModifier) +
-                   CurrentGameState[coordinate].MovementCostModifier;
+            float modifier = CurrentGameState.TileEffects.Where(te => te.Position == coordinate).Sum(te => te.MovementModifier) +
+                             CurrentGameState[coordinate].MovementCostModifier;
+
+            //don't allow negative movement costs... yet.
+            return modifier;
         }
 
         private void SendMessage(string message)

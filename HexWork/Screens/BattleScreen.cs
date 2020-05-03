@@ -864,7 +864,7 @@ namespace HexWork.UI
                                 GameState);
                             followUpAction = followUpAction.FollowUpAction;
                         }
-                    });
+                    }, () => action.IsAvailable(_selectedCharacter));
             }
 
             AddButton("End Turn", OnEndTurn);

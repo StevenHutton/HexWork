@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.Interfaces;
@@ -33,12 +34,15 @@ namespace HexWork.Gameplay.Actions
         public int Range { get; set; } = 2;
         
         public bool IsDetonator => Combo != null;
-
-        public bool IsExtender => PotentialCost > 0;
-
+        
         public int Power = 2;
 
         public bool AllySafe = false;
+
+        public virtual bool IsAvailable(Character character)
+        {
+            return character.CanAttack;
+        }
         
         #endregion
 

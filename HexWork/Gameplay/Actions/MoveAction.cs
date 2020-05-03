@@ -9,10 +9,16 @@ namespace HexWork.Gameplay.Actions
 {
 	public class MoveAction : HexAction
     {
+        public override bool IsAvailable(Character character)
+        {
+            return character.CanMove;
+        }
+
         public MoveAction(string name,
 			GetValidTargetsDelegate targetDelegate= null,
 			StatusEffect statusEffect = null,
-			DamageComboAction combo = null, TargetPattern targetPattern = null) :
+			DamageComboAction combo = null, 
+            TargetPattern targetPattern = null) :
 			base(name,
 				targetDelegate,
 				statusEffect,
@@ -38,7 +44,9 @@ namespace HexWork.Gameplay.Actions
             
             if(TileEffect != null)
 				gameState.CreateTileEffect(position, TileEffect);
-		}		
+
+            character.CanMove = false;
+        }		
 
         /// <summary>
         /// Get a list of coordinates that are valid target locations for this action for the passed in character

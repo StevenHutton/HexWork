@@ -54,6 +54,9 @@ namespace HexWork.Gameplay.Actions
 
             if (PotentialCost != 0)
                 gameState.LosePotential(PotentialCost);
+
+
+            character.HasActed = true;
         }
     }
 }
