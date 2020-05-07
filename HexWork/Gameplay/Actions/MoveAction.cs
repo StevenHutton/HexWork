@@ -37,8 +37,6 @@ namespace HexWork.Gameplay.Actions
 
             var position = character.Position;
 
-
-
             if (gameState.IsValidDestination(character, targetPosition))
             {
                 gameState.LosePotential(gameState.GetPathLengthToTile(character, targetPosition));

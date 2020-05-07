@@ -1102,18 +1102,23 @@ namespace HexWork.Gameplay
         public int GetPathLengthToTile(Character objectCharacter, HexCoordinate destination)
         {
             var path = FindShortestPath(objectCharacter.Position, destination, objectCharacter.MovementType);
-
+            var pathLength = 0;
             switch (objectCharacter.MovementSpeed)
             {
                 case MovementSpeed.Slow:
-                    return path.Select((coord, index) => (int)GetTileMovementCostModifier(coord) + GetMoveSpeedCost(MovementSpeed.Slow, index)).Sum();
+                    pathLength= path.Select((coord, index) => (int)GetTileMovementCostModifier(coord) + GetMoveSpeedCost(MovementSpeed.Slow, index)).Sum();
+                    break;
                 case MovementSpeed.Normal:
-                    return path.Select((coord, index) => (int)GetTileMovementCostModifier(coord) + GetMoveSpeedCost(MovementSpeed.Normal, index)).Sum();
+                    pathLength= path.Select((coord, index) => (int)GetTileMovementCostModifier(coord) + GetMoveSpeedCost(MovementSpeed.Normal, index)).Sum();
+                    break;
                 case MovementSpeed.Fast:
-                    return path.Select((coord, index) => (int)GetTileMovementCostModifier(coord) + GetMoveSpeedCost(MovementSpeed.Fast, index)).Sum();
+                    pathLength= path.Select((coord, index) => (int)GetTileMovementCostModifier(coord) + GetMoveSpeedCost(MovementSpeed.Fast, index)).Sum();
+                    break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    break;
             }
+            //no negative path lengths
+            return pathLength >= 0 ? pathLength : 0;
         }
 
         private int GetMoveSpeedCost(MovementSpeed ms, int distance)

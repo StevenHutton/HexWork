@@ -85,7 +85,7 @@ namespace HexWork.UI
 			_blankTexture = new Texture2D(game.GraphicsDevice, 2, 2);
 	        _blankTexture.SetData(data);
 
-            _hexGame = (HexWork) game;
+            _hexGame = (HexWork)game;
         }
 
 	    public Dictionary<HexCoordinate, int> GetValidDestinations(Character objectCharacter)
