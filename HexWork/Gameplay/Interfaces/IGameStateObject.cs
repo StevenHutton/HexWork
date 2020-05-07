@@ -79,7 +79,7 @@ namespace HexWork.Gameplay.Interfaces
 	    /// </summary>
 	    List<HexCoordinate> GetTilesInRange(Character objectCharacter, int range);
 
-	    List<HexCoordinate> GetValidDestinations(Character objectCharacter);
+	    Dictionary<HexCoordinate, int> GetValidDestinations(Character objectCharacter);
 
 	    /// <summary>
 	    /// Returns a boolean indicating if the selected tile is reachable from the start position in

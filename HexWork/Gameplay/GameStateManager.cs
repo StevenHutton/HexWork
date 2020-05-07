@@ -719,12 +719,12 @@ namespace HexWork.Gameplay
             return result;
         }
 
-        public List<HexCoordinate> GetValidDestinations(Character objectCharacter)
+        public Dictionary<HexCoordinate, int> GetValidDestinations(Character objectCharacter)
         {
             Dictionary<HexCoordinate, int> pathValues = new Dictionary<HexCoordinate, int> { { objectCharacter.Position, 0 } };
 
             GetWalkableNeighboursRecursive(pathValues, objectCharacter.Position, objectCharacter.MovementType, 0, 0);
-            return pathValues.Keys.ToList();
+            return pathValues;
         }
 
         public bool IsValidTarget(Character objectCharacter, HexCoordinate targetPosition, int range, GetValidTargetsDelegate targetDelegate)
@@ -738,9 +738,9 @@ namespace HexWork.Gameplay
         /// </summary>
         public bool IsValidDestination(Character objectCharacter, HexCoordinate targetPosition)
         {
-            var reachable = GetValidDestinations(objectCharacter).Contains(targetPosition);
-
-            var inRange = (this.CurrentGameState.Potential >= GetPathLengthToTile(objectCharacter, targetPosition));
+            var destinations = GetValidDestinations(objectCharacter);
+            var reachable = destinations.Keys.Contains(targetPosition);
+            var inRange = (this.CurrentGameState.Potential >= destinations[targetPosition]);
 
             return (reachable && inRange);
         }
@@ -762,11 +762,11 @@ namespace HexWork.Gameplay
             if (!CurrentGameState.ContainsKey(start) || !CurrentGameState.ContainsKey(destination))
                 return null;
 
-            //data structure map such that key : a tile we've looked at one or more times, value : the previous tile in the shortest path to the key.
+            //data structure map such that key : a tile we've looked at one or more times, value : the previous tile in the shortest path to the key-tile
             var ancestorMap = new Dictionary<HexCoordinate, HexCoordinate> { { start, null } };
 
             //a data structure that holds the shortest distance found to each tile that we've searched
-            var pathValues = new Dictionary<HexCoordinate, float> { { start, 0 } };
+            var pathValues = new Dictionary<HexCoordinate, int> { { start, 0 } };
 
             //data structure holding the estimated path length from the start to the destination for each tile we've searched.
             var tileEstimates = new Dictionary<HexCoordinate, float> { { start, 0 } };
@@ -799,13 +799,12 @@ namespace HexWork.Gameplay
                     //nodes are always one space away - hexgrid!
                     //BUT hexes have different movement costs to move through!
                     //the path from the start to the tile we're looking at now is the path the
-                    var pathLengthToNeighbor = pathValues[current] + GetTileMovementCostModifier(neighbor);
+                    var pathLengthToNeighbor = pathValues[current] + GetTileMovementCostModifier(neighbor) + 1;
 
                     //estimate the neighbor and add it to the list of estimates or update it if it's already in the list
                     if (!pathValues.ContainsKey(neighbor) || pathValues[neighbor] > pathLengthToNeighbor)
                     {
-                        //deliberate truncation in cast.
-                        pathValues[neighbor] = pathLengthToNeighbor;
+                        pathValues[neighbor] = (int)pathLengthToNeighbor;
 
                         //heuristic for "distance to destination tile" is just absolute distance between current tile and the destination
                         float estimate = pathLengthToNeighbor + HexGrid.DistanceBetweenPoints(neighbor, destination);
@@ -881,8 +880,6 @@ namespace HexWork.Gameplay
 
             float modifier = CurrentGameState.TileEffects.Where(te => te.Position == coordinate).Sum(te => te.MovementModifier) +
                              CurrentGameState[coordinate].MovementCostModifier;
-
-            //don't allow negative movement costs... yet.
             return modifier;
         }
 
@@ -933,7 +930,7 @@ namespace HexWork.Gameplay
             }
         }
 
-        private void GetWalkableNeighboursRecursive(Dictionary<HexCoordinate, int> neighbours, HexCoordinate position, MovementType movementType, int movementCost, int searchDepth)
+        private void GetWalkableNeighboursRecursive(Dictionary<HexCoordinate, int> output, HexCoordinate position, MovementType movementType, int movementCost, int searchDepth)
         {
             var adjacentTiles = CurrentGameState.GetNeighborCoordinates(position);
             var tilesToSearch = new List<HexCoordinate>();
@@ -946,23 +943,23 @@ namespace HexWork.Gameplay
                 int movementCostModifier = (int)GetTileMovementCostModifier(coord);
                 var movementCostToCoord = MovementSpeedNormal[searchDepth] + movementCostModifier;
 
-                //if we don't have enough movement to reach this tile skip it.
+                //if we don't have enough potential to reach this tile skip it.
                 if (movementCostToCoord + movementCost > CurrentGameState.Potential) continue;
 
-                if (!neighbours.ContainsKey(coord) || neighbours[coord] > searchDepth + movementCost)
+                if (!output.ContainsKey(coord) || output[coord] > movementCostToCoord)
                     tilesToSearch.Add(coord);
 
                 if (!IsTileEmpty(coord))
                     continue;
 
                 //if we've never looked at this tile or we found a shorter path to the tile add it to the list.
-                if (!neighbours.ContainsKey(coord))
+                if (!output.ContainsKey(coord))
                 {
-                    neighbours.Add(coord, movementCostToCoord + movementCost);//then add it to the list.
+                    output.Add(coord, movementCostToCoord + movementCost);//then add it to the list.
                 }
-                else if (neighbours[coord] > movementCostToCoord + movementCost)
+                else if (output[coord] > movementCostToCoord + movementCost)
                 {
-                    neighbours[coord] = movementCostToCoord + movementCost;//or adjust the cost
+                    output[coord] = movementCostToCoord + movementCost;//or adjust the cost
                 }
             }
 
@@ -977,7 +974,7 @@ namespace HexWork.Gameplay
                 int movementCostModifier = (int)GetTileMovementCostModifier(coord);
                 var movementCostToCoord = MovementSpeedNormal[searchDepth] + movementCostModifier;
 
-                GetWalkableNeighboursRecursive(neighbours, coord, movementType,
+                GetWalkableNeighboursRecursive(output, coord, movementType,
                     movementCost + movementCostToCoord,
                     searchDepth + 1);
             }
@@ -1109,11 +1106,11 @@ namespace HexWork.Gameplay
             switch (objectCharacter.MovementSpeed)
             {
                 case MovementSpeed.Slow:
-                    return path.Select((coord, index) => (int)GetTileAtCoordinate(coord).MovementCostModifier + GetMoveSpeedCost(MovementSpeed.Slow, index)).Sum();
+                    return path.Select((coord, index) => (int)GetTileMovementCostModifier(coord) + GetMoveSpeedCost(MovementSpeed.Slow, index)).Sum();
                 case MovementSpeed.Normal:
-                    return path.Select((coord, index) => (int)GetTileAtCoordinate(coord).MovementCostModifier + GetMoveSpeedCost(MovementSpeed.Normal, index)).Sum();
+                    return path.Select((coord, index) => (int)GetTileMovementCostModifier(coord) + GetMoveSpeedCost(MovementSpeed.Normal, index)).Sum();
                 case MovementSpeed.Fast:
-                    return path.Select((coord, index) => (int)GetTileAtCoordinate(coord).MovementCostModifier + GetMoveSpeedCost(MovementSpeed.Fast, index)).Sum();
+                    return path.Select((coord, index) => (int)GetTileMovementCostModifier(coord) + GetMoveSpeedCost(MovementSpeed.Fast, index)).Sum();
                 default:
                     throw new ArgumentOutOfRangeException();
             }

@@ -332,7 +332,7 @@ namespace HexWork.Gameplay.Characters
                 characters.Add(zombieKing);
             }
 
-            for (var i = 0; i < difficulty+3; i++)
+            for (var i = 0; i < difficulty-6; i++)
             {
                 var zombie = CreateZombie(i);
                 characters.Add(zombie);

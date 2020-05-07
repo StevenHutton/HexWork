@@ -1,7 +1,6 @@
 ﻿using System;
 using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.Interfaces;
-using HexWork.UI.Interfaces;
 
 namespace HexWork.Gameplay
 {

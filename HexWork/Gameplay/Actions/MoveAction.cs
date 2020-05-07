@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.Interfaces;
@@ -36,6 +37,8 @@ namespace HexWork.Gameplay.Actions
 
             var position = character.Position;
 
+
+
             if (gameState.IsValidDestination(character, targetPosition))
             {
                 gameState.LosePotential(gameState.GetPathLengthToTile(character, targetPosition));
@@ -53,12 +56,12 @@ namespace HexWork.Gameplay.Actions
         /// </summary>
         public override List<HexCoordinate> GetValidTargets(Character character, IGameStateObject gameState)
         {
-            return gameState.GetValidDestinations(character);
+            return gameState.GetValidDestinations(character).Keys.ToList();
         }
 
         public override bool IsValidTarget(Character character, HexCoordinate targetCoordinate, IGameStateObject gameState)
         {
-            return gameState.GetValidDestinations(character).Contains(targetCoordinate);
+            return gameState.GetValidDestinations(character).Keys.Contains(targetCoordinate);
         }
 	}
 }

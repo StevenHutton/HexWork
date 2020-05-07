@@ -88,10 +88,11 @@ namespace HexWork.UI
             _hexGame = (HexWork) game;
         }
 
-	    public List<HexCoordinate> GetValidDestinations(Character objectCharacter)
+	    public Dictionary<HexCoordinate, int> GetValidDestinations(Character objectCharacter)
 	    {
 		    var destinations =  gameState.GetValidDestinations(objectCharacter);
-            foreach (var coord in destinations)
+
+            foreach (var coord in destinations.Keys)
             {
                 var movementCost = GetPathLengthToTile(objectCharacter, coord).ToString();
                 
@@ -103,7 +104,7 @@ namespace HexWork.UI
 
 	    public bool IsValidDestination(Character objectCharacter, HexCoordinate targetPosition)
         {
-			var isValid = GetValidDestinations(objectCharacter).Contains(targetPosition);
+			var isValid = GetValidDestinations(objectCharacter).Keys.Contains(targetPosition);
 
 	        if (!isValid)
 	        {
