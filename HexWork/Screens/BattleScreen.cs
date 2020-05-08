@@ -1136,7 +1136,7 @@ namespace HexWork.UI
 			        statusTexture = _hexGame.Content.Load<Texture2D>("StopIcon");
 					break;
 		        case StatusEffectType.Bleeding:
-			        statusTexture = _hexGame.Content.Load<Texture2D>("BloodIcon");
+			        statusTexture = _hexGame.Content.Load<Texture2D>("Blood");
 					break;
 		        default:
 			        throw new ArgumentOutOfRangeException();
@@ -1215,20 +1215,7 @@ namespace HexWork.UI
 
         private void OnTileEffectSpawn(object sender, SpawnTileEffectEventArgs e)
         {
-            Texture2D tex = null;
-            switch (e.Type)
-            {
-                case TileEffectType.None:
-                    break;
-                case TileEffectType.Fire:
-                    tex = _hexGame.Content.Load<Texture2D>("FireIcon");
-                    break;
-                case TileEffectType.Wind:
-                    tex = _hexGame.Content.Load<Texture2D>("whirlwind");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            Texture2D tex = _hexGame.Content.Load<Texture2D>(e.Effect.Name);
 
             var tileEffect = new UiTileEffect(e.Id, tex)
             {

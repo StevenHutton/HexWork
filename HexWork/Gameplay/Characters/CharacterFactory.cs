@@ -47,6 +47,7 @@ namespace HexWork.Gameplay.Characters
         #region TileEffects
 
         private static TileEffect _fireEffect;
+        private static TileEffect _iceEffect;
         private static TileEffect _windEffect;
 
         #endregion
@@ -134,7 +135,8 @@ namespace HexWork.Gameplay.Characters
             {
                 Power = 1,
                 Range = 5,
-                PushForce = 1
+                PushForce = 1,
+                TileEffect = _iceEffect
             };
 
             var detonatingSnipeActionEx = new HexAction("Perfect Snipe! (1)",
@@ -347,14 +349,22 @@ namespace HexWork.Gameplay.Characters
             {
                 Damage = 5,
                 Effect = _fireStatus,
-                Type = TileEffectType.Fire
+                Name = "Fire"
+            };
+
+            _iceEffect = new TileEffect
+            {
+                Damage = 0,
+                Effect = null,
+                Name = "Ice",
+                MovementModifier = 100
             };
 
             _windEffect = new TileEffect
             {
                 Damage = 0,
                 Effect = null,
-                Type = TileEffectType.Wind,
+                Name = "Wind",
                 MovementModifier = -1
             };
 

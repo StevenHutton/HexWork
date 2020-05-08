@@ -49,7 +49,10 @@ namespace HexWork.Gameplay.Actions
 		    gameState.ApplyStatus(targetCharacter, StatusEffect);
 		    gameState.ApplyPush(targetCharacter, direction, PushForce);
 
-		    if (PotentialCost != 0)
+            if (TileEffect != null)
+                gameState.CreateTileEffect(targetPosition, TileEffect);
+
+			if (PotentialCost != 0)
 			    gameState.LosePotential(PotentialCost);
 
             character.HasActed = true;

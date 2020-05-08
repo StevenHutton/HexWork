@@ -287,10 +287,15 @@ namespace HexWork.Gameplay
             character.MoveTo(position);
         }
 
-        private void ResolveTileEffects(Character character, HexCoordinate position)
+        public void ResolveTileEffects(Character character, HexCoordinate position)
         {
             var tileEffect = CurrentGameState.TileEffects.FirstOrDefault(data => data.Position == position);
 
+            ResolveTileEffect(tileEffect);
+        }
+
+        public void ResolveTileEffect(TileEffect tileEffect, Character character = null)
+        {
             if (tileEffect == null)
                 return;
 
@@ -507,7 +512,7 @@ namespace HexWork.Gameplay
             {
                 Id = tileEffect.Guid,
                 Position = location,
-                Type = effect.Type
+                Effect = effect
             });
         }
 

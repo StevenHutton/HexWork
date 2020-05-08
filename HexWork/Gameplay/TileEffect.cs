@@ -4,24 +4,20 @@ using HexWork.Gameplay.Interfaces;
 
 namespace HexWork.Gameplay
 {
-    public enum TileEffectType
-    {
-        None,
-        Fire,
-        Wind
-    }
-
     public class TileEffect
     {
         public Guid Guid = Guid.NewGuid();
         public HexCoordinate Position;
-        public TileEffectType Type = TileEffectType.Fire;
         public int Damage = 5;
         public StatusEffect Effect;
         public float MovementModifier = 0.1f;
+        public string Name = "TileEffect";
 
 	    public virtual async void TriggerEffect(IGameStateObject gameState, Character character)
-	    {
+        {
+            if (character == null)
+                return;
+
             if(Damage > 0)
                 gameState.ApplyDamage(character, Damage);
             
@@ -38,9 +34,9 @@ namespace HexWork.Gameplay
         public TileEffect(TileEffect effectToCopy, HexCoordinate pos)
         {
             Position = pos;
-            Type = effectToCopy.Type;
             Damage = effectToCopy.Damage;
             Effect = effectToCopy.Effect;
+            Name = effectToCopy.Name;
             MovementModifier = effectToCopy.MovementModifier;
         }
     }

@@ -44,7 +44,7 @@ namespace HexWork.GameplayEvents
     {
         public Guid Id;
 
-        public TileEffectType Type = TileEffectType.Fire;
+        public TileEffect Effect;
 
         public HexCoordinate Position;
     }

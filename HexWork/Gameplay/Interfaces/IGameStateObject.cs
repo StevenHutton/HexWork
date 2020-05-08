@@ -57,10 +57,12 @@ namespace HexWork.Gameplay.Interfaces
 
         void CheckDied(Character character);
 
-        /// <summary>
-        /// Get all the visible tiles within range of a target position along each of our three coordinate system axes.
-        /// </summary>
-        List<HexCoordinate> GetVisibleAxisTilesInRange(Character objectCharacter, int range);
+        void ResolveTileEffect(TileEffect tileEffect, Character character = null);
+
+		/// <summary>
+		/// Get all the visible tiles within range of a target position along each of our three coordinate system axes.
+		/// </summary>
+		List<HexCoordinate> GetVisibleAxisTilesInRange(Character objectCharacter, int range);
 
 	    List<HexCoordinate> GetVisibleAxisTilesInRangeIgnoreUnits(Character objectCharacter, int range);
 

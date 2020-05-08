@@ -61,6 +61,26 @@ namespace HexWork.Gameplay.Actions
 
 				gameState.ApplyDamage(newTargetCharacter, (Power+ powerBonus) * character.Power);
             }
+
+            var tileEffect = gameState.GetTileEffectAtCoordinate(targetPosition);
+            if (tileEffect == null)
+                return;
+
+            foreach (var targetTile in GetTargetTiles(targetPosition))
+            {
+                var newTargetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
+                if (newTargetCharacter != null)
+                {
+                    if (AllySafe && newTargetCharacter.IsHero == character.IsHero)
+                        continue;
+
+                    tileEffect.TriggerEffect(gameState, newTargetCharacter);
+                }
+                else
+                    gameState.CreateTileEffect(targetTile, tileEffect);
+            }
+
+            gameState.ResolveTileEffect(tileEffect);
         }
     }
 }

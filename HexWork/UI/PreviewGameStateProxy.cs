@@ -188,11 +188,16 @@ namespace HexWork.UI
 			    if (tileEffect == null)
 				    continue;
 
-			    tileEffect.TriggerEffect(this, character);
-		    }
+                ResolveTileEffect(tileEffect, character);
+            }
 		}
 
-	    private void ResolveTerrainEffects(Character character, List<HexCoordinate> path)
+        public void ResolveTileEffect(TileEffect effect, Character character = null)
+        {
+            effect.TriggerEffect(this, character);
+        }
+
+        private void ResolveTerrainEffects(Character character, List<HexCoordinate> path)
         {
             if (path == null || path.Count == 0)
                 return;
@@ -288,7 +293,7 @@ namespace HexWork.UI
                     statusTexture = _hexGame.Content.Load<Texture2D>("StopIcon");
                     break;
                 case StatusEffectType.Bleeding:
-                    statusTexture = _hexGame.Content.Load<Texture2D>("BloodIcon");
+                    statusTexture = _hexGame.Content.Load<Texture2D>("Blood");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -308,20 +313,7 @@ namespace HexWork.UI
 
         public void CreateTileEffect(HexCoordinate location, TileEffect effect)
         {
-            Texture2D statusTexture = null; 
-            switch (effect.Type)
-            {
-                case TileEffectType.None:
-                    break;
-                case TileEffectType.Fire:
-                    statusTexture = _hexGame.Content.Load<Texture2D>("FireIcon");
-                    break;
-                case TileEffectType.Wind:
-                    statusTexture = _hexGame.Content.Load<Texture2D>("whirlwind");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            Texture2D statusTexture = _hexGame.Content.Load<Texture2D>(effect.Name);
 
             if (statusTexture == null)
                 return;

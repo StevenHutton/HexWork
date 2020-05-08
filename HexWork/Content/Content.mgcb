@@ -66,7 +66,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:BloodIcon.png
+/build:BloodIcon.png;Blood.png
 
 #begin Cross.png
 /importer:TextureImporter
@@ -91,6 +91,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Damage.png
+
+#begin Fire.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Fire.png
 
 #begin FireIcon.png
 /importer:TextureImporter
@@ -181,6 +193,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:hexagonOutline.png
+
+#begin Ice.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Ice.png
 
 #begin IronSoul.png
 /importer:TextureImporter
@@ -350,7 +374,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:whirlwind.png
+/build:whirlwind.png;Wind.png
 
 #begin ZombieKingPortrait.png
 /importer:TextureImporter

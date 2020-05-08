@@ -81,6 +81,9 @@ namespace HexWork.Gameplay.Actions
                 else
                     gameState.CreateTileEffect(targetTile, tileEffect);
             }
+
+            gameState.ResolveTileEffect(tileEffect);
+
         }
     }
 }
