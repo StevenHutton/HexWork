@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Characters;
+using HexWork.Gameplay.GameObject;
+using HexWork.Gameplay.GameObject.Characters;
 using HexWork.GameplayEvents;
 using HexWork.Interfaces;
 using HexWork.Screens;
@@ -35,9 +37,8 @@ namespace HexWork.UI
         #endregion
         
         private readonly List<UiButton> _actionBarButtons = new List<UiButton>();
-
-        private Dictionary<Guid, UiCharacter> _uiCharacterDictionary = new Dictionary<Guid, UiCharacter>();
-        private Dictionary<Guid, UiTileEffect> _tileEffectDictionary = new Dictionary<Guid, UiTileEffect>();
+        
+        private Dictionary<Guid, UiGameObject> _gameObjectDictionary = new Dictionary<Guid, UiGameObject>();
 
         private readonly List<InitiativeTrackButton> _initiativeTrack = new List<InitiativeTrackButton>();
 
@@ -192,7 +193,7 @@ namespace HexWork.UI
 
         private void LoadCharacterDictionary(Game game)
         {
-            _uiCharacterDictionary.Clear();
+            _gameObjectDictionary.Clear();
             var gameState = GameState.CurrentGameState;
             foreach (var character in gameState.Characters)
             {
@@ -206,7 +207,7 @@ namespace HexWork.UI
                     Scale = new Vector2(_hexScale * 0.9f)
                 };
 
-                _uiCharacterDictionary.Add(character.Id, sprite);
+                _gameObjectDictionary.Add(character.Id, sprite);
             }
         }
 
@@ -247,9 +248,9 @@ namespace HexWork.UI
         {
             base.Update(gameTime);
             GameState.Update();
-            foreach (var character in _uiCharacterDictionary.Values)
+            foreach (var character in _gameObjectDictionary.Values)
             {
-                character.Update(gameTime);
+                character.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
             }
             
             var actionToPlay = _uiActions.FirstOrDefault();
@@ -327,9 +328,8 @@ namespace HexWork.UI
             DrawActionBar();
             DrawInitiativeTrack();
             DrawMapUi();
-            DrawCharacters();
+            DrawEntities();
             DrawUiEffects();
-            DrawTileEffects();
 
 			//Draw Preview
 	        if (_cursorPosition != null)
@@ -346,36 +346,6 @@ namespace HexWork.UI
         }
         
         #region Private Rendering Methods
-
-        private void DrawTileEffects()
-        {
-            _spriteBatch.Begin();
-            foreach (var tileEffect in _tileEffectDictionary.Values)
-            {
-
-                var scaleFactor = 256.0f / tileEffect.Texture.Height * 0.35f;
-                _spriteBatch.Draw(tileEffect.Texture,
-                    tileEffect.Position,
-                    null,
-                    Color.White,
-                    0.0f,
-                    tileEffect.Origin,
-                    new Vector2(scaleFactor), 
-                    SpriteEffects.None,
-                    0.0f);
-            }
-            _spriteBatch.End();
-        }
-
-        private void DrawPath(IEnumerable<HexCoordinate> path)
-        {
-            foreach (var hex in path)
-            {
-                _spriteBatch.Draw(_blankTexture, GetHexScreenPosition(hex), null,
-                    Color.White, 0.0f, new Vector2(1.0f, 1.0f),
-                    6.0f, SpriteEffects.None, 0.0f);
-            }
-        }
 
         private void DrawHud()
         {
@@ -479,10 +449,13 @@ namespace HexWork.UI
             {
                 var id = initEntry.CharacterId;
 
-                if (!_uiCharacterDictionary.ContainsKey(id))
+                if (!_gameObjectDictionary.ContainsKey(id))
                     continue;
 
-                var texture = _uiCharacterDictionary[id].PortraitTexture;
+                var texture = _gameObjectDictionary[id].PortraitTexture;
+
+                if (texture == null)
+                    continue;
 
                 if (id == _selectedCharacter?.Id)
                 {
@@ -607,7 +580,7 @@ namespace HexWork.UI
             _spriteBatch.End();
         }
 
-        private void DrawCharacters()
+        private void DrawEntities()
         {
             var gameState = GameState.CurrentGameState;
             //draw highlighted elements
@@ -619,7 +592,7 @@ namespace HexWork.UI
             _outlineColour.SetValue(Color.TransparentBlack.ToVector4());
 
             //draw characters
-            foreach (var kvp in _uiCharacterDictionary)
+            foreach (var kvp in _gameObjectDictionary)
             {
                 var sprite = kvp.Value;
 	            var character = GameState.GetCharacter(kvp.Key);
@@ -629,14 +602,14 @@ namespace HexWork.UI
                     _outlineColour.SetValue(Color.Red.ToVector4());
 
                     _spriteBatch.Draw(sprite.Texture, sprite.Position, null, Color.White, 0.0f,
-                        _hexCenter, sprite.Scale, SpriteEffects.None, 0.0f);
+                        sprite.Origin, sprite.Scale, SpriteEffects.None, 0.0f);
 
                     _outlineColour.SetValue(Color.TransparentBlack.ToVector4());
                 }
                 else
                 {
                     _spriteBatch.Draw(sprite.Texture, sprite.Position, null, Color.White, 0.0f,
-                        _hexCenter, sprite.Scale, SpriteEffects.None, 0.0f);
+                        sprite.Origin, sprite.Scale, SpriteEffects.None, 0.0f);
                 }
             }
 
@@ -645,7 +618,7 @@ namespace HexWork.UI
             _spriteBatch.Begin();
 
             //draw health bars
-            foreach (var character in _uiCharacterDictionary.Values)
+            foreach (var character in _gameObjectDictionary.Values)
             {
                 var position = character.Position + new Vector2(0.0f, 25.0f);
 
@@ -747,7 +720,7 @@ namespace HexWork.UI
                 && _focusedTile == cursorPosition 
                 && OnClickEvent == null)
             {
-                var ch = GameState.GetCharacterAtCoordinate(cursorPosition);
+                var ch = GameState.GetEntityAtCoordinate(cursorPosition);
                 SelectCharacter(ch);
             }
 
@@ -813,15 +786,14 @@ namespace HexWork.UI
 
         #endregion
         
-        private void UpdateInitiative(List<Character> initList)
+        private void UpdateInitiative(IEnumerable<Character> initList)
         {
             _initiativeTrack.Clear();
             var buttonSize = (int)(70 * _hexScreenScale);
-
             var buttonMargin = (int) (10 * _hexScreenScale);
 
             //width of init rect * count + space between rects * count -1 
-            var initListLength = initList.Count * (buttonSize) + ((initList.Count - 1) * buttonMargin);
+            var initListLength = initList.Count() * (buttonSize) + ((initList.Count() - 1) * buttonMargin);
             var posX = _screenCenter.X - ((float)initListLength / 2);
             
             foreach (var character in initList)
@@ -835,9 +807,10 @@ namespace HexWork.UI
             }
         }
 
-        private void SelectCharacter(Character character)
+        private void SelectCharacter(HexGameObject character)
         {
-            _selectedCharacter = character;
+            if (!(character is Character)) return;
+            _selectedCharacter = (Character) character;
             UpdateButtons();
         }
 
@@ -971,7 +944,7 @@ namespace HexWork.UI
             var action = new UiAction();
             if (args?.Character != null)
             {
-                var character = _uiCharacterDictionary[args.Character.Id];
+                var character = _gameObjectDictionary[args.Character.Id];
                 action.Effect = new TextEffect(args.Message, _damageFont)
                 {
                     Position = character.Position + new Vector2(10.0f, -25.0f)
@@ -991,7 +964,7 @@ namespace HexWork.UI
 
         private void OnCharacterMove(object sender, MoveEventArgs e)
         {
-            var sprite = _uiCharacterDictionary[e.CharacterId];
+            var sprite = _gameObjectDictionary[e.CharacterId];
             
             //get the path that the sprite will take in screen space relative to it's starting position
             var action = new UiAction
@@ -1004,18 +977,19 @@ namespace HexWork.UI
 
         private void OnCharacterTeleport(object sender, MoveEventArgs e)
         {
-            var sprite = _uiCharacterDictionary[e.CharacterId];
+            var sprite = _gameObjectDictionary[e.CharacterId];
             sprite.Position = GetHexScreenPosition(e.Destination);
         }
 
         private void OnCharacterSpawn(object sender, SpawnChracterEventArgs e)
         {
-            if (_uiCharacterDictionary.ContainsKey(e.Character.Id))
+            if (_gameObjectDictionary.ContainsKey(e.Character.Id))
             {
-                var sprite = _uiCharacterDictionary[e.Character.Id];
+                var sprite = _gameObjectDictionary[e.Character.Id];
                 sprite.Position = GetHexScreenPosition(e.Character.Position);
                 sprite.MaxHealth = e.Character.MaxHealth;
                 sprite.Health = e.Character.Health;
+                sprite.Origin = _hexCenter;
                 return;
             }
 			
@@ -1026,15 +1000,16 @@ namespace HexWork.UI
             var sprite2 = new UiCharacter(tex, portraitTex, GetHexScreenPosition(e.Character.Position), e.Character.MaxHealth)
             {
                 Scale = new Vector2(_hexScale * 0.9f),
-                Health = e.Character.Health
+                Health = e.Character.Health,
+                Origin = _hexCenter
             };
-            
-            _uiCharacterDictionary.Add(e.Character.Id, sprite2);
+
+            _gameObjectDictionary.Add(e.Character.Id, sprite2);
         }
 
         private void OnCharacterDied(object sender, InteractionRequestEventArgs e)
         {
-            var character = _uiCharacterDictionary[e.TargetCharacterId];
+            var character = _gameObjectDictionary[e.TargetCharacterId];
 
             var action = new UiAction();
             action.Effect = new TextEffect("DEAD", _damageFont)
@@ -1044,14 +1019,14 @@ namespace HexWork.UI
 
             action.ActionCompleteCallback = () =>
             {
-                _uiCharacterDictionary.Remove(e.TargetCharacterId);
+                _gameObjectDictionary.Remove(e.TargetCharacterId);
             };
             _uiActions.Add(action);
         }
 
         private void OnTakeDamage(object sender, DamageTakenEventArgs args)
         {
-            var character = _uiCharacterDictionary[args.TargetCharacterId];
+            var character = _gameObjectDictionary[args.TargetCharacterId];
 
             var action = new UiAction();
             action.Sprite = character;
@@ -1064,8 +1039,8 @@ namespace HexWork.UI
 
             action.ActionCompleteCallback += () =>
             {
-                if (_uiCharacterDictionary.ContainsKey(args.TargetCharacterId))
-                    _uiCharacterDictionary[args.TargetCharacterId].TakeDamage(args.DamageTaken);
+                if (_gameObjectDictionary.ContainsKey(args.TargetCharacterId))
+                    _gameObjectDictionary[args.TargetCharacterId].TakeDamage(args.DamageTaken);
             };
 
             _uiActions.Add(action);
@@ -1094,7 +1069,7 @@ namespace HexWork.UI
 
         private void OnComboTrigger(object sender, ComboEventArgs e)
         {
-            var character = _uiCharacterDictionary[e.TargetCharacterId];
+            var character = _gameObjectDictionary[e.TargetCharacterId];
             var action = new UiAction()
             {
                 Sprite = character
@@ -1111,7 +1086,7 @@ namespace HexWork.UI
 
         private void OnStatusEffectApplied(object sender, StatusEventArgs e)
         {
-            var character = _uiCharacterDictionary[e.TargetCharacterId];
+            var character = _gameObjectDictionary[e.TargetCharacterId];
 	        var statusEffect = e.StatusEffect;
 
             var action = new UiAction
@@ -1153,7 +1128,7 @@ namespace HexWork.UI
 
         private void OnStatusEffectRemoved(object sender, StatusEventArgs e)
         {
-            var character = _uiCharacterDictionary[e.TargetCharacterId];
+            var character = _gameObjectDictionary[e.TargetCharacterId];
 
             var action = new UiAction
             {
@@ -1207,9 +1182,9 @@ namespace HexWork.UI
 
         private void OnRemoveTileEffect(object sender, RemoveTileEffectEventArgs e)
         {
-            if (_tileEffectDictionary.ContainsKey(e.Id))
+            if (_gameObjectDictionary.ContainsKey(e.Id))
             {
-                _tileEffectDictionary.Remove(e.Id);
+                _gameObjectDictionary.Remove(e.Id);
             }
         }
 
@@ -1221,7 +1196,7 @@ namespace HexWork.UI
             {
                 Position =  GetHexScreenPosition(e.Position)
             };
-            _tileEffectDictionary.Add(tileEffect.Id, tileEffect);
+            _gameObjectDictionary.Add(tileEffect.Id, tileEffect);
         }
 
 

@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using HexWork.Gameplay.Characters;
+using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
 using MonoGameTestProject.Gameplay;
@@ -30,7 +31,7 @@ namespace HexWork.Gameplay.Actions
             if (targetPosition == null)
                 return;
 
-            var targetCharacter = gameState.GetCharacterAtCoordinate(targetPosition);
+            var targetCharacter = gameState.GetEntityAtCoordinate(targetPosition);
             if (targetCharacter == null)
                 return;
 
@@ -50,7 +51,7 @@ namespace HexWork.Gameplay.Actions
 
             foreach (var targetTile in _targetPattern.GetPattern(targetPosition))
             {
-                var newTargetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
+                var newTargetCharacter = gameState.GetEntityAtCoordinate(targetTile);
 
                 //if no one is there, next tile
                 if (newTargetCharacter == null)
@@ -68,7 +69,7 @@ namespace HexWork.Gameplay.Actions
 
             foreach (var targetTile in GetTargetTiles(targetPosition))
             {
-                var newTargetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
+                var newTargetCharacter = gameState.GetEntityAtCoordinate(targetTile);
                 if (newTargetCharacter != null)
                 {
                     if (AllySafe && newTargetCharacter.IsHero == character.IsHero)

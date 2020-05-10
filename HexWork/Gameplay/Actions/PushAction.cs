@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using HexWork.Gameplay.Characters;
+using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
 using HexWork.UI.Interfaces;
@@ -33,7 +34,7 @@ namespace HexWork.Gameplay.Actions
 				return;
 
 			//Get target character and check validity
-		    var targetCharacter = gameState.GetCharacterAtCoordinate(targetPosition);
+		    var targetCharacter = gameState.GetEntityAtCoordinate(targetPosition);
 		    if (targetCharacter == null)
 			    return;
 			

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using HexWork.Gameplay.Actions;
+using HexWork.Gameplay.GameObject;
+using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.GameplayEvents;
 using HexWork.UI;
@@ -469,7 +471,7 @@ namespace HexWork.Gameplay.Characters
                 }
             }
             if (destination != null)
-                gameState.MoveCharacterTo(character, destination);
+                gameState.MoveEntityTo(character, destination);
             foreach (var action in character.Actions.Where(action =>
                 action.IsValidTarget(character, closestHero.Position, gameState)
                 && action.IsDetonator == closestHero.HasStatus))
@@ -523,7 +525,7 @@ namespace HexWork.Gameplay.Characters
                         }
                     }
                     if (destination != null)
-                        gameState.MoveCharacterTo(character, destination);
+                        gameState.MoveEntityTo(character, destination);
                 }
             }
             var zombies = gameState.CurrentGameState.Enemies.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();

@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using HexWork.Gameplay.Characters;
+using HexWork.Gameplay.GameObject;
+using HexWork.Gameplay.GameObject.Characters;
 
 namespace HexWork.Gameplay
 {
@@ -9,19 +11,20 @@ namespace HexWork.Gameplay
         #region Attributes
 
         //list of all characters in the current match ordered by initiative count
-        public List<Character> Characters = new List<Character>();
+        public IEnumerable<Character> Characters => Entities.OfType<Character>();
+        public IEnumerable<TileEffect> TileEffects => Entities.OfType<TileEffect>();
 
-        public List<TileEffect> TileEffects { get; set; } = new List<TileEffect>();
+        public List<HexGameObject> Entities = new List<HexGameObject>();
 
-        public int Difficulty = 0;
-        public int MaxPotential = 11;
-        public int Potential = 6;
+        public int MaxPotential = 9;
+        public int Potential = 3;
 
         #endregion
 
         #region Properties
 
-        public Character ActiveCharacter => Characters.First();
+        public Character ActiveCharacter => Characters.OrderBy(c => c.TurnTimer).FirstOrDefault();
+
         public IEnumerable<Character> Heroes => LivingCharacters.Where(character => character.IsHero);
         public IEnumerable<Character> LivingCharacters => Characters.Where(c => c.IsAlive);
         public IEnumerable<Character> Enemies => Characters.Where(character => !character.IsHero && character.IsAlive);

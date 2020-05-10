@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HexWork.Gameplay.Characters;
+using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
 using HexWork.UI.Interfaces;
@@ -35,12 +36,9 @@ namespace HexWork.Gameplay.Actions
                 .Contains(targetPosition))
                 return;
 
-            var target = gameState.GetCharacterAtCoordinate(targetPosition);
+            var target = gameState.GetEntityAtCoordinate(targetPosition);
 
             if(target == null)
-                return;
-
-            if (AllySafe && character.IsHero == target.IsHero)
                 return;
 
             gameState.NotifyAction(this, character);
@@ -48,8 +46,8 @@ namespace HexWork.Gameplay.Actions
             //swap positions of character and target character.
             var characterPosition = character.Position; 
             
-            gameState.TeleportCharacterTo(character, targetPosition);
-            gameState.TeleportCharacterTo(target, characterPosition);
+            gameState.TeleportEntityTo(character, targetPosition);
+            gameState.TeleportEntityTo(target, characterPosition);
 
             if (Combo != null)
                 await Combo.TriggerAsync(character, new DummyInputProvider(characterPosition), gameState);

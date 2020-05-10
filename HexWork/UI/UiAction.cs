@@ -11,7 +11,7 @@ namespace HexWork.UI
     {
         public Action ActionCompleteCallback;
 
-        public UiCharacter Sprite;
+        public UiGameObject Sprite;
 
         public Animation Animation;
 
@@ -27,7 +27,7 @@ namespace HexWork.UI
         {
             if (Sprite != null)
             {
-                Animation?.Update(gameTime, Sprite);
+                Animation?.Update((float)gameTime.ElapsedGameTime.TotalSeconds, Sprite);
             }
 
             Effect?.Update(gameTime);

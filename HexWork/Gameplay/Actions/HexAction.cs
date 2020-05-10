@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using HexWork.Gameplay.Characters;
+using HexWork.Gameplay.GameObject;
+using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
 using HexWork.UI.Interfaces;
@@ -107,7 +107,7 @@ namespace HexWork.Gameplay.Actions
 
         public virtual async void ApplyToTile(HexCoordinate targetTile, IGameStateObject gameState, Character character)
         {
-            var targetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
+            var targetCharacter = gameState.GetEntityAtCoordinate(targetTile);
 
             if (TileEffect != null)
                 gameState.CreateTileEffect(targetTile, TileEffect);

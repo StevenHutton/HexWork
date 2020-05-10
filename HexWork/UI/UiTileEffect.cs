@@ -4,20 +4,8 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace HexWork.UI
 {
-    public class UiTileEffect
+    public class UiTileEffect : UiGameObject
     {
-        public Guid Id;
-
-        public Rectangle SourceRectangle;
-
-        public Texture2D Texture;
-
-        public Vector2 Position;
-
-        public Vector2 Scale;
-
-        public Vector2 Origin;
-
         private int _frameCount = 15;
         private int _currentFrame = 0;
 
@@ -38,10 +26,12 @@ namespace HexWork.UI
             Texture = tex;
             SourceRectangle = new Rectangle(16, 0, 64, 64);
             Origin = new Vector2((float)Texture.Width / 2, (float)Texture.Height / 2);
+            Scale = new Vector2(256.0f / Texture.Height * 0.35f);
         }
 
-        public void Update(float dt)
+        public override void Update(float dt)
         {
+            Animation?.Update(dt, this);
             _timer += dt;
 
             if (_timer >= FrameLength)

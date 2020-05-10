@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using HexWork.Gameplay.Characters;
+using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
 using MonoGameTestProject.Gameplay;
@@ -40,13 +41,11 @@ namespace HexWork.Gameplay.Actions
             if (gameState.IsValidDestination(character, targetPosition))
             {
                 gameState.LosePotential(gameState.GetPathLengthToTile(character, targetPosition));
-                gameState.MoveCharacterTo(character, targetPosition);
+                gameState.MoveEntityTo(character, targetPosition);
             }
             
             if(TileEffect != null)
 				gameState.CreateTileEffect(position, TileEffect);
-
-            character.CanMove = false;
         }		
 
         /// <summary>

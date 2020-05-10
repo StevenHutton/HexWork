@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using HexWork.Gameplay.Characters;
+using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
 using HexWork.UI.Interfaces;
@@ -57,7 +58,7 @@ namespace HexWork.Gameplay.Actions
             {
                 foreach (var targetTile in targetTiles)
                 {
-                    var targetCharacter = gameState.GetCharacterAtCoordinate(targetTile);
+                    var targetCharacter = gameState.GetEntityAtCoordinate(targetTile);
 
                     //if no one is there, next tile
                     if (targetCharacter == null)

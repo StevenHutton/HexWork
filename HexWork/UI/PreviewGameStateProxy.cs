@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
-using HexWork.Gameplay.Characters;
+using HexWork.Gameplay.GameObject;
+using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -46,7 +47,8 @@ namespace HexWork.UI
 		#region Properties
 
         public GameState CurrentGameState  => gameState.CurrentGameState;
-        public List<TileEffect> TileEffects { get; set; }
+
+        public IEnumerable<TileEffect> TileEffects { get; set; }
 
 		#endregion
 
@@ -160,25 +162,25 @@ namespace HexWork.UI
 		/// </summary>
 		/// <param name="character"></param>
 		/// <param name="targetPosition"></param>
-        public void MoveCharacterTo(Character character, HexCoordinate targetPosition)
+        public void MoveEntityTo(HexGameObject entity, HexCoordinate targetPosition)
         {
-            var path = gameState.FindShortestPath(character.Position, targetPosition);
-	        ResolveTileEffects(character, path);
-            ResolveTerrainEffects(character, path);
+            var path = gameState.FindShortestPath(entity.Position, targetPosition);
+	        ResolveTileEffects(entity, path);
+            ResolveTerrainEffects(entity, path);
         }
 
-        public void TeleportCharacterTo(Character character, HexCoordinate position)
+        public void TeleportEntityTo(HexGameObject entity, HexCoordinate position)
         {
-	        ResolveTileEffects(character, new List<HexCoordinate> { position});
-			ResolveTerrainEffects(character, new List<HexCoordinate>{position});
+	        ResolveTileEffects(entity, new List<HexCoordinate> { position});
+			ResolveTerrainEffects(entity, new List<HexCoordinate>{position});
 		}
 
-	    private void ResolveTileEffects(Character character, List<HexCoordinate> path)
+	    private void ResolveTileEffects(HexGameObject entity, List<HexCoordinate> path)
 	    {
 		    //don't count terrain effects from a tile you're standing. We don't punish players for e.g. leaving lava.
-		    if (path.First() == character.Position)
+		    if (path.First() == entity.Position)
 		    {
-			    path.Remove(character.Position);
+			    path.Remove(entity.Position);
 		    }
 
 		    foreach (var tile in path)
@@ -188,33 +190,33 @@ namespace HexWork.UI
 			    if (tileEffect == null)
 				    continue;
 
-                ResolveTileEffect(tileEffect, character);
+                ResolveTileEffect(tileEffect, entity);
             }
 		}
 
-        public void ResolveTileEffect(TileEffect effect, Character character = null)
+        public void ResolveTileEffect(TileEffect effect, HexGameObject entity = null)
         {
-            effect.TriggerEffect(this, character);
+            effect.TriggerEffect(this, entity);
         }
 
-        private void ResolveTerrainEffects(Character character, List<HexCoordinate> path)
+        private void ResolveTerrainEffects(HexGameObject entity, List<HexCoordinate> path)
         {
             if (path == null || path.Count == 0)
                 return;
 
 	        //don't count terrain effects from a tile you're standing. We don't punish players for e.g. leaving lava.
-	        if (path.First() == character.Position)
+	        if (path.First() == entity.Position)
 	        {
-		        path.Remove(character.Position);
+		        path.Remove(entity.Position);
 	        }
 
 			foreach (var position in path)
             {
-                ResolveTerrainEffect(character, position);
+                ResolveTerrainEffect(entity, position);
             }
         }
 
-        private void ResolveTerrainEffect(Character character, HexCoordinate position)
+        private void ResolveTerrainEffect(HexGameObject entity, HexCoordinate position)
         {
             var tile = gameState.GetTileAtCoordinate(position);
             switch (tile.TerrainType)
@@ -224,7 +226,7 @@ namespace HexWork.UI
                 case TerrainType.Water:
                     break;
                 case TerrainType.Lava:
-                    ApplyStatus(character, new StatusEffect{StatusEffectType = StatusEffectType.Burning});
+                    ApplyStatus(entity, new StatusEffect{StatusEffectType = StatusEffectType.Burning});
                     break;
                 case TerrainType.Ice:
                     break;
@@ -247,25 +249,24 @@ namespace HexWork.UI
         /// intentionally does nothing
         /// </summary>
         /// <param name="action"></param>
-        public void NotifyAction(HexAction action, Character character)
+        public void NotifyAction(HexAction action, HexGameObject entity)
         {
 
         }
 
-        public Character GetCharacterAtCoordinate(HexCoordinate coordinate)
+        public HexGameObject GetEntityAtCoordinate(HexCoordinate coordinate)
         {
-            //throw new System.NotImplementedException();
-	        return gameState.GetCharacterAtCoordinate(coordinate);
+	        return gameState.GetEntityAtCoordinate(coordinate);
         }
 
-        public int ApplyDamage(Character character, int power, string message = null)
+        public int ApplyDamage(HexGameObject entity, int power, string message = null)
         {
-	        var position = GetHexScreenPosition(character.Position);
+	        var position = GetHexScreenPosition(entity.Position);
             _spriteBatch.Draw(_damageTexture, position, null, Color.Red, 0.0f, new Vector2(128), _hexScaleV, SpriteEffects.None, 0.0f );
 	        return power;
         }
 
-        public void CheckDied(Character character)
+        public void CheckDied(HexGameObject entity)
         { }
 
         public void ApplyHealing(Character character, int power)
@@ -276,7 +277,7 @@ namespace HexWork.UI
                 SpriteEffects.None, 0.0f);
         }
 
-        public void ApplyStatus(Character character, StatusEffect effect)
+        public void ApplyStatus(HexGameObject entity, StatusEffect effect)
         {
             if (effect == null) return;
 
@@ -299,7 +300,7 @@ namespace HexWork.UI
                     throw new ArgumentOutOfRangeException();
             }
 
-	        var position = GetHexScreenPosition(character.Position);
+	        var position = GetHexScreenPosition(entity.Position);
 	        _spriteBatch.Draw(statusTexture, 
 		        position,
 		        null,
@@ -336,14 +337,14 @@ namespace HexWork.UI
                 0.0f);
         }
 
-        public int ApplyCombo(Character targetCharacter, DamageComboAction combo)
+        public int ApplyCombo(HexGameObject entity, DamageComboAction combo)
         {
             return 0;
         }
 
-        public void ApplyPush(Character character, HexCoordinate direction, int pushForce = 0)
+        public void ApplyPush(HexGameObject entity, HexCoordinate direction, int pushForce = 0)
         {
-	        var characterPos = character.Position;
+	        var characterPos = entity.Position;
 	        var destinationPos = characterPos + direction;
 
             while (pushForce > 0)

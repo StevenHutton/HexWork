@@ -1,30 +1,31 @@
 ﻿using System;
-using HexWork.Gameplay.Characters;
+using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 
-namespace HexWork.Gameplay
+namespace HexWork.Gameplay.GameObject
 {
-    public class TileEffect
+    public class TileEffect : HexGameObject
     {
-        public Guid Guid = Guid.NewGuid();
-        public HexCoordinate Position;
         public int Damage = 5;
         public StatusEffect Effect;
         public float MovementModifier = 0.1f;
-        public string Name = "TileEffect";
 
-	    public virtual async void TriggerEffect(IGameStateObject gameState, Character character)
+	    public virtual async void TriggerEffect(IGameStateObject gameState, HexGameObject entity)
         {
-            if (character == null)
+            if (entity == null)
                 return;
 
             if(Damage > 0)
-                gameState.ApplyDamage(character, Damage);
+                gameState.ApplyDamage(entity, Damage);
             
             if(Effect != null)
-                gameState.ApplyStatus(character, Effect);
+                gameState.ApplyStatus(entity, Effect);
 	    }
-        public TileEffect() { }
+
+        public TileEffect() : base()
+        {
+            Name = "TileEffect";
+        }
         
         public TileEffect(HexCoordinate pos)
         {
@@ -38,6 +39,7 @@ namespace HexWork.Gameplay
             Effect = effectToCopy.Effect;
             Name = effectToCopy.Name;
             MovementModifier = effectToCopy.MovementModifier;
+            BlocksMovement = effectToCopy.BlocksMovement;
         }
     }
 }

@@ -15,7 +15,7 @@ namespace HexWork.UI
 
         public bool IsComplete = false;
 
-        public virtual void Update(GameTime gameTime, UiCharacter sprite)
+        public virtual void Update(float gameTime, UiGameObject sprite)
         {
             //just end immediately
             sprite.Position = Vector2.Zero;
@@ -33,9 +33,8 @@ namespace HexWork.UI
             _destination = destination;
         }
 
-        public override void Update(GameTime gameTime, UiCharacter sprite)
+        public override void Update(float dt, UiGameObject sprite)
         {
-            var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             if (_start == Vector2.Zero)
                 _start = sprite.Position;
             

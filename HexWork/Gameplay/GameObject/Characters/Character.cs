@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Interfaces;
 
-namespace HexWork.Gameplay.Characters
+namespace HexWork.Gameplay.GameObject.Characters
 {
     public enum MonsterType
     {
@@ -11,7 +11,7 @@ namespace HexWork.Gameplay.Characters
         ZombieKing
     }
 
-    public class Character
+    public class Character : HexGameObject
     {
         #region Attributes
 
@@ -22,28 +22,20 @@ namespace HexWork.Gameplay.Characters
 
         //indicates how much potential your team can have if this character is your commander.
         public int Command = 0;
-
-        public int Health;
         public int MaxHealth;
 
         #endregion
 
         public List<HexAction> Actions = new List<HexAction>();
-        public List<StatusEffect> StatusEffects = new List<StatusEffect>(); 
 
-        public Guid Id = Guid.NewGuid();
         public MonsterType MonsterType;
-	    public string Name;
-        public HexCoordinate Position;
         
         public int Movement;
         public MovementType MovementType = MovementType.NormalMove;
         public MovementSpeed MovementSpeed = MovementSpeed.Normal;
 
-        public bool IsHero = false;
         public bool IsAlive = true;
         public bool CanAttack = false;
-        public bool CanMove = false;
         public int RangeModifier = 0;
         public bool HasActed = false;
         public bool IsActive = false;
@@ -56,16 +48,10 @@ namespace HexWork.Gameplay.Characters
         public Action<IGameStateObject, Character> DoTurn { get; set; }
 
         #endregion
-
-        #region Properties
-
-        public bool HasStatus => StatusEffects.Count > 0;
         
-        #endregion
-
         #region Methods
 
-        public Character(string name, int maxHealth, int turnLength, int speed, int potential)
+        public Character(string name, int maxHealth, int turnLength, int speed, int potential) : base()
         {
             if(_rand == null)
                 _rand = new Random(DateTime.Now.Millisecond);
@@ -105,22 +91,10 @@ namespace HexWork.Gameplay.Characters
             IsAlive = true;
         }
 
-        public void MoveTo(HexCoordinate position)
-        {
-            CanMove = false;
-            Position = position;
-        }
-
         public void AddAction(HexAction action)
         {
             if(!Actions.Contains(action))
                 Actions.Add(action);
-        }
-        
-        public void ApplyStatusEffect(StatusEffect effect)
-        {
-            if (!StatusEffects.Contains(effect))
-                StatusEffects.Add(effect);
         }
 
         #endregion

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Characters;
+using HexWork.Gameplay.GameObject;
+using HexWork.Gameplay.GameObject.Characters;
 
 namespace HexWork.GameplayEvents
 {
@@ -17,14 +19,14 @@ namespace HexWork.GameplayEvents
             Message = message;
         }
 
-        public MessageEventArgs(string message, Character targetCharacter)
+        public MessageEventArgs(string message, HexGameObject targetCharacter)
         {
             Message = message;
             Character = targetCharacter;
         }
 
         public string Message;
-        public Character Character;
+        public HexGameObject Character;
     }
 
     public class MoveEventArgs : EventArgs

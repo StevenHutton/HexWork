@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Characters;
+using HexWork.Gameplay.GameObject;
+using HexWork.Gameplay.GameObject.Characters;
 
 namespace HexWork.Gameplay.Interfaces
 {
@@ -27,23 +29,23 @@ namespace HexWork.Gameplay.Interfaces
     {
 		GameState CurrentGameState { get; }
 
-		List<TileEffect> TileEffects { get; }
+		IEnumerable<TileEffect> TileEffects { get; }
 
-		void NotifyAction(HexAction action, Character character);
+		void NotifyAction(HexAction action, HexGameObject entity);
 
-        void MoveCharacterTo(Character character, HexCoordinate targetPosition);
+        void MoveEntityTo(HexGameObject entity, HexCoordinate targetPosition);
 
-        void TeleportCharacterTo(Character character, HexCoordinate position);
+        void TeleportEntityTo(HexGameObject entity, HexCoordinate position);
 
-        Character GetCharacterAtCoordinate(HexCoordinate coordinate);
+        HexGameObject GetEntityAtCoordinate(HexCoordinate coordinate);
 
-        int ApplyDamage(Character character, int power, string message = null);
+        int ApplyDamage(HexGameObject entity, int power, string message = null);
 
-        void ApplyStatus(Character character, StatusEffect effect);
+        void ApplyStatus(HexGameObject entity, StatusEffect effect);
 
-        int ApplyCombo(Character character, DamageComboAction combo);
+        int ApplyCombo(HexGameObject entity, DamageComboAction combo);
 
-        void ApplyPush(Character character, HexCoordinate direction, int pushForce);
+        void ApplyPush(HexGameObject entity, HexCoordinate direction, int pushForce);
 
         void ApplyHealing(Character character, int healingAmount);
 
@@ -55,9 +57,9 @@ namespace HexWork.Gameplay.Interfaces
 
         void NextTurn();
 
-        void CheckDied(Character character);
+        void CheckDied(HexGameObject entity);
 
-        void ResolveTileEffect(TileEffect tileEffect, Character character = null);
+        void ResolveTileEffect(TileEffect tileEffect, HexGameObject entity = null);
 
 		/// <summary>
 		/// Get all the visible tiles within range of a target position along each of our three coordinate system axes.
