@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
-using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.GameplayEvents;
@@ -145,8 +144,8 @@ namespace HexWork.UI
             GameState.CharacterMoveEvent += OnCharacterMove;
             GameState.CharacterTeleportEvent += OnCharacterTeleport;
             GameState.EndTurnEvent += OnEndTurn;
-            GameState.SpawnCharacterEvent += OnCharacterSpawn;
-            GameState.CharacterDiedEvent += OnCharacterDied;
+            GameState.SpawnEntityEvent += OnEntitySpawn;
+            GameState.RemoveEntityEvent += OnEntityDied;
             GameState.TakeDamageEvent += OnTakeDamage;
             GameState.ActionEvent += OnActionTrigger;
             GameState.ComboEvent += OnComboTrigger;
@@ -155,8 +154,6 @@ namespace HexWork.UI
             GameState.PotentialChangeEvent += OnPotentialChange;
             GameState.MessageEvent += OnMessage;
             GameState.GameOverEvent += OnGameOver;
-            GameState.SpawnTileEffectEvent += OnTileEffectSpawn;
-            GameState.RemoveTileEffectEvent += OnRemoveTileEffect;
 
             GameState.CreateCharacters(difficulty);
         }
@@ -980,46 +977,63 @@ namespace HexWork.UI
             var sprite = _gameObjectDictionary[e.CharacterId];
             sprite.Position = GetHexScreenPosition(e.Destination);
         }
-
-        private void OnCharacterSpawn(object sender, SpawnChracterEventArgs e)
+        
+        private void OnEntitySpawn(object sender, EntityEventArgs e)
         {
-            if (_gameObjectDictionary.ContainsKey(e.Character.Id))
+            if (_gameObjectDictionary.ContainsKey(e.Entity.Id))
             {
-                var sprite = _gameObjectDictionary[e.Character.Id];
-                sprite.Position = GetHexScreenPosition(e.Character.Position);
-                sprite.MaxHealth = e.Character.MaxHealth;
-                sprite.Health = e.Character.Health;
+                var sprite = _gameObjectDictionary[e.Entity.Id];
+                sprite.Position = GetHexScreenPosition(e.Entity.Position);
+                sprite.MaxHealth = e.Entity.MaxHealth;
+                sprite.Health = e.Entity.Health;
                 sprite.Origin = _hexCenter;
                 return;
             }
-			
-            var tex = e.MonsterType == MonsterType.Zombie ? _monsterTexture : _monsterTexture_ZombieKing;
-            var portraitTex = e.MonsterType == MonsterType.Zombie ? _monsterPortraitTexture
-                : _monsterPortraitTexture_ZombieKing;
 
-            var sprite2 = new UiCharacter(tex, portraitTex, GetHexScreenPosition(e.Character.Position), e.Character.MaxHealth)
+            if (e.Entity is Character character)
             {
-                Scale = new Vector2(_hexScale * 0.9f),
-                Health = e.Character.Health,
-                Origin = _hexCenter
-            };
+                var tex = character.MonsterType == MonsterType.Zombie ? _monsterTexture : _monsterTexture_ZombieKing;
+                var portraitTex = character.MonsterType == MonsterType.Zombie
+                    ? _monsterPortraitTexture
+                    : _monsterPortraitTexture_ZombieKing;
+                
+                var sprite2 = new UiGameObject(character.MaxHealth)
+                {
+                    Texture = tex,
+                    PortraitTexture = portraitTex,
+                    Scale = new Vector2(_hexScale * 0.9f),
+                    Origin = _hexCenter,
+                    Position = GetHexScreenPosition(e.Entity.Position)
+                };
 
-            _gameObjectDictionary.Add(e.Character.Id, sprite2);
+                _gameObjectDictionary.Add(e.Entity.Id, sprite2);
+                return;
+            }
+
+            Texture2D tex2 = _hexGame.Content.Load<Texture2D>(e.Entity.Name);
+
+            var tileEffect = new UiTileEffect(e.Entity.Id, tex2, e.Entity.MaxHealth)
+            {
+                Position = GetHexScreenPosition(e.Entity.Position)
+            };
+            _gameObjectDictionary.Add(tileEffect.Id, tileEffect);
+
         }
 
-        private void OnCharacterDied(object sender, InteractionRequestEventArgs e)
+        private void OnEntityDied(object sender, EntityEventArgs e)
         {
-            var character = _gameObjectDictionary[e.TargetCharacterId];
+            var character = _gameObjectDictionary[e.Entity.Id];
 
             var action = new UiAction();
             action.Effect = new TextEffect("DEAD", _damageFont)
             {
-                Position = character.Position + new Vector2(10.0f, -25.0f)
+                Position = character.Position + new Vector2(10.0f, -25.0f),
+                Duration = 0.2f
             };
 
             action.ActionCompleteCallback = () =>
             {
-                _gameObjectDictionary.Remove(e.TargetCharacterId);
+                _gameObjectDictionary.Remove(e.Entity.Id);
             };
             _uiActions.Add(action);
         }
@@ -1179,27 +1193,6 @@ namespace HexWork.UI
 
             _uiActions.Add(gameOver);
         }
-
-        private void OnRemoveTileEffect(object sender, RemoveTileEffectEventArgs e)
-        {
-            if (_gameObjectDictionary.ContainsKey(e.Id))
-            {
-                _gameObjectDictionary.Remove(e.Id);
-            }
-        }
-
-        private void OnTileEffectSpawn(object sender, SpawnTileEffectEventArgs e)
-        {
-            Texture2D tex = _hexGame.Content.Load<Texture2D>(e.Effect.Name);
-
-            var tileEffect = new UiTileEffect(e.Id, tex)
-            {
-                Position =  GetHexScreenPosition(e.Position)
-            };
-            _gameObjectDictionary.Add(tileEffect.Id, tileEffect);
-        }
-
-
         #endregion
 
         #endregion

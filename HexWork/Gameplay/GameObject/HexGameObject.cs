@@ -11,6 +11,7 @@ namespace HexWork.Gameplay.GameObject
         public bool BlocksMovement = true;
         public bool CanMove = false;
         public int Health;
+        public int MaxHealth;
         public bool IsHero = false;
         
         public List<StatusEffect> StatusEffects = new List<StatusEffect>();
@@ -18,6 +19,13 @@ namespace HexWork.Gameplay.GameObject
 
         public HexGameObject()
         { }
+
+        public HexGameObject(string name, int maxHealth)
+        {
+            Name = name;
+            MaxHealth = maxHealth;
+            Health = maxHealth;
+        }
 
         public void MoveTo(HexCoordinate position)
         {

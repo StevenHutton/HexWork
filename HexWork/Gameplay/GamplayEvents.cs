@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
-using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
 
@@ -42,27 +41,11 @@ namespace HexWork.GameplayEvents
         public HexCoordinate TargetPosition;
     }
 
-    public class SpawnTileEffectEventArgs : EventArgs
+    public class EntityEventArgs : EventArgs
     {
-        public Guid Id;
-
-        public TileEffect Effect;
-
-        public HexCoordinate Position;
+        public HexGameObject Entity;
     }
-
-    public class RemoveTileEffectEventArgs : EventArgs
-    {
-        public Guid Id;
-    }
-
-    public class SpawnChracterEventArgs
-    {
-        public Character Character;
-
-        public MonsterType MonsterType;
-    }
-
+    
     public class EndTurnEventArgs : EventArgs
     {
         public List<Character> InitativeOrder { get; set; }

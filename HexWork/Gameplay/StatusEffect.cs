@@ -1,5 +1,4 @@
 ﻿using System;
-using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
 

@@ -1,6 +1,4 @@
-﻿using System;
-using HexWork.Gameplay.GameObject.Characters;
-using HexWork.Gameplay.Interfaces;
+﻿using HexWork.Gameplay.Interfaces;
 
 namespace HexWork.Gameplay.GameObject
 {
@@ -26,7 +24,10 @@ namespace HexWork.Gameplay.GameObject
         {
             Name = "TileEffect";
         }
-        
+
+        public TileEffect(string name, int maxHealth) : base(name, maxHealth) { }
+
+
         public TileEffect(HexCoordinate pos)
         {
             Position = pos;
@@ -38,6 +39,8 @@ namespace HexWork.Gameplay.GameObject
             Damage = effectToCopy.Damage;
             Effect = effectToCopy.Effect;
             Name = effectToCopy.Name;
+            Health = effectToCopy.Health;
+            MaxHealth = effectToCopy.MaxHealth;
             MovementModifier = effectToCopy.MovementModifier;
             BlocksMovement = effectToCopy.BlocksMovement;
         }

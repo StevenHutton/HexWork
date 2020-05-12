@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using HexWork.Gameplay.Actions;
-using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
@@ -26,12 +25,12 @@ namespace HexWork.Gameplay
 
         public event EventHandler<MoveEventArgs> CharacterTeleportEvent;
 
-        public event EventHandler<SpawnChracterEventArgs> SpawnCharacterEvent;
+        public event EventHandler<EntityEventArgs> SpawnEntityEvent;
 
+        public event EventHandler<EntityEventArgs> RemoveEntityEvent;
+        
         public event EventHandler<DamageTakenEventArgs> TakeDamageEvent;
-
-        public event EventHandler<InteractionRequestEventArgs> CharacterDiedEvent;
-
+        
         public event EventHandler<EndTurnEventArgs> EndTurnEvent;
 
         public event EventHandler<ActionEventArgs> ActionEvent;
@@ -47,10 +46,6 @@ namespace HexWork.Gameplay
         public event EventHandler<MessageEventArgs> MessageEvent;
 
         public event EventHandler<MessageEventArgs> GameOverEvent;
-
-        public event EventHandler<SpawnTileEffectEventArgs> SpawnTileEffectEvent;
-
-        public event EventHandler<RemoveTileEffectEventArgs> RemoveTileEffectEvent;
 
         #endregion
 
@@ -89,11 +84,10 @@ namespace HexWork.Gameplay
                 }
 
                 character.SpawnAt(coordinate);
-                SpawnCharacterEvent?.Invoke(this,
-                    new SpawnChracterEventArgs()
+                SpawnEntityEvent?.Invoke(this,
+                    new EntityEventArgs()
                     {
-                        MonsterType = character.MonsterType,
-                        Character = character
+                        Entity = character
                     });
             }
 
@@ -113,7 +107,11 @@ namespace HexWork.Gameplay
                 }
 
                 character.SpawnAt(position);
-                SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs() { Character = character });
+                SpawnEntityEvent?.Invoke(this,
+                    new EntityEventArgs()
+                    {
+                        Entity = character
+                    });
             }
 
             NextTurn();
@@ -248,23 +246,23 @@ namespace HexWork.Gameplay
         public void SpawnCharacter(Character character)
         {
             CurrentGameState.Entities.Add(character);
-            SpawnCharacterEvent?.Invoke(this, new SpawnChracterEventArgs
-            {
-                MonsterType = character.MonsterType,
-                Character = character
-            });
+            SpawnEntityEvent?.Invoke(this,
+                new EntityEventArgs()
+                {
+                    Entity = character
+                });
             TeleportEntityTo(character, character.Position);
         }
 
         public void MoveEntityTo(HexGameObject entity, HexCoordinate position)
         {
-            if (!(entity is Character character))
-                return;
+            List<HexCoordinate> path;
+            if (entity is Character character)
+                path = FindShortestPath(entity.Position, position, character.MovementType);
+            else
+                path = FindShortestPath(entity.Position, position);
 
-            var path = FindShortestPath(entity.Position, position, character.MovementType);
-
-            foreach (var coordinate in
-                path)
+            foreach (var coordinate in path)
             {
                 CharacterMoveEvent?.Invoke(this, new MoveEventArgs
                 {
@@ -309,7 +307,7 @@ namespace HexWork.Gameplay
 
             tileEffect.TriggerEffect(this, (Character)entity);
             CurrentGameState.Entities.Remove(tileEffect);
-            RemoveTileEffectEvent?.Invoke(this, new RemoveTileEffectEventArgs() { Id = tileEffect.Id });
+            RemoveEntityEvent?.Invoke(this, new EntityEventArgs() { Entity = tileEffect });
         }
 
         //when a character moves into a tile check to see if there're any terrain effects for moving into that tile.
@@ -402,7 +400,7 @@ namespace HexWork.Gameplay
             if (character.Health <= 0)
             {
                 CurrentGameState.Entities.Remove(character);
-                CharacterDiedEvent?.Invoke(this, new InteractionRequestEventArgs() { TargetCharacterId = character.Id });
+                RemoveEntityEvent?.Invoke(this, new EntityEventArgs() { Entity = character });
             }
         }
 
@@ -519,11 +517,9 @@ namespace HexWork.Gameplay
             var tileEffect = new TileEffect(effect, location);
             CurrentGameState.Entities.Add(tileEffect);
 
-            SpawnTileEffectEvent?.Invoke(this, new SpawnTileEffectEventArgs
+            SpawnEntityEvent?.Invoke(this, new EntityEventArgs
             {
-                Id = tileEffect.Id,
-                Position = location,
-                Effect = effect
+                Entity = tileEffect
             });
         }
 
@@ -571,7 +567,7 @@ namespace HexWork.Gameplay
 
         public bool IsTileEmpty(HexCoordinate position)
         {
-            return !CurrentGameState.LivingCharacters.Any(character => character.Position == position);
+            return !CurrentGameState.Entities.Any(character => character.Position == position && character.BlocksMovement);
         }
 
         public Character GetCharacterAtInitiative(int initiative)

@@ -37,6 +37,13 @@ namespace HexWork.UI
 
         public List<UiStatusEffect> StatusEffects = new List<UiStatusEffect>();
 
+        public UiGameObject(float maxHealth)
+        {
+            Health = maxHealth;
+            MaxHealth = maxHealth;
+            TargetHealth = maxHealth;
+        }
+
         public virtual void Update(float dt)
         {
 

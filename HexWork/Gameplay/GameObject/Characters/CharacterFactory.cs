@@ -2,14 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using HexWork.Gameplay.Actions;
-using HexWork.Gameplay.GameObject;
-using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
-using HexWork.GameplayEvents;
 using HexWork.UI;
 using MonoGameTestProject.Gameplay;
 
-namespace HexWork.Gameplay.Characters
+namespace HexWork.Gameplay.GameObject.Characters
 {
     public static class CharacterFactory
     {
@@ -58,6 +55,7 @@ namespace HexWork.Gameplay.Characters
 
         private static DotEffect _fireStatus;
         private static DotEffect _bleedingStatus;
+        private static FreezeEffect _freezeEffect;
         
         #endregion
 
@@ -67,7 +65,7 @@ namespace HexWork.Gameplay.Characters
 
         public static Character CreateMajin()
         {
-            var majinCharacter = new Character("Majin", 100, 100, 3, 5)
+            var majinCharacter = new Character("Majin", 100, 100, 5)
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes
@@ -152,7 +150,7 @@ namespace HexWork.Gameplay.Characters
             };
 
             //create gunner hero
-            var gunnerCharacter = new Character("Gunner", 60, 100, 3, 4)
+            var gunnerCharacter = new Character("Gunner", 60, 100, 4)
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes
@@ -196,7 +194,7 @@ namespace HexWork.Gameplay.Characters
             };
 
             //create ninja hero
-            var ninjaCharacter = new Character("Ninja", 80, 80, 3, 4)
+            var ninjaCharacter = new Character("Ninja", 80, 80, 4)
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes
@@ -255,7 +253,7 @@ namespace HexWork.Gameplay.Characters
             };
 
             //create Iron Soul hero
-            var ironSoulCharacter = new Character("Iron Soul", 200, 120, 2, 3)
+            var ironSoulCharacter = new Character("Iron Soul", 200, 120, 3)
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes
@@ -298,7 +296,7 @@ namespace HexWork.Gameplay.Characters
             };
 
             //create Barbarian hero
-            var barbarianCharacter = new Character("Barbarian", 150, 100, 3, 2)
+            var barbarianCharacter = new Character("Barbarian", 150, 100, 2)
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes
@@ -351,7 +349,10 @@ namespace HexWork.Gameplay.Characters
             {
                 Damage = 5,
                 Effect = _fireStatus,
-                Name = "Fire"
+                Name = "Fire",
+                Health = 15,
+                MaxHealth = 15,
+                BlocksMovement = false,
             };
 
             _iceEffect = new TileEffect
@@ -359,7 +360,10 @@ namespace HexWork.Gameplay.Characters
                 Damage = 0,
                 Effect = null,
                 Name = "Ice",
-                MovementModifier = 100
+                MovementModifier = 100,
+                Health = 50,
+                MaxHealth = 50,
+                BlocksMovement = true,
             };
 
             _windEffect = new TileEffect
@@ -367,7 +371,10 @@ namespace HexWork.Gameplay.Characters
                 Damage = 0,
                 Effect = null,
                 Name = "Wind",
-                MovementModifier = -1
+                MovementModifier = -1,
+                Health = 5,
+                MaxHealth = 5,
+                BlocksMovement = false,
             };
 
             _fireStatus = new DotEffect { Name = "Fire", TileEffect = _fireEffect };
@@ -380,13 +387,21 @@ namespace HexWork.Gameplay.Characters
                 StatusEffectType = StatusEffectType.Bleeding
             };
 
+            _freezeEffect = new FreezeEffect
+            {
+                Name = "Freeze",
+                Duration = 1,
+                StatusEffectType = StatusEffectType.Frozen
+            };
+
             _fireEffect.Effect = _fireStatus;
             _fireStatus.TileEffect = _fireEffect;
+            _iceEffect.Effect = _freezeEffect;
         }
 
         private static Character CreateZombieKing()
         {
-            var zombieKing = new Character($"Zom-boy King", 160, 140, 2, 1)
+            var zombieKing = new Character($"Zom-boy King", 160, 140, 1)
             {
                 MonsterType = MonsterType.ZombieKing
             };
@@ -401,7 +416,7 @@ namespace HexWork.Gameplay.Characters
 
         public static Character CreateZombie(int i = 0)
         {
-            var zombie = new Character($"Zom-boy {i}", 60, 100, 1, 0);
+            var zombie = new Character($"Zom-boy {i}", 60, 100, 0);
             zombie.AddAction(new FixedMoveAction("Shamble"){Range = 1});
             zombie.AddAction(_zombieGrab);
             zombie.AddAction(_zombieBite);

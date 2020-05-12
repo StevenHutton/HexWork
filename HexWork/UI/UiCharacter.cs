@@ -10,14 +10,11 @@ namespace HexWork.UI
     {
         #region Methods
 
-        public UiCharacter(Texture2D tex, Texture2D pTex, Vector2 pos, float maxHealth)
+        public UiCharacter(Texture2D tex, Texture2D pTex, Vector2 pos, float maxHealth) : base(maxHealth)
         {
             Texture = tex;
             PortraitTexture = pTex;
             Position = pos;
-            Health = maxHealth;
-            MaxHealth = maxHealth;
-            TargetHealth = maxHealth;
         }
 
         public override void Update(float dt)

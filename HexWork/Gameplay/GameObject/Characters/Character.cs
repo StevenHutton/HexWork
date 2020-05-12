@@ -22,7 +22,6 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         //indicates how much potential your team can have if this character is your commander.
         public int Command = 0;
-        public int MaxHealth;
 
         #endregion
 
@@ -30,7 +29,6 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public MonsterType MonsterType;
         
-        public int Movement;
         public MovementType MovementType = MovementType.NormalMove;
         public MovementSpeed MovementSpeed = MovementSpeed.Normal;
 
@@ -51,7 +49,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         
         #region Methods
 
-        public Character(string name, int maxHealth, int turnLength, int speed, int potential) : base()
+        public Character(string name, int maxHealth, int turnLength, int potential) : base()
         {
             if(_rand == null)
                 _rand = new Random(DateTime.Now.Millisecond);
@@ -63,7 +61,6 @@ namespace HexWork.Gameplay.GameObject.Characters
             MaxHealth = maxHealth;
             Health = maxHealth;
             TurnCooldown = turnLength;
-            Movement = speed;
             Command = potential;
 
             TurnTimer = _rand.Next(0, TurnCooldown);

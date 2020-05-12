@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using HexWork.Gameplay.Actions;
-using HexWork.Gameplay.Characters;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
 

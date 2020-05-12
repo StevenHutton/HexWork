@@ -20,7 +20,7 @@ namespace HexWork.UI
 
         private float _timer = 0.0f;
 
-        public UiTileEffect(Guid id, Texture2D tex)
+        public UiTileEffect(Guid id, Texture2D tex, float maxHealth) : base(maxHealth)
         {
             Id = id;
             Texture = tex;
@@ -44,6 +44,23 @@ namespace HexWork.UI
 
                 SourceRectangle.X = _firstFrameOffsetX + (_currentFrame * _frameStepX);
                 SourceRectangle.Y = _firstFrameOffsetY + (_currentFrame * _frameStepY);
+            }
+
+            if (Health < TargetHealth)
+            {
+                Health += HealthBarSpeed * dt;
+                if (Health >= TargetHealth)
+                {
+                    Health = TargetHealth;
+                }
+            }
+            else if (Health > TargetHealth)
+            {
+                Health -= HealthBarSpeed * dt;
+                if (Health <= TargetHealth)
+                {
+                    Health = TargetHealth;
+                }
             }
         }
     }
