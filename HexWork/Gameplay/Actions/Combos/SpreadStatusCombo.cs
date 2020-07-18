@@ -83,7 +83,7 @@ namespace HexWork.Gameplay.Actions
             }
 
             gameState.ResolveTileEffect(tileEffect);
-
+            gameState.RemoveTileEffect(tileEffect);
         }
     }
 }

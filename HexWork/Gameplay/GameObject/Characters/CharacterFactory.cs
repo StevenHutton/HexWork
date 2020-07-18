@@ -350,8 +350,8 @@ namespace HexWork.Gameplay.GameObject.Characters
                 Damage = 5,
                 Effect = _fireStatus,
                 Name = "Fire",
-                Health = 15,
-                MaxHealth = 15,
+                Health = 5,
+                MaxHealth = 5,
                 BlocksMovement = false,
             };
 

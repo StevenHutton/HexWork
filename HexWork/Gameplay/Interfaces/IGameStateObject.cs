@@ -60,6 +60,8 @@ namespace HexWork.Gameplay.Interfaces
 
         void ResolveTileEffect(TileEffect tileEffect, HexGameObject entity = null);
 
+        void RemoveTileEffect(TileEffect effect);
+
 		/// <summary>
 		/// Get all the visible tiles within range of a target position along each of our three coordinate system axes.
 		/// </summary>

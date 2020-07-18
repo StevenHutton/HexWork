@@ -465,6 +465,9 @@ namespace HexWork.UI
             return gameState.GetPathLengthToTile(objectCharacter, destination);
         }
 
+        public void RemoveTileEffect(TileEffect effect)
+        { }
+
         #endregion
 
         public void NextTurn(){}

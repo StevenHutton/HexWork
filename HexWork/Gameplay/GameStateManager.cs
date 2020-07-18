@@ -306,8 +306,15 @@ namespace HexWork.Gameplay
                 return;
 
             tileEffect.TriggerEffect(this, (Character)entity);
-            CurrentGameState.Entities.Remove(tileEffect);
-            RemoveEntityEvent?.Invoke(this, new EntityEventArgs() { Entity = tileEffect });
+            RemoveTileEffect(tileEffect);
+        }
+
+        public void RemoveTileEffect(TileEffect effect)
+        {
+            if (!CurrentGameState.Entities.Contains(effect)) return;
+
+            CurrentGameState.Entities.Remove(effect);
+            RemoveEntityEvent?.Invoke(this, new EntityEventArgs() { Entity = effect });
         }
 
         //when a character moves into a tile check to see if there're any terrain effects for moving into that tile.
