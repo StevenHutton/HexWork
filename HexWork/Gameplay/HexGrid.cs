@@ -30,12 +30,12 @@ namespace HexWork.Gameplay
 
         public HexGrid()
         {
-            GenerateMap(5, 6);
+            
         }
 
         #region Private Methods
 
-        private void GenerateMap(int rows, int columns)
+        protected void GenerateMap(int columns, int rows)
         {
             _cols = columns;
             _rows = rows;

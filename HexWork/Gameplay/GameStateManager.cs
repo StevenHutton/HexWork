@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
@@ -14,8 +15,24 @@ namespace HexWork.Gameplay
     {
         #region Attributes
 
+        public const int ImpactDamage = 50;
+
+        public const int CollisionDamage = 30;
+
+        public const int MapWidth = 6;
+        public const int MapHeight = 5;
+
         public GameState CurrentGameState { get; set; }
         public IEnumerable<TileEffect> TileEffects => CurrentGameState.TileEffects;
+
+        public static readonly HexCoordinate[] Directions = {
+            new HexCoordinate(+1, -1, 0),
+            new HexCoordinate(+1, 0, -1),
+            new HexCoordinate(0, +1, -1),
+            new HexCoordinate(-1, +1, 0),
+            new HexCoordinate(-1, 0, +1),
+            new HexCoordinate(0, -1, +1)
+        };
 
         #endregion
 
@@ -55,7 +72,7 @@ namespace HexWork.Gameplay
         
         public GameStateManager()
         {
-            CurrentGameState = new GameState();
+            CurrentGameState = new GameState(MapWidth, MapHeight);
         }
 
         public void CreateCharacters(int difficulty = 1)
@@ -437,9 +454,9 @@ namespace HexWork.Gameplay
 
             ComboEvent?.Invoke(this, new ComboEventArgs(targetEntity.Id, combo));
 
-            //if the player scores a combo they gain potential. if their commander gets comboed they lose potential (uh-oh!)
+            //if the player scores a combo they gain potential.
             if (CurrentGameState.ActiveCharacter.IsHero)
-                GainPotential(2);
+                GainPotential(1);
             
             var status = targetEntity.StatusEffects.First();
 
@@ -483,13 +500,13 @@ namespace HexWork.Gameplay
                 else if (!IsTileEmpty(destinationPos))
                 {
                     var objectCharacter = GetEntityAtCoordinate(destinationPos);
-                    ApplyDamage(targetEntity, distance * 10, "IMPACT");
-                    ApplyDamage(objectCharacter, distance * 10, "IMPACT");
+                    ApplyDamage(targetEntity, distance * CollisionDamage, "Collision");
+                    ApplyDamage(objectCharacter, distance * CollisionDamage, "Collision");
                     distance = 0;
                 }
                 else
                 {
-                    ApplyDamage(targetEntity, distance * 15, "IMPACT");
+                    ApplyDamage(targetEntity, distance * ImpactDamage, "IMPACT");
                     distance = 0;
                 }
             }
@@ -1036,47 +1053,14 @@ namespace HexWork.Gameplay
             return null;
         }
 
-        public HexCoordinate GetNearestNeighbor(HexCoordinate start, HexCoordinate end)
-        {
-            var neighbours = CurrentGameState.GetNeighborCoordinates(end);
-
-            int distance = 100;
-            HexCoordinate nearest = null;
-
-            foreach (var neighbor in neighbours)
-            {
-                var delta = HexGrid.DistanceBetweenPoints(start, neighbor);
-                if (delta < distance)
-                {
-                    nearest = neighbor;
-                    distance = delta;
-                }
-                else if (delta == distance && nearest != null)
-                {
-                    var startCoords = Get2DCoords(start);
-                    var neighborCoords = Get2DCoords(neighbor);
-                    var nearestCoords = Get2DCoords(nearest);
-
-                    var nearestDelta = nearestCoords - startCoords;
-                    var neighborDelta = neighborCoords - startCoords;
-
-                    if (neighborDelta.Length() < nearestDelta.Length())
-                    {
-                        nearest = neighbor;
-                        distance = delta;
-                    }
-                }
-            }
-
-            return nearest;
-        }
-
         private readonly float _sqrt3 = (float)Math.Sqrt(3.0);
 
+        private static readonly float Sqrt3 = (float)Math.Sqrt(3.0);
+
         //not screenSpace
-        private Vector2 Get2DCoords(HexCoordinate coordinate)
+        private static Vector2 Get2DCoords(HexCoordinate coordinate)
         {
-            var posX = (_sqrt3 * coordinate.X + (_sqrt3 / 2 * coordinate.Z));
+            var posX = (Sqrt3 * coordinate.X + (Sqrt3 / 2 * coordinate.Z));
             var posY = 1.5f * coordinate.Z;
 
             return new Vector2(posX, posY);
@@ -1159,6 +1143,92 @@ namespace HexWork.Gameplay
         }
 
         #endregion
+
+        #endregion
+
+        #region Gameplay Helper Function
+
+        //Get all the neighbours of a tile that're inside the map.
+        public static IEnumerable<HexCoordinate> GetNeighbourCoordinates(HexCoordinate position)
+        {
+            List<HexCoordinate> coordinates = new List<HexCoordinate>();
+
+            //loop through neighbors
+            for (int i = 0; i < 6; i++)
+            {
+                HexCoordinate neighbourCoordinate = position + Directions[i];
+                
+                var position2D = Get2DCoords(neighbourCoordinate);
+
+                if( Math.Abs((int)position2D.X) <= MapWidth || Math.Abs((int)position2D.Y) <= MapHeight)
+                {
+                    coordinates.Add(neighbourCoordinate);
+                }            
+            }
+
+            return coordinates;
+        }
+
+        public static Vector2 CubeToOddRight(HexCoordinate coord) 
+        {
+            var col = coord.X + (coord.Z - (coord.Z & 1)) / 2;
+            var row = coord.Z;
+            return new Vector2(col, row);
+        }
+
+        public static HexCoordinate GetNearestNeighbor(HexCoordinate start, HexCoordinate end)
+        {
+            var startCoords = Get2DCoords(start);
+            int distance = 100;
+            HexCoordinate nearest = null;
+
+            for (int i = 0; i < 6; i++)
+            {
+                HexCoordinate neighbourCoordinate = end + Directions[i];
+
+                var oddR = CubeToOddRight(neighbourCoordinate);
+                var position2D = Get2DCoords(neighbourCoordinate);
+
+                //don't look at neighbours outside of the map
+                if (Math.Abs((int)oddR.X) > MapWidth || Math.Abs((int)oddR.Y) > MapHeight)
+                    continue;
+
+                var delta = HexGrid.DistanceBetweenPoints(start, neighbourCoordinate);
+                if (delta < distance) //if this is naively closer then we have a new nearest tile
+                {
+                    nearest = neighbourCoordinate;
+                    distance = delta;
+                }
+                //if they're tied then convert to 2d coords and use that as the tiebeaker
+                //I have no idea why this works but it ends up looking good intuitively
+                else if (delta == distance && nearest != null)
+                {
+                    var neighborCoords = Get2DCoords(neighbourCoordinate);
+                    var nearestCoords = Get2DCoords(nearest);
+
+                    var nearestDelta = nearestCoords - startCoords;
+                    var neighborDelta = neighborCoords - startCoords;
+
+                    if (neighborDelta.Length() < nearestDelta.Length())
+                    {
+                        nearest = neighbourCoordinate;
+                        distance = delta;
+                    }
+                }
+            }
+
+            return nearest;
+        }
+
+
+        public static HexCoordinate GetPushDirection(HexCoordinate pushOrigin, HexCoordinate targetPosition)
+        {            
+            //determine direction of push
+            var nearestNeighbor = GetNearestNeighbor(pushOrigin, targetPosition);
+            var direction = targetPosition - nearestNeighbor;
+
+            return direction;
+        }
 
         #endregion
 

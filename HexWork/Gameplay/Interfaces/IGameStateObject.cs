@@ -106,8 +106,6 @@ namespace HexWork.Gameplay.Interfaces
         
 	    List<HexCoordinate> GetAxisTilesInRange(Character objectCharacter, int range);
         
-	    HexCoordinate GetNearestNeighbor(HexCoordinate start, HexCoordinate end);
-
         bool IsHexPassable(HexCoordinate coordinate);
 
         bool IsTileEmpty(HexCoordinate coordinate);

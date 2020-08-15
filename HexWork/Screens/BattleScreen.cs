@@ -1025,12 +1025,7 @@ namespace HexWork.UI
             var character = _gameObjectDictionary[e.Entity.Id];
 
             var action = new UiAction();
-            action.Effect = new TextEffect("DEAD", _damageFont)
-            {
-                Position = character.Position + new Vector2(10.0f, -25.0f),
-                Duration = 0.2f
-            };
-
+            
             action.ActionCompleteCallback = () =>
             {
                 _gameObjectDictionary.Remove(e.Entity.Id);
@@ -1051,7 +1046,7 @@ namespace HexWork.UI
                 PositionModifier = new Vector2(10.0f, -25.0f)
             };
 
-            action.ActionCompleteCallback += () =>
+            action.ActionCompleteCallback = () =>
             {
                 if (_gameObjectDictionary.ContainsKey(args.TargetCharacterId))
                     _gameObjectDictionary[args.TargetCharacterId].TakeDamage(args.DamageTaken);

@@ -420,11 +420,6 @@ namespace HexWork.UI
 			return gameState.GetTilesInRange(objectCharacter, range);
 		}
 
-	    public HexCoordinate GetNearestNeighbor(HexCoordinate start, HexCoordinate end)
-	    {
-		    return gameState.GetNearestNeighbor(start, end);
-	    }
-
         public bool IsHexPassable(HexCoordinate coordinate)
         {
             return gameState.IsHexPassable(coordinate);

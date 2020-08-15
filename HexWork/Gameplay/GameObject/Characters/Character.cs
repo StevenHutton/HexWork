@@ -17,7 +17,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         #region Stats
 
-        //Feeds into damage
+        //Feeds into damage - all damage dealt by this character is multiplied by this number.
         public int Power = 5;
 
         //indicates how much potential your team can have if this character is your commander.

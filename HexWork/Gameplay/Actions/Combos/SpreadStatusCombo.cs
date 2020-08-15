@@ -19,7 +19,7 @@ namespace HexWork.Gameplay.Actions
                 new HexCoordinate(0, -1),
                 new HexCoordinate(-1, 1),
                 new HexCoordinate(1, -1));
-            Power = 2;
+            Power = 1;
         }
 
         public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
@@ -28,7 +28,7 @@ namespace HexWork.Gameplay.Actions
             if (targetPosition == null)
                 return;
 
-            var nearestNeighbor = gameState.GetNearestNeighbor(character.Position, targetPosition);
+            var nearestNeighbor = GameStateManager.GetNearestNeighbor(character.Position, targetPosition);
             var direction = targetPosition - nearestNeighbor;
 
             while (Pattern.Pattern.All(coord => coord != direction))
@@ -40,6 +40,7 @@ namespace HexWork.Gameplay.Actions
             var statusEffect = targetCharacter?.StatusEffects.FirstOrDefault();
             if (statusEffect != null)
             {
+                //the more status effects we detonate the more damage we add
                 var powerBonus = gameState.ApplyCombo(targetCharacter, this);
 
                 foreach (var targetTile in GetTargetTiles(targetPosition))

@@ -29,5 +29,10 @@ namespace HexWork.Gameplay
         public IEnumerable<Character> Enemies => Characters.Where(character => !character.IsHero && character.IsAlive);
 
         #endregion
+
+        public GameState(int mapWidth, int mapHeight)
+        {
+            GenerateMap(mapWidth, mapHeight);
+        }
     }
 }

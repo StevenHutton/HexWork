@@ -75,7 +75,9 @@ namespace HexWork.Gameplay.GameObject.Characters
                 TargetingHelper.GetValidAxisTargetTilesLos)
             {
                 Range = 3,
-                StatusEffect = _fireStatus
+                StatusEffect = _fireStatus,
+                PushForce = 1,
+                PushFromCaster = false
             };
 
             var exBurningBoltAction = new HexAction("Fire Wall! (1)",
@@ -101,12 +103,11 @@ namespace HexWork.Gameplay.GameObject.Characters
             var lightningBolt = new HexAction("Lightning Bolt (1)", TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo())
             {
                 Range = 3,
-                Power = 3,
+                Power = 2,
                 PotentialCost = 1
             };
 
-            //create majin hero
-            
+            //create majin hero            
             majinCharacter.AddAction(_moveAction);
             majinCharacter.AddAction(burningBolt);
             majinCharacter.AddAction(exBurningBoltAction);
@@ -125,24 +126,25 @@ namespace HexWork.Gameplay.GameObject.Characters
                 _cornerPattern)
             {
                 PotentialCost = 1,
+                Power = 3,
                 Range = 2,
                 TileEffect = _windEffect
             };
 
-            var shovingSnipeAction = new PushAction(name: "Shoving Snipe",
+            var shovingSnipeAction = new HexAction(name: "Shoving Snipe",
                 targetDelegate: TargetingHelper.GetValidAxisTargetTilesLos,
                 combo: null)
             {
-                Power = 1,
+                Power = 2,
                 Range = 5,
-                PushForce = 1,
+                PushForce = 2,
                 TileEffect = _iceEffect
             };
 
             var detonatingSnipeActionEx = new HexAction("Perfect Snipe! (1)",
                 TargetingHelper.GetValidAxisTargetTilesLos,
                 null,
-                new DamageComboAction { Power = 7 })
+                new DamageComboAction { Power = 4 })
             {
                 PotentialCost = 1,
                 Power = 1,
@@ -211,14 +213,14 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public static Character CreateIronSoul()
         {
-            var pushingFist = new PushAction("Pushing Fist", TargetingHelper.GetValidTargetTilesLos)
+            var pushingFist = new HexAction("Pushing Fist", TargetingHelper.GetValidTargetTilesLos)
             {
                 Range = 1,
                 Power = 3,
                 PushForce = 2
             };
 
-            var overwhelmingStrike = new PushAction("Overwhelming Strike! (1)", TargetingHelper.GetValidTargetTilesLos,
+            var overwhelmingStrike = new HexAction("Overwhelming Strike! (1)", TargetingHelper.GetValidTargetTilesLos,
                 null, new StatusCombo()
                 {
                     Effect = new ImmobalisedEffect()
@@ -256,7 +258,8 @@ namespace HexWork.Gameplay.GameObject.Characters
             var ironSoulCharacter = new Character("Iron Soul", 200, 120, 3)
             {
                 IsHero = true,
-                MovementType = MovementType.MoveThroughHeroes
+                MovementType = MovementType.MoveThroughHeroes,
+                Power = 15
             };
             ironSoulCharacter.AddAction(_moveAction);
             ironSoulCharacter.AddAction(vampiricStrike);
@@ -299,7 +302,8 @@ namespace HexWork.Gameplay.GameObject.Characters
             var barbarianCharacter = new Character("Barbarian", 150, 100, 2)
             {
                 IsHero = true,
-                MovementType = MovementType.MoveThroughHeroes
+                MovementType = MovementType.MoveThroughHeroes,
+                Power = 15
             };
             barbarianCharacter.AddAction(_moveAction);
             barbarianCharacter.AddAction(earthQuakeStrike);
@@ -334,7 +338,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 characters.Add(zombieKing);
             }
 
-            for (var i = 0; i < difficulty-6; i++)
+            for (var i = 0; i < (difficulty*2)+1; i++)
             {
                 var zombie = CreateZombie(i);
                 characters.Add(zombie);
@@ -347,7 +351,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         {
             _fireEffect = new TileEffect
             {
-                Damage = 5,
+                Damage = 15,
                 Effect = _fireStatus,
                 Name = "Fire",
                 Health = 5,
@@ -377,7 +381,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 BlocksMovement = false,
             };
 
-            _fireStatus = new DotEffect { Name = "Fire", TileEffect = _fireEffect };
+            _fireStatus = new DotEffect { Name = "Fire", TileEffect = _fireEffect, Damage = 10};
 
             _bleedingStatus = new DotEffect
             {
@@ -401,7 +405,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         private static Character CreateZombieKing()
         {
-            var zombieKing = new Character($"Zom-boy King", 160, 140, 1)
+            var zombieKing = new Character($"Zom-boy King", 160, 120, 1)
             {
                 MonsterType = MonsterType.ZombieKing
             };
@@ -416,7 +420,10 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public static Character CreateZombie(int i = 0)
         {
-            var zombie = new Character($"Zom-boy {i}", 60, 100, 0);
+            var zombie = new Character($"Zom-boy {i}", 60, 100, 0)
+            {
+                Power = 5,
+            };
             zombie.AddAction(new FixedMoveAction("Shamble"){Range = 1});
             zombie.AddAction(_zombieGrab);
             zombie.AddAction(_zombieBite);

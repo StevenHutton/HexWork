@@ -25,6 +25,9 @@ namespace HexWork.Gameplay.Actions
         public HexAction FollowUpAction = null;
         public HexAction Combo = null;
 
+        public int PushForce = 0;
+        public bool PushFromCaster = true;
+
         #endregion
 
         #region Properties
@@ -35,7 +38,7 @@ namespace HexWork.Gameplay.Actions
         
         public bool IsDetonator => Combo != null;
         
-        public int Power = 2;
+        public int Power = 4;
 
         public bool AllySafe = false;
 
@@ -101,11 +104,14 @@ namespace HexWork.Gameplay.Actions
             var targetTiles = GetTargetTiles(targetPosition);
 	        foreach (var targetTile in targetTiles)
             {
-                ApplyToTile(targetTile, gameState, character);
+                var direction = PushFromCaster ?
+                GameStateManager.GetPushDirection(character.Position, targetTile) :
+                GameStateManager.GetPushDirection(targetPosition, targetTile);
+                ApplyToTile(targetTile, gameState, character, direction);
             }
         }
 
-        public virtual async void ApplyToTile(HexCoordinate targetTile, IGameStateObject gameState, Character character)
+        public virtual async void ApplyToTile(HexCoordinate targetTile, IGameStateObject gameState, Character character, HexCoordinate direction = null)
         {
             var targetCharacter = gameState.GetEntityAtCoordinate(targetTile);
 
@@ -113,8 +119,8 @@ namespace HexWork.Gameplay.Actions
                 gameState.CreateTileEffect(targetTile, TileEffect);
             
             if (Combo != null)
-                await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState); 
-            
+                await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState);
+        
             //if no one is there, next tile
             if (targetCharacter == null)
                 return;
@@ -122,6 +128,8 @@ namespace HexWork.Gameplay.Actions
                 return;
             gameState.ApplyDamage(targetCharacter, Power * character.Power);
             gameState.ApplyStatus(targetCharacter, StatusEffect);
+            if(direction != null)
+                gameState.ApplyPush(targetCharacter, direction, PushForce);
         }
 
         /// <summary>
