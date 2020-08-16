@@ -37,7 +37,7 @@ namespace HexWork.Gameplay.Actions
                 return;
             }
 
-            var nearestNeighbor = GameStateManager.GetNearestNeighbor(character.Position, targetPosition);
+            var nearestNeighbor = GameState.GetNearestNeighbor(character.Position, targetPosition);
 
             var direction = targetPosition - nearestNeighbor;
 

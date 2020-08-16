@@ -445,7 +445,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             //find the closest hero
             foreach (var hero in heroes)
             {
-                var nearestNeighbour = GetNearestTileAdjacentToDestination(position, hero.Position, gameState);
+                var nearestNeighbour = GetNearestPassableTileAdjacentToDestination(position, hero.Position, gameState);
                 if (nearestNeighbour == null)
                     continue;
                 var path = gameState.FindShortestPath(position, nearestNeighbour);
@@ -484,7 +484,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             //look at all the possible destinations and get the one which is closest to a hero
             foreach (var tile in tilesInRange)
             {
-                var distanceToHeroes = heroes.Select(data => HexGrid.DistanceBetweenPoints(tile, data.Position));
+                var distanceToHeroes = heroes.Select(data => GameState.DistanceBetweenPoints(tile, data.Position));
                 var distance = (float)distanceToHeroes.Sum() / (float)heroes.Count();
                 if (distance < shortestDistance)
                 {
@@ -516,7 +516,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             //find the closest hero
             foreach (var hero in heroes)
             {
-                var nearestNeighbour = GetNearestTileAdjacentToDestination(position, hero.Position, gameState);
+                var nearestNeighbour = GetNearestPassableTileAdjacentToDestination(position, hero.Position, gameState);
                 if (nearestNeighbour == null)
                     continue;
                 var path = gameState.FindShortestPath(position, nearestNeighbour);
@@ -538,7 +538,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                     //look at all the possible destinations and get the one which is the furthest average distance away from heroes
                     foreach (var tile in tilesInRange)
                     {
-                        var distanceToHeroes = heroes.Select(data => HexGrid.DistanceBetweenPoints(tile, data.Position));
+                        var distanceToHeroes = heroes.Select(data => GameState.DistanceBetweenPoints(tile, data.Position));
                         var distance = (float)distanceToHeroes.Sum() / (float)heroes.Count();
                         if (distance > greatestDistance)
                         {
@@ -567,11 +567,11 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         #region Turn Helper
 
-        private static HexCoordinate GetNearestTileAdjacentToDestination(HexCoordinate start, HexCoordinate end, IGameStateObject gameState)
+        private static HexCoordinate GetNearestPassableTileAdjacentToDestination(HexCoordinate start, HexCoordinate end, IGameStateObject gameState)
         {
-            var cgs = gameState.CurrentGameState;
-            var neighbours = cgs.GetNeighborCoordinates(end);
+            var neighbours = GameState.GetNeighbours(end);
 
+            //if the start tile is adjacent then there isn't a nearer tile.
             if (neighbours.Contains(start))
                 return start;
 
@@ -582,7 +582,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 foreach (var neighbor in neighbours)
                 {
-                    var delta = HexGrid.DistanceBetweenPoints(start, neighbor);
+                    var delta = GameState.DistanceBetweenPoints(start, neighbor);
                     if (delta <= distance)
                     {
                         nearest = neighbor;
@@ -593,7 +593,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                     }
                 }
 
-                neighbours = cgs.GetNeighborCoordinates(nearest);
+                neighbours = GameState.GetNeighbours(nearest);
                 if (neighbours.Contains(end))
                     neighbours.Remove(end);
 

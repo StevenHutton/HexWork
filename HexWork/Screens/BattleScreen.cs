@@ -52,7 +52,7 @@ namespace HexWork.UI
 
         private HexAction SelectedHexAction = null;
 
-        private GameStateManager GameState;
+        private GameState GameState;
 
         #region Rendering Attributes
 
@@ -139,7 +139,7 @@ namespace HexWork.UI
             _hexScale = 0.4f * _screenWidth / 1920;
             _hexScaleV = new Vector2(_hexScale);
 
-            GameState = new GameStateManager();
+            GameState = new GameState();
             
             GameState.CharacterMoveEvent += OnCharacterMove;
             GameState.CharacterTeleportEvent += OnCharacterTeleport;

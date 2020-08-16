@@ -59,13 +59,12 @@
     <Compile Include="Gameplay\Actions\VampiricAction.cs" />
     <Compile Include="Gameplay\GameObject\Characters\CharacterFactory.cs" />
     <Compile Include="Gameplay\GameObject\HexGameObject.cs" />
-    <Compile Include="Gameplay\GameStateManager.cs" />
+    <Compile Include="Gameplay\GameState.cs" />
     <Compile Include="Gameplay\Actions\HexAction.cs" />
     <Compile Include="Gameplay\GameObject\Characters\Character.cs" />
-    <Compile Include="Gameplay\GameState.cs" />
+    <Compile Include="Gameplay\BoardState.cs" />
     <Compile Include="Gameplay\GamplayEvents.cs" />
     <Compile Include="Gameplay\HexCoordinate.cs" />
-    <Compile Include="Gameplay\HexGrid.cs" />
     <Compile Include="Gameplay\Interfaces\IGameStateObject.cs" />
     <Compile Include="Gameplay\StatusEffect.cs" />
     <Compile Include="Gameplay\TargetPattern.cs" />

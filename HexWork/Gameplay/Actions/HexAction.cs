@@ -105,8 +105,8 @@ namespace HexWork.Gameplay.Actions
 	        foreach (var targetTile in targetTiles)
             {
                 var direction = PushFromCaster ?
-                GameStateManager.GetPushDirection(character.Position, targetTile) :
-                GameStateManager.GetPushDirection(targetPosition, targetTile);
+                GameState.GetPushDirection(character.Position, targetTile) :
+                GameState.GetPushDirection(targetPosition, targetTile);
                 ApplyToTile(targetTile, gameState, character, direction);
             }
         }

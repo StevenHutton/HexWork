@@ -13,7 +13,7 @@ namespace HexWork.Gameplay.Actions
             //spawn zombie
             var zombie = CharacterFactory.CreateZombie();
 
-            var tile = gameState.CurrentGameState.GetNeighborCoordinates(character.Position)
+            var tile = GameState.GetNeighbours(character.Position)
                 .FirstOrDefault(gameState.IsHexPassable);
 
             if (tile != null)

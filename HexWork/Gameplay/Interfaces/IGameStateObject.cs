@@ -26,7 +26,7 @@ namespace HexWork.Gameplay.Interfaces
 
 	public interface IGameStateObject
     {
-		GameState CurrentGameState { get; }
+		BoardState CurrentGameState { get; }
 
 		IEnumerable<TileEffect> TileEffects { get; }
 

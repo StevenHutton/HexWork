@@ -39,7 +39,7 @@ namespace HexWork.Gameplay.Actions
 
             var powerBonus = gameState.ApplyCombo(targetCharacter, this);
 
-            var nearestNeighbor = GameStateManager.GetNearestNeighbor(character.Position, targetCharacter.Position);
+            var nearestNeighbor = GameState.GetNearestNeighbor(character.Position, targetCharacter.Position);
 
             var direction = targetCharacter.Position - nearestNeighbor;
 

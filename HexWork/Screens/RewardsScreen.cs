@@ -31,7 +31,7 @@ namespace HexWork.Screens
     public class RewardsScreen : Screen
     {
         private HexWork _hexGame;
-        private GameState _gameState;
+        private BoardState _gameState;
 
         private List<CharacterButton> _characterPortraits = new List<CharacterButton>();
 
