@@ -10,7 +10,7 @@ namespace HexWork.Gameplay.Actions
         public DamageComboAction()
         {
             Name = "Damage Combo";
-            Power = 5;
+            Power = 1;
         }
         
         public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)

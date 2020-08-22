@@ -77,7 +77,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 Range = 3,
                 StatusEffect = _fireStatus,
                 PushForce = 1,
-                PushFromCaster = false
+                PushFromCaster = true
             };
 
             var exBurningBoltAction = new HexAction("Fire Wall! (1)",
@@ -100,7 +100,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 TileEffect = _fireEffect
             };
 
-            var lightningBolt = new HexAction("Lightning Bolt (1)", TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo())
+            var lightningBolt = new HexAction("Lightning Bolt (1)", TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo() { PushForce = 1, PushFromCaster = false})
             {
                 Range = 3,
                 Power = 2,
@@ -293,9 +293,11 @@ namespace HexWork.Gameplay.GameObject.Characters
             var whirlwindAttack = new HexAction("Spin Attack", TargetingHelper.GetValidTargetTilesLos, null, new DamageComboAction(),
                 _whirlWindTargetPattern)
             {
-                Power = 3,
+                Power = 1,
                 PotentialCost = 1,
-                Range = 0
+                Range = 0,
+                PushForce = 1,
+                PushFromCaster = true
             };
 
             //create Barbarian hero

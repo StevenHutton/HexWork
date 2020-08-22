@@ -50,9 +50,9 @@ namespace HexWork.Gameplay.Actions
                     //if no one is there, next tile
                     if (newTargetCharacter == null)
                     {
-                        if(statusEffect.TileEffect != null)
+                        if (statusEffect.TileEffect != null)
                             gameState.CreateTileEffect(targetTile, statusEffect.TileEffect);
-                        
+
                         continue;
                     }
 
@@ -61,8 +61,13 @@ namespace HexWork.Gameplay.Actions
 
                     gameState.ApplyStatus(newTargetCharacter, statusEffect);
                     gameState.ApplyDamage(newTargetCharacter, Power * character.Power);
-                    gameState.ApplyDamage(targetCharacter, (powerBonus + Power) * character.Power);
+
+                    var dir = PushFromCaster ?
+                        GameState.GetPushDirection(character.Position, targetTile) :
+                        GameState.GetPushDirection(targetPosition, targetTile);
+                    gameState.ApplyPush(newTargetCharacter, dir, PushForce);
                 }
+                gameState.ApplyDamage(targetCharacter, (powerBonus + Power) * character.Power);
             }
 
             var tileEffect = gameState.GetTileEffectAtCoordinate(targetPosition);

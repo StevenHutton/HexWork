@@ -13,6 +13,7 @@ namespace HexWork.Gameplay
 
         //list of all characters in the current match ordered by initiative count
         public IEnumerable<Character> Characters => Entities.OfType<Character>();
+
         public IEnumerable<TileEffect> TileEffects => Entities.OfType<TileEffect>();
 
         public List<HexGameObject> Entities = new List<HexGameObject>();

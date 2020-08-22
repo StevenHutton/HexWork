@@ -469,8 +469,6 @@ namespace HexWork.Gameplay
 
         public void ApplyPush(HexGameObject targetEntity, HexCoordinate direction, int distance = 0)
         {
-            SendMessage("PUSH");
-
             var targetCharacterPos = targetEntity.Position;
             var destinationPos = targetCharacterPos + direction;
             while (distance > 0)
@@ -642,7 +640,7 @@ namespace HexWork.Gameplay
         {
             var targets = new List<HexCoordinate>();
 
-            foreach (var direction in HexGrid.Directions)
+            foreach (var direction in Directions)
             {
                 for (var i = 0; i < range; i++)
                 {
@@ -668,7 +666,7 @@ namespace HexWork.Gameplay
         public List<HexCoordinate> GetVisibleAxisTilesInRange(Character objectCharacter, int range)
         {
             var targets = new List<HexCoordinate>();
-            foreach (var direction in HexGrid.Directions)
+            foreach (var direction in Directions)
             {
                 for (var i = 0; i < range; i++)
                 {
@@ -694,7 +692,7 @@ namespace HexWork.Gameplay
         public List<HexCoordinate> GetVisibleAxisTilesInRangeIgnoreUnits(Character objectCharacter, int range)
         {
             var targets = new List<HexCoordinate>();
-            foreach (var direction in HexGrid.Directions)
+            foreach (var direction in Directions)
             {
                 for (var i = 0; i < range; i++)
                 {
@@ -1248,8 +1246,8 @@ namespace HexWork.Gameplay
         {
             Random rand = new Random();
 
-            var rowIndex = rand.Next(-MapWidth, MapWidth);
-            var columnIndex = rand.Next(-MapHeight, MapHeight);
+            var rowIndex = rand.Next(-MapHeight, MapHeight);
+            var columnIndex = rand.Next(-MapWidth, MapWidth);
 
             var x = columnIndex - (rowIndex - (rowIndex & 1)) / 2;
             var z = rowIndex;

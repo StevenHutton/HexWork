@@ -105,8 +105,9 @@ namespace HexWork.Gameplay.Actions
 	        foreach (var targetTile in targetTiles)
             {
                 var direction = PushFromCaster ?
-                GameState.GetPushDirection(character.Position, targetTile) :
-                GameState.GetPushDirection(targetPosition, targetTile);
+                    GameState.GetPushDirection(character.Position, targetTile) :
+                    GameState.GetPushDirection(targetPosition, targetTile);
+
                 ApplyToTile(targetTile, gameState, character, direction);
             }
         }
@@ -114,22 +115,28 @@ namespace HexWork.Gameplay.Actions
         public virtual async void ApplyToTile(HexCoordinate targetTile, IGameStateObject gameState, Character character, HexCoordinate direction = null)
         {
             var targetCharacter = gameState.GetEntityAtCoordinate(targetTile);
+                                    
+            if (Combo != null)
+                await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState);
+
+            //if no one is there, next tile
+            if (targetCharacter != null)
+            {
+                //only apply damage and status effects to legal targets
+                if (!AllySafe || targetCharacter.IsHero != character.IsHero)
+                { 
+                    gameState.ApplyDamage(targetCharacter, Power * character.Power);
+                    gameState.ApplyStatus(targetCharacter, StatusEffect);
+                }
+
+                //everyone gets pushed
+                if (direction != null)
+                    gameState.ApplyPush(targetCharacter, direction, PushForce);
+
+            }
 
             if (TileEffect != null)
                 gameState.CreateTileEffect(targetTile, TileEffect);
-            
-            if (Combo != null)
-                await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState);
-        
-            //if no one is there, next tile
-            if (targetCharacter == null)
-                return;
-            if (AllySafe && targetCharacter.IsHero == character.IsHero)
-                return;
-            gameState.ApplyDamage(targetCharacter, Power * character.Power);
-            gameState.ApplyStatus(targetCharacter, StatusEffect);
-            if(direction != null)
-                gameState.ApplyPush(targetCharacter, direction, PushForce);
         }
 
         /// <summary>
