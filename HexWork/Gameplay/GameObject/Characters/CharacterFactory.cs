@@ -213,29 +213,28 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public static Character CreateIronSoul()
         {
-            var pushingFist = new HexAction("Pushing Fist", TargetingHelper.GetValidTargetTilesLos)
+            var pushingFist = new HexAction("Heavy Blow", TargetingHelper.GetValidTargetTilesLos, null, new StatusCombo()
+            {
+                Effect = new ImmobalisedEffect()
+                {
+                    StatusEffectType = StatusEffectType.Rooted
+                }
+            })
             {
                 Range = 1,
                 Power = 3,
                 PushForce = 2
             };
 
-            var overwhelmingStrike = new HexAction("Overwhelming Strike! (1)", TargetingHelper.GetValidTargetTilesLos,
-                null, new StatusCombo()
-                {
-                    Effect = new ImmobalisedEffect()
-                    {
-                        StatusEffectType = StatusEffectType.Rooted
-                    }
-                })
+            var stomp = new HexAction("Stomp", TargetingHelper.GetValidTargetTilesLos, new ImmobalisedEffect(), new DamageComboAction(),
+                _whirlWindTargetPattern)
             {
-                Range = 1,
-                Power = 4,
-                PushForce = 3,
-                PotentialCost = 1
+                Power = 1,
+                PotentialCost = 1,
+                Range = 0
             };
 
-            var vampiricStrike = new VampiricAction("Vampiric Strike", TargetingHelper.GetValidAxisTargetTilesLos)
+            var vampiricStrike = new VampiricAction("Blood Drain", TargetingHelper.GetValidAxisTargetTilesLos, null, new HealingCombo())
             {
                 Range = 1,
             };
@@ -264,7 +263,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             ironSoulCharacter.AddAction(_moveAction);
             ironSoulCharacter.AddAction(vampiricStrike);
             ironSoulCharacter.AddAction(pushingFist);
-            ironSoulCharacter.AddAction(overwhelmingStrike);
+            ironSoulCharacter.AddAction(stomp);
             ironSoulCharacter.AddAction(exDetonatingSlash);
             ironSoulCharacter.AddAction(_potentialGainAction);
             
@@ -273,7 +272,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public static Character CreateBarbarian()
         {
-            var spreadStatusCombo = new SpreadStatusCombo { AllySafe = true, Power = 3 };
+            var spreadStatusCombo = new SpreadStatusCombo { AllySafe = true, Power = 1 };
             var detonatingSlash =
               new HexAction("Detonating Strike! (1)", TargetingHelper.GetValidTargetTilesLos, null, spreadStatusCombo)
               {
@@ -287,13 +286,14 @@ namespace HexWork.Gameplay.GameObject.Characters
                 null,
                 _xAxisLinePattern)
             {
-                Range = 1
+                Range = 2,
+                Power = 2
             };
 
             var whirlwindAttack = new HexAction("Spin Attack", TargetingHelper.GetValidTargetTilesLos, null, new DamageComboAction(),
                 _whirlWindTargetPattern)
             {
-                Power = 1,
+                Power = 2,
                 PotentialCost = 1,
                 Range = 0,
                 PushForce = 1,
@@ -305,7 +305,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes,
-                Power = 15
+                Power = 12
             };
             barbarianCharacter.AddAction(_moveAction);
             barbarianCharacter.AddAction(earthQuakeStrike);
@@ -340,7 +340,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 characters.Add(zombieKing);
             }
 
-            for (var i = 0; i < (difficulty*2)+1; i++)
+            for (var i = 0; i < (difficulty*2)+2; i++)
             {
                 var zombie = CreateZombie(i);
                 characters.Add(zombie);

@@ -66,37 +66,37 @@ namespace HexWork.Gameplay
                     case TerrainType.Water:
                         tile.Color = Color.CadetBlue;
                         tile.IsWalkable = true;
-                        tile.MovementCostModifier = 0;
+                        tile.MovementCost = 0;
                         break;
                     case TerrainType.Ground:
                         tile.Color = Color.SaddleBrown;
                         tile.IsWalkable = true;
-                        tile.MovementCostModifier = 0;
+                        tile.MovementCost = 0;
                         break;
                     case TerrainType.Lava:
                         tile.Color = Color.Orange;
                         tile.IsWalkable = true;
-                        tile.MovementCostModifier = 1.1f;
+                        tile.MovementCost = 1.1f;
                         break;
                     case TerrainType.Ice:
                         tile.Color = Color.LightBlue;
                         tile.IsWalkable = true;
-                        tile.MovementCostModifier = 1;
+                        tile.MovementCost = 1;
                         break;
                     case TerrainType.ThinIce:
                         tile.Color = Color.LightSteelBlue;
                         tile.IsWalkable = true;
-                        tile.MovementCostModifier = 1;
+                        tile.MovementCost = 1;
                         break;
                     case TerrainType.Snow:
                         tile.Color = Color.DarkGray;
                         tile.IsWalkable = true;
-                        tile.MovementCostModifier = 2;
+                        tile.MovementCost = 2;
                         break;
                     case TerrainType.Sand:
                         tile.Color = Color.SandyBrown;
                         tile.IsWalkable = true;
-                        tile.MovementCostModifier = 1;
+                        tile.MovementCost = 1;
                         break;
                     case TerrainType.Pit:
                         tile.Color = Color.DarkSlateGray;

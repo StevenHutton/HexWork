@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
@@ -15,15 +14,14 @@ namespace HexWork.Gameplay
     {
         #region Attributes
 
-        public const int ImpactDamage = 50;
+        public const int ImpactDamage = 25;
 
-        public const int CollisionDamage = 30;
+        public const int CollisionDamage = 15;
 
         public const int MapWidth = 6;
         public const int MapHeight = 5;
 
         public BoardState CurrentGameState { get; set; }
-        public IEnumerable<TileEffect> TileEffects => CurrentGameState.TileEffects;
 
         public static readonly HexCoordinate[] Directions = {
             new HexCoordinate(+1, -1, 0),
@@ -415,7 +413,7 @@ namespace HexWork.Gameplay
         public void CheckDied(HexGameObject character)
         {
             //check to see if they died.
-            if (character.Health <= 0)
+            if (character.Health <= 0 && CurrentGameState.Entities.Contains(character))
             {
                 CurrentGameState.Entities.Remove(character);
                 RemoveEntityEvent?.Invoke(this, new EntityEventArgs() { Entity = character });
@@ -469,6 +467,10 @@ namespace HexWork.Gameplay
 
         public void ApplyPush(HexGameObject targetEntity, HexCoordinate direction, int distance = 0)
         {
+            //don't push dead characters
+            if (!CurrentGameState.Entities.Contains(targetEntity))
+                return;
+
             var targetCharacterPos = targetEntity.Position;
             var destinationPos = targetCharacterPos + direction;
             while (distance > 0)
@@ -583,7 +585,7 @@ namespace HexWork.Gameplay
 
         public bool IsTileEmpty(HexCoordinate position)
         {
-            return !CurrentGameState.Entities.Any(character => character.Position == position && character.BlocksMovement);
+            return !CurrentGameState.Entities.Any(ent => ent.Position == position);
         }
 
         public Character GetCharacterAtInitiative(int initiative)
@@ -747,122 +749,13 @@ namespace HexWork.Gameplay
             return result;
         }
 
-        public Dictionary<HexCoordinate, int> GetValidDestinations(Character objectCharacter)
-        {
-            Dictionary<HexCoordinate, int> pathValues = new Dictionary<HexCoordinate, int> { { objectCharacter.Position, 0 } };
-
-            GetWalkableNeighboursRecursive(pathValues, objectCharacter.Position, objectCharacter.MovementType, 0, 0);
-            return pathValues;
-        }
+        
 
         public bool IsValidTarget(Character objectCharacter, HexCoordinate targetPosition, int range, GetValidTargetsDelegate targetDelegate)
         {
             return targetDelegate != null && targetDelegate.Invoke(objectCharacter, range, this).Contains(targetPosition);
         }
-
-        /// <summary>
-        /// Returns a boolean indicating if the selected tile is reachable from the start position in
-        /// a number of steps =< range.
-        /// </summary>
-        public bool IsValidDestination(Character objectCharacter, HexCoordinate targetPosition)
-        {
-            var destinations = GetValidDestinations(objectCharacter);
-            var reachable = destinations.Keys.Contains(targetPosition);
-            var inRange = (this.CurrentGameState.Potential >= destinations[targetPosition]);
-
-            return (reachable && inRange);
-        }
-
-        /// <summary>
-        /// Get the shortest traverseable path between two points on the map.
-        /// If no path can be found returns null.
-        ///
-        /// A* is fuckin' rad.
-        ///
-        /// Rad as shit.
-        ///
-        /// Lots of comments on this - DON'T DELETE THEM!
-        ///
-        /// DO UPDATE THEM!
-        /// </summary>
-        public List<HexCoordinate> FindShortestPath(HexCoordinate start, HexCoordinate destination, MovementType movementType = MovementType.NormalMove)
-        {
-            if (!CurrentGameState.ContainsKey(start) || !CurrentGameState.ContainsKey(destination))
-                return null;
-
-            //data structure map such that key : a tile we've looked at one or more times, value : the previous tile in the shortest path to the key-tile
-            var ancestorMap = new Dictionary<HexCoordinate, HexCoordinate> { { start, null } };
-
-            //a data structure that holds the shortest distance found to each tile that we've searched
-            var pathValues = new Dictionary<HexCoordinate, int> { { start, 0 } };
-
-            //data structure holding the estimated path length from the start to the destination for each tile we've searched.
-            var tileEstimates = new Dictionary<HexCoordinate, float> { { start, 0 } };
-
-            HexCoordinate current = start;
-
-            while (tileEstimates.Any())
-            {
-                //get the current best estimated tile
-                //this is the tile we *think* probably leads to the shortest path to the destination
-                current = tileEstimates.OrderBy(data => data.Value).First().Key;
-                tileEstimates.Remove(current);
-
-                if (current == destination)
-                    break;
-
-                //look at all of the best estimated tile's neighbors
-                foreach (var neighbor in GameState.GetNeighbours(current))
-                {
-                    //tile validation goes here.
-                    if (!IsTilePassable(movementType, neighbor))
-                        continue;
-
-                    //check if the tile is water or lava. - these tiles have a special rule, they stop your movement.
-                    if ((CurrentGameState[neighbor].TerrainType == TerrainType.Water
-                        || CurrentGameState[neighbor].TerrainType == TerrainType.Lava)
-                        && neighbor != destination)
-                        continue;
-
-                    //nodes are always one space away - hexgrid!
-                    //BUT hexes have different movement costs to move through!
-                    //the path from the start to the tile we're looking at now is the path the
-                    var pathLengthToNeighbor = pathValues[current] + GetTileMovementCostModifier(neighbor) + 1;
-
-                    //estimate the neighbor and add it to the list of estimates or update it if it's already in the list
-                    if (!pathValues.ContainsKey(neighbor) || pathValues[neighbor] > pathLengthToNeighbor)
-                    {
-                        pathValues[neighbor] = (int)pathLengthToNeighbor;
-
-                        //heuristic for "distance to destination tile" is just absolute distance between current tile and the destination
-                        float estimate = pathLengthToNeighbor + GameState.DistanceBetweenPoints(neighbor, destination);
-
-                        ancestorMap[neighbor] = current;
-
-                        tileEstimates[neighbor] = estimate;
-                    }
-                }
-            }
-
-            //if we looked at every reachable tile and didn't find the destination in there then no path exists.
-            if (current != destination)
-                return null;
-
-            //go backwards up the ancestor path to the start.
-            var path = new List<HexCoordinate>();
-            path.Add(current);
-            var ancestor = ancestorMap[current];
-            while (ancestor != null)
-            {
-                path.Add(ancestor);
-                ancestor = ancestorMap[ancestor];
-            }
-
-            path.Reverse();
-            path.RemoveAt(0);
-            return path;
-        }
-
+                
         #endregion
 
         #region Private Helper Methods
@@ -901,14 +794,22 @@ namespace HexWork.Gameplay
             return true;
         }
 
-        public float GetTileMovementCostModifier(HexCoordinate coordinate)
+        public float GetTileTotalMovementCost(HexCoordinate coordinate)
         {
-            if (!CurrentGameState.TileEffects.Any(te => te.Position == coordinate))
-                return CurrentGameState[coordinate].MovementCostModifier;
+            return CurrentGameState[coordinate].MovementCost + GetMovementCostModifier(coordinate);
+        }
 
-            float modifier = CurrentGameState.TileEffects.Where(te => te.Position == coordinate).Sum(te => te.MovementModifier) +
-                             CurrentGameState[coordinate].MovementCostModifier;
-            return modifier;
+        public float GetTileMovementCost(HexCoordinate coord)
+        {
+            return CurrentGameState[coord].MovementCost;
+        }
+
+        public float GetMovementCostModifier(HexCoordinate coord)
+        {
+            if (CurrentGameState.TileEffects.Any(te => te.Position == coord))
+                return CurrentGameState.TileEffects.Where(te => te.Position == coord).Sum(te => te.MovementModifier);
+            else return 0.0f;
+
         }
 
         private void SendMessage(string message)
@@ -936,9 +837,17 @@ namespace HexWork.Gameplay
             return CurrentGameState[coordinate].BlocksLOS;
         }
 
-        private bool BlocksLineOfSight(HexCoordinate coordinate)
+        /// <summary>
+        /// Returns a boolean indicating if the selected tile is reachable from the start position in
+        /// a number of steps =< range.
+        /// </summary>
+        public bool IsValidDestination(Character objectCharacter, HexCoordinate targetPosition)
         {
-            return IsHexOpaque(coordinate) || !IsTileEmpty(coordinate);
+            var destinations = GetValidDestinations(objectCharacter);
+            var reachable = destinations.Keys.Contains(targetPosition);
+            var inRange = (this.CurrentGameState.Potential >= destinations[targetPosition]);
+
+            return (reachable && inRange);
         }
 
         private void GetTilesInRangeRecursive(List<HexCoordinate> tilesInRange, HexCoordinate position, int range, int searchDepth = 0)
@@ -946,7 +855,7 @@ namespace HexWork.Gameplay
             if (searchDepth >= range)
                 return;
 
-            var adjacentTiles = GameState.GetNeighbours(position);
+            var adjacentTiles = GetNeighbours(position);
             foreach (var coord in adjacentTiles)
             {
                 if (!tilesInRange.Contains(coord))
@@ -958,36 +867,52 @@ namespace HexWork.Gameplay
             }
         }
 
-        private void GetWalkableNeighboursRecursive(Dictionary<HexCoordinate, int> output, HexCoordinate position, MovementType movementType, int movementCost, int searchDepth)
+        public Dictionary<HexCoordinate, int> GetValidDestinations(Character objectCharacter)
         {
-            var adjacentTiles = GameState.GetNeighbours(position);
+            Dictionary<HexCoordinate, int> pathValues = new Dictionary<HexCoordinate, int> { { objectCharacter.Position, 0 } };
+
+            GetWalkableNeighboursRecursive(pathValues, objectCharacter.Position, objectCharacter.MovementType, 0, 0);
+            return pathValues;
+        }
+
+        /// <summary></summary>
+        /// <param name="output"></param>
+        /// <param name="position"></param>
+        /// <param name="movementType"></param>
+        /// <param name="movementCost"></param>
+        /// <param name="searchDepth"></param>
+        private void GetWalkableNeighboursRecursive(Dictionary<HexCoordinate, int> pathLengthsToTiles, HexCoordinate position, MovementType movementType, int movementCost, int searchDepth)
+        {
+            var adjacentTiles = GetNeighbours(position);
             var tilesToSearch = new List<HexCoordinate>();
 
+            //loop through all neighbour tiles.
             foreach (var coord in adjacentTiles)
             {
                 if (!IsTilePassable(movementType, coord)) continue;
 
                 //get movement cost to next tile
-                int movementCostModifier = (int)GetTileMovementCostModifier(coord);
-                var movementCostToCoord = MovementSpeedNormal[searchDepth] + movementCostModifier;
+                int movementCostModifier = (int)GetTileTotalMovementCost(coord);
+                var movementCostToCoord = GetMoveSpeedCost(MovementSpeed.Normal, searchDepth) + movementCostModifier;
 
                 //if we don't have enough potential to reach this tile skip it.
                 if (movementCostToCoord + movementCost > CurrentGameState.Potential) continue;
 
-                if (!output.ContainsKey(coord) || output[coord] > movementCostToCoord)
+                if (!pathLengthsToTiles.ContainsKey(coord) || pathLengthsToTiles[coord] > movementCostToCoord)
                     tilesToSearch.Add(coord);
 
+                //valid destination check
                 if (!IsTileEmpty(coord))
                     continue;
 
                 //if we've never looked at this tile or we found a shorter path to the tile add it to the list.
-                if (!output.ContainsKey(coord))
+                if (!pathLengthsToTiles.ContainsKey(coord))
                 {
-                    output.Add(coord, movementCostToCoord + movementCost);//then add it to the list.
+                    pathLengthsToTiles.Add(coord, movementCostToCoord + movementCost);//then add it to the list.
                 }
-                else if (output[coord] > movementCostToCoord + movementCost)
+                else if (pathLengthsToTiles[coord] > movementCostToCoord + movementCost)
                 {
-                    output[coord] = movementCostToCoord + movementCost;//or adjust the cost
+                    pathLengthsToTiles[coord] = movementCostToCoord + movementCost;//or adjust the cost
                 }
             }
 
@@ -999,12 +924,106 @@ namespace HexWork.Gameplay
                     continue;
 
                 //get movement cost to next tile
-                int movementCostModifier = (int)GetTileMovementCostModifier(coord);
-                var movementCostToCoord = MovementSpeedNormal[searchDepth] + movementCostModifier;
+                int movementCostModifier = (int)GetTileTotalMovementCost(coord);
+                var movementCostToCoord = GetMoveSpeedCost(MovementSpeed.Normal, searchDepth) + movementCostModifier;
 
-                GetWalkableNeighboursRecursive(output, coord, movementType,
+                GetWalkableNeighboursRecursive(pathLengthsToTiles, coord, movementType,
                     movementCost + movementCostToCoord,
                     searchDepth + 1);
+            }
+        }
+
+        public List<HexCoordinate> FindShortestPath(HexCoordinate startPosition, HexCoordinate destination, 
+            MovementType movementType = MovementType.NormalMove, MovementSpeed speed = MovementSpeed.Normal)
+        {
+            //this is the map of hex coordiantes to the shortest path length to that coordinate
+            Dictionary<HexCoordinate, float> pathValues = new Dictionary<HexCoordinate, float> { { startPosition, 0f } };
+
+            Dictionary<HexCoordinate, List<HexCoordinate>> ancestorPathmap = new Dictionary<HexCoordinate, List<HexCoordinate>>();
+
+            //get cost to move to this neighbour tile from the current search tile
+            FindShortestPathRecursive(ancestorPathmap, pathValues, startPosition, destination, movementType, speed, 0, 0);
+
+            List<HexCoordinate> path = ancestorPathmap[destination];
+            path.Add(destination);
+
+            return path;
+        }
+
+        private void FindShortestPathRecursive(Dictionary<HexCoordinate, List<HexCoordinate>> ancestorPathmap,
+            Dictionary<HexCoordinate, float> moveCostToSearchedTiles,
+            HexCoordinate currentSearchCoord,
+            HexCoordinate destination,
+            MovementType movementType,
+            MovementSpeed speed,
+            int movementCostPrevious,
+            int searchDepth,
+            int availableMovement = 10)
+        {
+            var adjacentTiles = GetNeighbours(currentSearchCoord);
+            var tilesToSearch = new List<HexCoordinate>();
+
+            foreach (var coord in adjacentTiles)
+            {
+                if (!IsTilePassable(movementType, coord)) continue;
+                
+                //a list of ancestor tiles to walk to reach the current coord
+                var shortestPathToCurrentSearchTile = new List<HexCoordinate>(ancestorPathmap[currentSearchCoord]);
+                shortestPathToCurrentSearchTile.Add(currentSearchCoord);
+
+                //get cost to move to this neighbour tile from the current search tile
+                float movementCostToTile = GetTileMovementCost(coord) + GetMoveSpeedCost(speed, searchDepth);
+
+                //if this is the first time we've visited this tile on this path then apply the tile effects (we only apply them once)
+                if(!shortestPathToCurrentSearchTile.Contains(coord))
+                    movementCostToTile += GetMovementCostModifier(coord);
+
+                var totalMovementCostToTile = movementCostToTile + movementCostPrevious;
+
+                if (totalMovementCostToTile > availableMovement)
+                    continue;
+
+                //if we've never been to this tile or if we found a shorter path to this tile then add it to the list.
+                if (!moveCostToSearchedTiles.ContainsKey(coord))
+                {
+                    moveCostToSearchedTiles.Add(coord, totalMovementCostToTile);//add it to the list.
+                    
+                    if(!ancestorPathmap.ContainsKey(coord))
+                        ancestorPathmap.Add(coord, shortestPathToCurrentSearchTile);
+                    else
+                        ancestorPathmap[coord] = shortestPathToCurrentSearchTile;
+
+                    tilesToSearch.Add(coord);
+                }
+                else if (moveCostToSearchedTiles[coord] > totalMovementCostToTile)
+                {
+                    moveCostToSearchedTiles[coord] = totalMovementCostToTile;//or adjust the cost
+
+                    if (!ancestorPathmap.ContainsKey(coord))
+                        ancestorPathmap.Add(coord, shortestPathToCurrentSearchTile);
+                    else
+                        ancestorPathmap[coord] = shortestPathToCurrentSearchTile;
+
+                    tilesToSearch.Add(coord);
+                }
+
+                //check here if we've found the destination and early return?  
+                if (coord == destination)
+                    return;
+            }
+
+            foreach (var searchCandidate in tilesToSearch)
+            {
+                TerrainType terrainType = CurrentGameState[searchCandidate].TerrainType;
+                if (terrainType == TerrainType.Water
+                    || terrainType == TerrainType.Lava)
+                    continue;
+
+                //get movement cost to next tile
+                int movementCost = (int)GetTileTotalMovementCost(searchCandidate);
+                var movementCostToCoord = GetMoveSpeedCost(MovementSpeed.Normal, searchDepth) + movementCost;
+
+                FindShortestPathRecursive(ancestorPathmap, moveCostToSearchedTiles, searchCandidate, destination, movementType, speed, movementCostToCoord + movementCostPrevious, searchDepth + 1);
             }
         }
 
@@ -1012,7 +1031,7 @@ namespace HexWork.Gameplay
         {
             var walkableNeighbours = new List<HexCoordinate>();
 
-            var neighbours = GameState.GetNeighbours(position);
+            var neighbours = GetNeighbours(position);
 
             foreach (var coordinate in neighbours)
             {
@@ -1029,7 +1048,7 @@ namespace HexWork.Gameplay
             if (searchDepth >= maxSearchDepth)
                 return null;
 
-            var adjacentTiles = GameState.GetNeighbours(position);
+            var adjacentTiles = GetNeighbours(position);
 
             foreach (var coord in adjacentTiles)
             {
@@ -1101,13 +1120,13 @@ namespace HexWork.Gameplay
             switch (objectCharacter.MovementSpeed)
             {
                 case MovementSpeed.Slow:
-                    pathLength= path.Select((coord, index) => (int)GetTileMovementCostModifier(coord) + GetMoveSpeedCost(MovementSpeed.Slow, index)).Sum();
+                    pathLength= path.Select((coord, index) => (int)GetTileTotalMovementCost(coord) + GetMoveSpeedCost(MovementSpeed.Slow, index)).Sum();
                     break;
                 case MovementSpeed.Normal:
-                    pathLength= path.Select((coord, index) => (int)GetTileMovementCostModifier(coord) + GetMoveSpeedCost(MovementSpeed.Normal, index)).Sum();
+                    pathLength= path.Select((coord, index) => (int)GetTileTotalMovementCost(coord) + GetMoveSpeedCost(MovementSpeed.Normal, index)).Sum();
                     break;
                 case MovementSpeed.Fast:
-                    pathLength= path.Select((coord, index) => (int)GetTileMovementCostModifier(coord) + GetMoveSpeedCost(MovementSpeed.Fast, index)).Sum();
+                    pathLength= path.Select((coord, index) => (int)GetTileTotalMovementCost(coord) + GetMoveSpeedCost(MovementSpeed.Fast, index)).Sum();
                     break;
                 default:
                     break;
@@ -1116,7 +1135,7 @@ namespace HexWork.Gameplay
             return pathLength >= 0 ? pathLength : 0;
         }
 
-        private int GetMoveSpeedCost(MovementSpeed ms, int distance)
+        private static int GetMoveSpeedCost(MovementSpeed ms, int distance)
         {
             if (distance >= 7)
                 return 4;
@@ -1270,7 +1289,7 @@ namespace HexWork.Gameplay
 
         #region Movement Attibutes
 
-        public static readonly int[] MovementSpeedSlow = { 0, 1, 2, 3, 3, 3, 3 };
+        public static readonly int[] MovementSpeedSlow = { 0, 1, 2, 2, 3, 3, 3 };
         public static readonly int[] MovementSpeedNormal = { 0, 1, 1, 2, 3, 3, 3 };
         public static readonly int[] MovementSpeedFast = { 0, 0, 1, 2, 2, 3, 3 };
 

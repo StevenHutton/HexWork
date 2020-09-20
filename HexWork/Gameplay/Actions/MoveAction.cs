@@ -57,7 +57,7 @@ namespace HexWork.Gameplay.Actions
 
         public override bool IsValidTarget(Character character, HexCoordinate targetCoordinate, IGameStateObject gameState)
         {
-            return gameState.GetValidDestinations(character).Keys.Contains(targetCoordinate);
+            return GetValidTargets(character, gameState).Contains(targetCoordinate);
         }
 	}
 }

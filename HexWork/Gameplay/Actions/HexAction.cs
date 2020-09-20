@@ -38,7 +38,7 @@ namespace HexWork.Gameplay.Actions
         
         public bool IsDetonator => Combo != null;
         
-        public int Power = 4;
+        public int Power = 1;
 
         public bool AllySafe = false;
 

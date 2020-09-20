@@ -369,7 +369,7 @@ namespace HexWork.UI
             if (_cursorPosition != null)
 	        {
 		        _spriteBatch.DrawString(_uiFont, $"{_cursorPosition.X},{_cursorPosition.Y},{_cursorPosition.Z}",
-			        new Vector2(ScreenEdgeMargin, _screenHeight - ScreenEdgeMargin - 20), Color.Black);
+			        new Vector2(ScreenEdgeMargin, ScreenEdgeMargin), Color.Black);
 			}
 
 			var startPositionX = _screenCenter.X - ((float)gameState.CurrentGameState.MaxPotential / 2 * 65);
@@ -875,7 +875,6 @@ namespace HexWork.UI
 		/// <returns></returns>
 		private List<HexCoordinate> GetHighlightedCoordinates()
 		{
-            var gameState = GameState.CurrentGameState;
             return SelectedHexAction?.GetValidTargets(_selectedCharacter, GameState);
 		}
 

@@ -53,7 +53,7 @@ namespace HexWork.Screens
         public RewardsScreen(IScreenManager _screenManager, int numRewards = 3) : base(_screenManager)
         {
             _hexGame = (HexWork)_screenManager.Game;
-            //_gameState = 
+            //_gameState = _hexGame.
 
             _rand = new Random(DateTime.Now.Millisecond);
             rewardCount = numRewards;

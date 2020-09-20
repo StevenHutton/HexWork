@@ -48,7 +48,7 @@ namespace HexWork.UI
 
         public BoardState CurrentGameState  => gameState.CurrentGameState;
 
-        public IEnumerable<TileEffect> TileEffects { get; set; }
+        public IEnumerable<TileEffect> TileEffects => CurrentGameState.TileEffects;
 
 		#endregion
 
@@ -136,9 +136,9 @@ namespace HexWork.UI
 		    return isValid;
 	    }
 
-		public List<HexCoordinate> FindShortestPath(HexCoordinate startPosition, HexCoordinate destination, MovementType movementType = MovementType.NormalMove)
+		public List<HexCoordinate> FindShortestPath(HexCoordinate startPosition, HexCoordinate destination, MovementType movementType = MovementType.NormalMove, MovementSpeed speed = MovementSpeed.Normal)
 	    {
-			var path = gameState.FindShortestPath(startPosition, destination, movementType);
+			var path = gameState.FindShortestPath(startPosition, destination, movementType, speed);
 		    if (path == null)
 			    return null;
 
@@ -185,7 +185,7 @@ namespace HexWork.UI
 
 		    foreach (var tile in path)
 		    {
-			    var tileEffect = gameState.TileEffects.FirstOrDefault(data => data.Position == tile);
+			    var tileEffect = TileEffects.FirstOrDefault(data => data.Position == tile);
 
 			    if (tileEffect == null)
 				    continue;

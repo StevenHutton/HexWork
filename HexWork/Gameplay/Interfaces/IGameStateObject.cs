@@ -28,8 +28,6 @@ namespace HexWork.Gameplay.Interfaces
     {
 		BoardState CurrentGameState { get; }
 
-		IEnumerable<TileEffect> TileEffects { get; }
-
 		void NotifyAction(HexAction action, HexGameObject entity);
 
         void MoveEntityTo(HexGameObject entity, HexCoordinate targetPosition);
@@ -94,17 +92,19 @@ namespace HexWork.Gameplay.Interfaces
 
 	    bool IsValidTarget(Character objectCharacter, HexCoordinate targetPosition, int range, GetValidTargetsDelegate targetDelegate);
 
-	    /// <summary>
-	    /// Get the shortest traversable path between two points on the map.
-	    /// If no path can be found returns null
-	    /// 
-	    /// A* is fuckin' rad.
-	    /// 
-	    /// Rad as shit.
-	    /// </summary>
-	    List<HexCoordinate> FindShortestPath(HexCoordinate start, HexCoordinate destination, MovementType movementType = MovementType.NormalMove);
-        
-	    List<HexCoordinate> GetAxisTilesInRange(Character objectCharacter, int range);
+		/// <summary>
+		/// Get the shortest traversable path between two points on the map.
+		/// If no path can be found returns null
+		/// 
+		/// A* is fuckin' rad.
+		/// 
+		/// Rad as shit.
+		/// </summary>
+		List<HexCoordinate> FindShortestPath(HexCoordinate startPosition, HexCoordinate destination,
+			MovementType movementType = MovementType.NormalMove, MovementSpeed speed = MovementSpeed.Normal);
+
+
+		List<HexCoordinate> GetAxisTilesInRange(Character objectCharacter, int range);
         
         bool IsHexPassable(HexCoordinate coordinate);
 
