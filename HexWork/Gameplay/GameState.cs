@@ -76,7 +76,7 @@ namespace HexWork.Gameplay
         public void CreateCharacters(int difficulty = 1)
         {
             CurrentGameState.Entities.AddRange(CharacterFactory.CreateHeroes());
-            CurrentGameState.Entities.AddRange(CharacterFactory.CreateEnemies(difficulty));
+            //CurrentGameState.Entities.AddRange(CharacterFactory.CreateEnemies(difficulty));
         }
 
         #endregion
@@ -88,23 +88,23 @@ namespace HexWork.Gameplay
             var characters = CurrentGameState.Characters;
 
             //spawn enemies
-            foreach (var character in CurrentGameState.Characters.Where(c => !c.IsHero))
-            {
-                var coordinate = GetRandomCoordinateInMap();
+            //foreach (var character in CurrentGameState.Characters.Where(c => !c.IsHero))
+            //{
+            //    var coordinate = GetRandomCoordinateInMap();
 
-                //one unit per tile and only deploy to walkable spaces.
-                while (characters.Select(cha => cha.Position).Contains(coordinate) || !CurrentGameState[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
-                {
-                    coordinate = GetRandomCoordinateInMap();
-                }
+            //    //one unit per tile and only deploy to walkable spaces.
+            //    while (characters.Select(cha => cha.Position).Contains(coordinate) || !CurrentGameState[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
+            //    {
+            //        coordinate = GetRandomCoordinateInMap();
+            //    }
 
-                character.SpawnAt(coordinate);
-                SpawnEntityEvent?.Invoke(this,
-                    new EntityEventArgs()
-                    {
-                        Entity = character
-                    });
-            }
+            //    character.SpawnAt(coordinate);
+            //    SpawnEntityEvent?.Invoke(this,
+            //        new EntityEventArgs()
+            //        {
+            //            Entity = character
+            //        });
+            //}
 
             //spawn heroes
             var spawnPoint = new HexCoordinate(-2, -2, 4);
@@ -218,11 +218,11 @@ namespace HexWork.Gameplay
 
             EndTurnEvent?.Invoke(this, new EndTurnEventArgs(GetInitiativeList().ToList()));
             
-            if (CurrentGameState.Enemies.All(c => c.MonsterType != MonsterType.ZombieKing))
-            {
-                SendMessage("Enemy Leader(s) Defeated");
-                GameOverEvent?.Invoke(this, new MessageEventArgs("You Win!"));               
-            }
+            //if (CurrentGameState.Enemies.All(c => c.MonsterType != MonsterType.ZombieKing))
+            //{
+            //    SendMessage("Enemy Leader(s) Defeated");
+            //    GameOverEvent?.Invoke(this, new MessageEventArgs("You Win!"));               
+            //}
         }
 
         public void CharacterGainPower(Guid characterId)
@@ -937,7 +937,7 @@ namespace HexWork.Gameplay
             MovementType movementType = MovementType.NormalMove, MovementSpeed speed = MovementSpeed.Normal)
         {
             //this is the map of hex coordiantes to the shortest path length to that coordinate
-            Dictionary<HexCoordinate, float> pathValues = new Dictionary<HexCoordinate, float> { { startPosition, 0f } };
+            Dictionary<HexCoordinate, float> pathValues = new Dictionary<HexCoordinate, float>();
 
             Dictionary<HexCoordinate, List<HexCoordinate>> ancestorPathmap = new Dictionary<HexCoordinate, List<HexCoordinate>>();
 
@@ -946,6 +946,7 @@ namespace HexWork.Gameplay
 
             List<HexCoordinate> path = ancestorPathmap[destination];
             path.Add(destination);
+            path.RemoveAt(0);
 
             return path;
         }
@@ -966,17 +967,24 @@ namespace HexWork.Gameplay
             foreach (var coord in adjacentTiles)
             {
                 if (!IsTilePassable(movementType, coord)) continue;
-                
-                //a list of ancestor tiles to walk to reach the current coord
-                var shortestPathToCurrentSearchTile = new List<HexCoordinate>(ancestorPathmap[currentSearchCoord]);
-                shortestPathToCurrentSearchTile.Add(currentSearchCoord);
+
+                List<HexCoordinate> shortestPathToCurrentSearchTile;
 
                 //get cost to move to this neighbour tile from the current search tile
                 float movementCostToTile = GetTileMovementCost(coord) + GetMoveSpeedCost(speed, searchDepth);
 
-                //if this is the first time we've visited this tile on this path then apply the tile effects (we only apply them once)
-                if(!shortestPathToCurrentSearchTile.Contains(coord))
-                    movementCostToTile += GetMovementCostModifier(coord);
+                if (ancestorPathmap.ContainsKey(currentSearchCoord))
+                {
+                    //a list of ancestor tiles to walk to reach the current coord
+                    shortestPathToCurrentSearchTile = new List<HexCoordinate>(ancestorPathmap[currentSearchCoord]);
+                    shortestPathToCurrentSearchTile.Add(currentSearchCoord);
+
+                    //if this is the first time we've visited this tile on this path then apply the tile effects (we only apply them once)
+                    if (!shortestPathToCurrentSearchTile.Contains(coord))
+                        movementCostToTile += GetMovementCostModifier(coord);
+                }
+                else
+                    shortestPathToCurrentSearchTile = new List<HexCoordinate> { currentSearchCoord };
 
                 var totalMovementCostToTile = movementCostToTile + movementCostPrevious;
 
