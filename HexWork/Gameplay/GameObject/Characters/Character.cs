@@ -5,10 +5,15 @@ using HexWork.Gameplay.Interfaces;
 
 namespace HexWork.Gameplay.GameObject.Characters
 {
-    public enum MonsterType
+    public enum CharacterType
     {
         Zombie,
-        ZombieKing
+        ZombieKing,
+        Majin,
+        Gunner,
+        IronSoul,
+        Barbarian,
+        Ninja
     }
 
     public class Character : HexGameObject
@@ -27,7 +32,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public List<HexAction> Actions = new List<HexAction>();
 
-        public MonsterType MonsterType;
+        public CharacterType CharacterType;
         
         public MovementType MovementType = MovementType.NormalMove;
         public MovementSpeed MovementSpeed = MovementSpeed.Normal;

@@ -68,7 +68,8 @@ namespace HexWork.Gameplay.GameObject.Characters
             var majinCharacter = new Character("Majin", 100, 100, 5)
             {
                 IsHero = true,
-                MovementType = MovementType.MoveThroughHeroes
+                MovementType = MovementType.MoveThroughHeroes,
+                CharacterType = CharacterType.Majin
             };
 
             var burningBolt = new HexAction("Fire Bolt",
@@ -155,7 +156,8 @@ namespace HexWork.Gameplay.GameObject.Characters
             var gunnerCharacter = new Character("Gunner", 60, 100, 4)
             {
                 IsHero = true,
-                MovementType = MovementType.MoveThroughHeroes
+                MovementType = MovementType.MoveThroughHeroes,
+                CharacterType = CharacterType.Gunner
             };
 
             gunnerCharacter.AddAction(_moveAction);
@@ -199,7 +201,8 @@ namespace HexWork.Gameplay.GameObject.Characters
             var ninjaCharacter = new Character("Ninja", 80, 80, 4)
             {
                 IsHero = true,
-                MovementType = MovementType.MoveThroughHeroes
+                MovementType = MovementType.MoveThroughHeroes,
+                CharacterType = CharacterType.Ninja
             };
             ninjaCharacter.MovementSpeed = MovementSpeed.Fast;
             ninjaCharacter.AddAction(_moveAction);
@@ -258,7 +261,8 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes,
-                Power = 15
+                Power = 15,
+                CharacterType = CharacterType.IronSoul
             };
             ironSoulCharacter.AddAction(_moveAction);
             ironSoulCharacter.AddAction(vampiricStrike);
@@ -305,8 +309,10 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes,
-                Power = 12
+                Power = 12,
+                CharacterType = CharacterType.Barbarian
             };
+
             barbarianCharacter.AddAction(_moveAction);
             barbarianCharacter.AddAction(earthQuakeStrike);
             barbarianCharacter.AddAction(whirlwindAttack);
@@ -409,7 +415,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         {
             var zombieKing = new Character($"Zom-boy King", 160, 120, 1)
             {
-                MonsterType = MonsterType.ZombieKing
+                CharacterType = CharacterType.ZombieKing
             };
             zombieKing.AddAction(_moveAction);
             zombieKing.AddAction(_zombieGrab);
@@ -552,7 +558,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                         gameState.MoveEntityTo(character, destination);
                 }
             }
-            var zombies = gameState.CurrentGameState.Enemies.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
+            var zombies = gameState.CurrentGameState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie && c.IsAlive).ToList();
             var rand = new Random(DateTime.Now.Millisecond);
             
             if (rand.Next(0, 10) >= zombies.Count)

@@ -398,7 +398,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:ZombieKingSprite.png
+/build:ZombieKingSprite.png;ZombieKing.png
 
 #begin ZombiePortrait.png
 /importer:TextureImporter
@@ -422,5 +422,5 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:ZombieSprite.png
+/build:ZombieSprite.png;Zombie.png
 

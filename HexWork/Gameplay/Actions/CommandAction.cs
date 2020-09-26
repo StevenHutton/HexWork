@@ -11,7 +11,7 @@ namespace HexWork.Gameplay.Actions
     {
         public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
         {
-            var zombies = gameState.CurrentGameState.Enemies.Where(c => !c.IsHero && c.MonsterType == MonsterType.Zombie && c.IsAlive).ToList();
+            var zombies = gameState.CurrentGameState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie && c.IsAlive).ToList();
             var rand = new Random(DateTime.Now.Millisecond);
 
             gameState.NotifyAction(this, character);

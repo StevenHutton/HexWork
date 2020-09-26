@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using HexWork.Gameplay;
@@ -14,7 +13,6 @@ using HexWork.UI.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MonoGameTestProject.Gameplay;
 
 namespace HexWork.UI
 {
@@ -65,11 +63,6 @@ namespace HexWork.UI
         private Texture2D _buttonTexture;
         private Texture2D _blankTexture;
         
-        private Texture2D _monsterTexture;
-        private Texture2D _monsterTexture_ZombieKing;
-        private Texture2D _monsterPortraitTexture;
-        private Texture2D _monsterPortraitTexture_ZombieKing;
-
         private readonly Color _buttonEnabledColor = Color.LightGray;
         private readonly Color _buttonDisabledColor = Color.DarkGray;
         private readonly Color _buttonMouseDownColor = Color.SlateGray;
@@ -160,18 +153,11 @@ namespace HexWork.UI
 
         public override void LoadContent(Game game)
         {
-            _monsterTexture = game.Content.Load<Texture2D>("ZombieSprite");
-            _monsterTexture_ZombieKing = game.Content.Load<Texture2D>("ZombieKingSprite");
-            _monsterPortraitTexture = game.Content.Load<Texture2D>("ZombiePortrait");
-            _monsterPortraitTexture_ZombieKing = game.Content.Load<Texture2D>("ZombieKingPortrait");
             _hexagonTexture = game.Content.Load<Texture2D>("hexagon");
             _hexagonOutlineTexture = game.Content.Load<Texture2D>("hexagonOutline");
 
             LoadBlankTextures(game);
-
             LoadEffects(game);
-
-            LoadCharacterDictionary(game);
 
             //load the button font
             _buttonFont = game.Content.Load<SpriteFont>("Nunito");
@@ -187,26 +173,6 @@ namespace HexWork.UI
         }
 
         #region Private Load Content Methods
-
-        private void LoadCharacterDictionary(Game game)
-        {
-            _gameObjectDictionary.Clear();
-            var gameState = GameState.CurrentGameState;
-            foreach (var character in gameState.Characters)
-            {
-                var tex = character.IsHero ? game.Content.Load<Texture2D>(character.Name) 
-                    : character.MonsterType == MonsterType.Zombie ? _monsterTexture : _monsterTexture_ZombieKing;
-                var portraitTex = character.IsHero ? game.Content.Load<Texture2D>($"{character.Name}Portrait")
-                    : character.MonsterType == MonsterType.Zombie ? _monsterPortraitTexture
-                    : _monsterPortraitTexture_ZombieKing;
-                var sprite = new UiCharacter(tex, portraitTex, GetHexScreenPosition(character.Position), character.MaxHealth)
-                {
-                    Scale = new Vector2(_hexScale * 0.9f)
-                };
-
-                _gameObjectDictionary.Add(character.Id, sprite);
-            }
-        }
 
         private void LoadBlankTextures(Game game)
         {
@@ -889,11 +855,6 @@ namespace HexWork.UI
 		    return gameState.ContainsKey(result) ? result : null;
 	    }
 
-	    private HexCoordinate GetHexCoordinate(Vector2 position)
-	    {
-		    return GetHexCoordinate(position.X, position.Y);
-	    }
-
 	    private HexCoordinate GetNearestCoord(float x, float y, float z)
 	    {
 		    var rx = (int)Math.Round(x);
@@ -979,33 +940,17 @@ namespace HexWork.UI
         
         private void OnEntitySpawn(object sender, EntityEventArgs e)
         {
-            if (_gameObjectDictionary.ContainsKey(e.Entity.Id))
-            {
-                var sprite = _gameObjectDictionary[e.Entity.Id];
-                sprite.Position = GetHexScreenPosition(e.Entity.Position);
-                sprite.MaxHealth = e.Entity.MaxHealth;
-                sprite.Health = e.Entity.Health;
-                sprite.Origin = _hexCenter;
-                return;
-            }
-
             if (e.Entity is Character character)
             {
-                var tex = character.MonsterType == MonsterType.Zombie ? _monsterTexture : _monsterTexture_ZombieKing;
-                var portraitTex = character.MonsterType == MonsterType.Zombie
-                    ? _monsterPortraitTexture
-                    : _monsterPortraitTexture_ZombieKing;
-                
-                var sprite2 = new UiGameObject(character.MaxHealth)
+                var tex = _hexGame.Content.Load<Texture2D>($"{character.CharacterType}");
+                var portraitTex = _hexGame.Content.Load<Texture2D>($"{character.CharacterType}Portrait");
+                var sprite = new UiCharacter(tex, portraitTex, GetHexScreenPosition(character.Position), character.MaxHealth)
                 {
-                    Texture = tex,
-                    PortraitTexture = portraitTex,
                     Scale = new Vector2(_hexScale * 0.9f),
-                    Origin = _hexCenter,
-                    Position = GetHexScreenPosition(e.Entity.Position)
+                    Origin = _hexCenter
                 };
 
-                _gameObjectDictionary.Add(e.Entity.Id, sprite2);
+                _gameObjectDictionary.Add(e.Entity.Id, sprite);
                 return;
             }
 
@@ -1015,8 +960,8 @@ namespace HexWork.UI
             {
                 Position = GetHexScreenPosition(e.Entity.Position)
             };
-            _gameObjectDictionary.Add(tileEffect.Id, tileEffect);
 
+            _gameObjectDictionary.Add(tileEffect.Id, tileEffect);
         }
 
         private void OnEntityDied(object sender, EntityEventArgs e)
