@@ -330,9 +330,9 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 CreateMajin(),
                 CreateGunner(),
-                //CreateNinja(),
-                //CreateIronSoul(),
-                //CreateBarbarian()
+                CreateNinja(),
+                CreateIronSoul(),
+                CreateBarbarian()
             };
         }
 
@@ -340,13 +340,13 @@ namespace HexWork.Gameplay.GameObject.Characters
         {
             var characters = new List<Character>();
 
-            //for (int i = 0; i < difficulty; i++)
-            //{
-            //    var zombieKing = CreateZombieKing();
-            //    characters.Add(zombieKing);
-            //}
+            for (int i = 0; i < difficulty; i++)
+            {
+                var zombieKing = CreateZombieKing();
+                characters.Add(zombieKing);
+            }
 
-            for (var i = 0; i < 2/*(difficulty*2)+2*/; i++)
+            for (var i = 0; i < (difficulty*2)+2; i++)
             {
                 var zombie = CreateZombie(0);
                 characters.Add(zombie);
