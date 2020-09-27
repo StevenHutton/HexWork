@@ -29,7 +29,7 @@ namespace HexWork.Gameplay
 
         public IEnumerable<Character> Heroes => LivingCharacters.Where(character => character.IsHero);
         public IEnumerable<Character> LivingCharacters => Characters.Where(c => c.IsAlive);
-        public IEnumerable<Character> Enemies => Characters.Where(character => !character.IsHero && character.IsAlive);
+        public IEnumerable<Character> Enemies => LivingCharacters.Where(character => !character.IsHero);
 
         #endregion
 

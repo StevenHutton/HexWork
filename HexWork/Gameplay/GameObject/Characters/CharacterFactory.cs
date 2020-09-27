@@ -330,9 +330,9 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 CreateMajin(),
                 CreateGunner(),
-                CreateNinja(),
-                CreateIronSoul(),
-                CreateBarbarian()
+                //CreateNinja(),
+                //CreateIronSoul(),
+                //CreateBarbarian()
             };
         }
 
@@ -340,15 +340,15 @@ namespace HexWork.Gameplay.GameObject.Characters
         {
             var characters = new List<Character>();
 
-            for (int i = 0; i < difficulty; i++)
-            {
-                var zombieKing = CreateZombieKing();
-                characters.Add(zombieKing);
-            }
+            //for (int i = 0; i < difficulty; i++)
+            //{
+            //    var zombieKing = CreateZombieKing();
+            //    characters.Add(zombieKing);
+            //}
 
             for (var i = 0; i < (difficulty*2)+2; i++)
             {
-                var zombie = CreateZombie(i);
+                var zombie = CreateZombie(0);
                 characters.Add(zombie);
             }
 
@@ -375,7 +375,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 MovementModifier = 100,
                 Health = 50,
                 MaxHealth = 50,
-                BlocksMovement = true,
+                BlocksMovement = false,
             };
 
             _windEffect = new TileEffect
@@ -456,6 +456,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 var nearestNeighbour = GetNearestPassableTileAdjacentToDestination(position, hero.Position, gameState);
                 if (nearestNeighbour == null)
                     continue;
+
                 var path = gameState.FindShortestPath(position, nearestNeighbour);
                 if (path == null) continue;
                 if (path.Count >= shortestPathLength) continue;
@@ -528,11 +529,13 @@ namespace HexWork.Gameplay.GameObject.Characters
                 if (nearestNeighbour == null)
                     continue;
                 var path = gameState.FindShortestPath(position, nearestNeighbour);
+                
                 if (path == null) continue;
                 if (path.Count >= shortestPathLength) continue;
                 shortestPathLength = path.Count;
                 closestHero = hero;
             }
+
             if (closestHero != null && character.CanMove)
             {
                 //if the closest hero is close then move away.
@@ -585,6 +588,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
             int distance = 1000;
             HexCoordinate nearest = null;
+            HexCoordinate result = null;
             bool found = false;
             while (!found)
             {
@@ -597,7 +601,10 @@ namespace HexWork.Gameplay.GameObject.Characters
                         distance = delta;
 
                         if (gameState.IsHexPassable(neighbor))
+                        { 
                             found = true;
+                            result = neighbor;
+                        }
                     }
                 }
 
@@ -609,7 +616,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                     neighbours.Remove(start);
             }
 
-            return nearest;
+            return result;
         }
 
         #endregion

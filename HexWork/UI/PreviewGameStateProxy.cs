@@ -94,11 +94,12 @@ namespace HexWork.UI
 	    {
 		    var destinations =  gameState.GetValidDestinations(objectCharacter);
 
-            foreach (var coord in destinations.Keys)
+            foreach (var coord in destinations)
             {
-                var movementCost = GetPathLengthToTile(objectCharacter, coord).ToString();
+                var postion = coord.Key;
+                var movementCost = coord.Value.ToString();
                 
-                _spriteBatch.DrawString(_font, movementCost, GetHexScreenPosition(coord), Color.White, 0.0f, _font.MeasureString(movementCost) / 2, Vector2.One, SpriteEffects.None, 0.0f);
+                _spriteBatch.DrawString(_font, movementCost, GetHexScreenPosition(postion), Color.White, 0.0f, _font.MeasureString(movementCost) / 2, Vector2.One, SpriteEffects.None, 0.0f);
             }
             
             return destinations;
