@@ -893,7 +893,7 @@ namespace HexWork.UI
 
 		private void OnEndTurn(IInputProvider input)
         {
-            GameState.NextTurn();
+            GameState.NextTurn(_selectedCharacter);
         }
 
         private void OnMessage(object sender, MessageEventArgs args)

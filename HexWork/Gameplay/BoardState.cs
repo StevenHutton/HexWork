@@ -25,8 +25,7 @@ namespace HexWork.Gameplay
 
         #region Properties
 
-        public Character ActiveCharacter => Characters.OrderBy(c => c.TurnTimer).FirstOrDefault();
-
+        public Character ActiveCharacter;
         public IEnumerable<Character> Heroes => LivingCharacters.Where(character => character.IsHero);
         public IEnumerable<Character> LivingCharacters => Characters.Where(c => c.IsAlive);
         public IEnumerable<Character> Enemies => LivingCharacters.Where(character => !character.IsHero);
@@ -163,6 +162,11 @@ namespace HexWork.Gameplay
                     }
                 }
             }
+        }
+
+        public Character GetCharacterAtInitiativeZero()
+        {
+            return LivingCharacters.OrderBy(a => a.TurnTimer).First();
         }
     }
 }

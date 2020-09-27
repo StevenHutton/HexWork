@@ -52,7 +52,7 @@ namespace HexWork.Gameplay.Interfaces
 
         void LosePotential(int potentialCost);
 
-        void NextTurn();
+		void NextTurn(Character activeCharacter);
 
         void CheckDied(HexGameObject entity);
 

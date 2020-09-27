@@ -25,7 +25,7 @@ namespace HexWork.Gameplay.Actions
         public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
         {
             gameState.GainPotential();
-            gameState.NextTurn();
+            gameState.NextTurn(character);
         }
     }
 }

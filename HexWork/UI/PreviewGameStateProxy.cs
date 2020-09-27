@@ -466,7 +466,7 @@ namespace HexWork.UI
 
         #endregion
 
-        public void NextTurn(){}
+        public void NextTurn(Character activeCharacter) { }
 
         public void GainPotential(int potentialGain = 1) { }
 

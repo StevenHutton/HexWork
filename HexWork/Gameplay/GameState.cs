@@ -130,7 +130,7 @@ namespace HexWork.Gameplay
                     });
             }
 
-            NextTurn();
+            NextTurn(GetCharacterAtInitiative(0));            
         }
         
         #endregion
@@ -139,32 +139,31 @@ namespace HexWork.Gameplay
         
         public void Update()
         {
-            var activeCharacter = CurrentGameState.ActiveCharacter;
+            if (CurrentGameState.ActiveCharacter == null)
+                return;
 
-            if (!activeCharacter.IsAlive)
+            if (!CurrentGameState.ActiveCharacter.IsAlive)
             {
-                NextTurn();
+                NextTurn(CurrentGameState.ActiveCharacter);
+                return;
+            }
+                
+            if (CurrentGameState.ActiveCharacter.IsHero)
+                return;
+
+            //if they can't act, end turn
+            if (CurrentGameState.ActiveCharacter.HasActed)
+            {
+                NextTurn(CurrentGameState.ActiveCharacter);
                 return;
             }
 
-            if (activeCharacter.IsHero)
-                return;
-
-            //if they can move take their actions and end turn
-            if (activeCharacter.HasActed)
-            {
-                NextTurn();
-                return;
-            }
-
-            activeCharacter.DoTurn(this, activeCharacter);
-            activeCharacter.HasActed = true;
+            CurrentGameState.ActiveCharacter.DoTurn(this, CurrentGameState.ActiveCharacter);
+            CurrentGameState.ActiveCharacter.HasActed = true;                      
         }
 
-        public void NextTurn()
+        public void NextTurn(Character activeCharacter)
         {
-            var activeCharacter = CurrentGameState.ActiveCharacter;
-
             //if we have an active character then update all the initiative values
             if (activeCharacter != null)
             {
@@ -196,7 +195,8 @@ namespace HexWork.Gameplay
             }
 
             //get the new active character
-            activeCharacter = GetCharacterAtInitiative(0);
+            CurrentGameState.ActiveCharacter = GetCharacterAtInitiative(0);
+            activeCharacter = CurrentGameState.ActiveCharacter;
             activeCharacter.StartTurn();
 
             if (activeCharacter.IsHero)
@@ -218,12 +218,6 @@ namespace HexWork.Gameplay
             }
 
             EndTurnEvent?.Invoke(this, new EndTurnEventArgs(GetInitiativeList().ToList()));
-            
-            //if (CurrentGameState.Enemies.All(c => c.MonsterType != MonsterType.ZombieKing))
-            //{
-            //    SendMessage("Enemy Leader(s) Defeated");
-            //    GameOverEvent?.Invoke(this, new MessageEventArgs("You Win!"));               
-            //}
         }
 
         public void CharacterGainPower(Guid characterId)
@@ -673,7 +667,7 @@ namespace HexWork.Gameplay
             {
                 for (var i = 0; i < range; i++)
                 {
-                    var hexToCheck = CurrentGameState.ActiveCharacter.Position + (direction * (i + 1));
+                    var hexToCheck = objectCharacter.Position + (direction * (i + 1));
 
                     if (!CurrentGameState.ContainsKey(hexToCheck))
                         break;
