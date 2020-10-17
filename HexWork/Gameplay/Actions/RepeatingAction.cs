@@ -4,7 +4,6 @@ using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
 using HexWork.UI.Interfaces;
-using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Gameplay.Actions
 {

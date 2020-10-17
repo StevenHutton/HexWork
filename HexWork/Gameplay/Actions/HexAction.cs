@@ -5,7 +5,6 @@ using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
 using HexWork.UI.Interfaces;
-using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Gameplay.Actions
 {
@@ -42,9 +41,9 @@ namespace HexWork.Gameplay.Actions
 
         public bool AllySafe = false;
 
-        public virtual bool IsAvailable(Character character)
+        public virtual bool IsAvailable(Character character, BoardState gameState)
         {
-            return character.CanAttack;
+            return character.CanAttack && gameState.Potential >= PotentialCost;
         }
         
         #endregion
@@ -132,7 +131,6 @@ namespace HexWork.Gameplay.Actions
                 //everyone gets pushed
                 if (direction != null)
                     gameState.ApplyPush(targetCharacter, direction, PushForce);
-
             }
 
             if (TileEffect != null)

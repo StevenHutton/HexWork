@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
@@ -255,7 +256,7 @@ namespace HexWork.UI
 				button.IsHover = true;
 	        }
             
-            if (NewKeyRelease(Keys.Tab))
+            if (NewKeyRelease(Keys.Tab) || NewKeyRelease(Keys.R) || NewKeyRelease(Keys.Space))
             {
                 SelectedHexAction?.RotateTargeting(_keyBoardState.IsKeyDown(Keys.LeftShift));
             }
@@ -385,15 +386,8 @@ namespace HexWork.UI
 
             foreach (var button in _actionBarButtons)
             {
-                var buttonColor = button.IsEnabled ? //1st conditional
-	                (button.IsMouseDown ? _buttonMouseDownColor 
-		                : (button.IsHover ? _buttonHoverColor : _buttonEnabledColor))
-                    : _buttonDisabledColor; //1st conditional false
-
-                var textColor = button.IsEnabled ? Color.Black : Color.Gray;
-
-                _spriteBatch.Draw(_buttonTexture, button.Rect, buttonColor);
-                _spriteBatch.DrawString(_buttonFont, button.Text, button.Position - button.TextSize / 2, textColor);
+                _spriteBatch.Draw(_buttonTexture, button.Rect, button.Colour);
+                _spriteBatch.DrawString(_buttonFont, button.Text, button.Position - button.TextSize / 2, button.TextColour);
             }
 
             _spriteBatch.End();
@@ -678,15 +672,6 @@ namespace HexWork.UI
             var mouseOffsetY = clickPosition.Y - (_screenHeight / 2);
             var cursorPosition = GetHexCoordinate(mouseOffsetX, mouseOffsetY);
             
-            //if we clicked on the map
-            if (_focusedTile != null 
-                && _focusedTile == cursorPosition 
-                && OnClickEvent == null)
-            {
-                var ch = GameState.GetEntityAtCoordinate(cursorPosition);
-                SelectCharacter(ch);
-            }
-
             //If the UI was busy then handle the click.
             OnClickEvent?.Invoke(this, cursorPosition);
 
@@ -701,13 +686,6 @@ namespace HexWork.UI
             {
                 button.Click(this);
                 return;
-            }
-
-            //check to see if we clicked a portrait
-            var initButton = _initiativeTrack.FirstOrDefault(b => b.Rect.Contains(clickPosition));
-            if (initButton != null)
-            {
-                SelectCharacter(GameState.GetCharacter(initButton.CharacterId));
             }
         }
 
@@ -770,13 +748,6 @@ namespace HexWork.UI
             }
         }
 
-        private void SelectCharacter(HexGameObject character)
-        {
-            if (!(character is Character)) return;
-            _selectedCharacter = (Character) character;
-            UpdateButtons();
-        }
-
         #region Private Action Bar Methods
 
         private void UpdateButtons()
@@ -789,7 +760,15 @@ namespace HexWork.UI
             
             foreach (var action in actions)
             {
-                AddButton(action.Name,
+                var name = action.Name;
+                if(action is PotentialGainAction)
+                {
+                    name = _selectedCharacter.CanAttack ? name : "End Turn";
+                }
+
+                name = action.PotentialCost > 0 ? $"{name} {action.PotentialCost}" : name;
+
+                AddButton(name,
                     async (input) =>
                     {
                         await action.TriggerAsync(_selectedCharacter, input, GameState);
@@ -800,19 +779,23 @@ namespace HexWork.UI
                                 GameState);
                             followUpAction = followUpAction.FollowUpAction;
                         }
-                    }, () => action.IsAvailable(_selectedCharacter));
+                    }, action.IsAvailable(_selectedCharacter, GameState.CurrentGameState));
             }
-
-            AddButton("End Turn", OnEndTurn);
             UpdateButtonPositions();
         }
         
-        private void AddButton(string name, Action<IInputProvider> onClickCallback, Func<bool> isEnabled = null)
+        private void AddButton(string name, Action<IInputProvider> onClickCallback, bool isEnabled)
         {
             var button = new UiButton(name, _buttonFont, onClickCallback, isEnabled);
+            
+            button.Colour = button.IsEnabled ? //1st conditional
+                    (button.IsMouseDown ? _buttonMouseDownColor
+                        : (button.IsHover ? _buttonHoverColor : _buttonEnabledColor))
+                    : _buttonDisabledColor; //1st conditional false
+
+            button.TextColour = button.IsEnabled ? Color.Black : Color.Gray;
 
             _actionBarButtons.Add(button);
-            UpdateButtonPositions();
         }
 
         private void UpdateButtonPositions()
@@ -888,13 +871,13 @@ namespace HexWork.UI
 		private void EndTurn(EndTurnEventArgs e)
 		{
 			UpdateInitiative(e.InitativeOrder);
-			SelectCharacter(e.InitativeOrder.FirstOrDefault());
-		}
+            var firstCharacter = e.InitativeOrder.FirstOrDefault();
 
-		private void OnEndTurn(IInputProvider input)
-        {
-            GameState.NextTurn(_selectedCharacter);
-        }
+            if (firstCharacter.IsHero)
+                _selectedCharacter = firstCharacter;
+
+            UpdateButtons();
+		}
 
         private void OnMessage(object sender, MessageEventArgs args)
         {
@@ -930,12 +913,16 @@ namespace HexWork.UI
 				Animation = new MovementAnimation(GetHexScreenPosition(e.Destination))
 	        };
             _uiActions.Add(action);
+
+            UpdateButtons();
         }
 
         private void OnCharacterTeleport(object sender, MoveEventArgs e)
         {
             var sprite = _gameObjectDictionary[e.CharacterId];
             sprite.Position = GetHexScreenPosition(e.Destination);
+
+            UpdateButtons();
         }
         
         private void OnEntitySpawn(object sender, EntityEventArgs e)
@@ -1006,6 +993,8 @@ namespace HexWork.UI
             action.ActionCompleteCallback += () => { EndTurn(e); };
 
             _uiActions.Add(action);
+
+            UpdateButtons();
         }
 
         private void OnActionTrigger(object sender, ActionEventArgs e)
@@ -1018,6 +1007,8 @@ namespace HexWork.UI
             };
 
             _uiActions.Add(showActionNameUiAction);
+
+            UpdateButtons();
         }
 
         private void OnComboTrigger(object sender, ComboEventArgs e)

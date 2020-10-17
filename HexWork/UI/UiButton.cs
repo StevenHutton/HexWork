@@ -15,9 +15,10 @@ namespace HexWork.UI
 
         public Rectangle Rect = new Rectangle();
 
-        private IsEnabledDelegate _isEnabled = null;
-
         private Action<IInputProvider> _onClick;
+
+        public Color Colour = Color.Black;
+        public Color TextColour = Color.Black;
 
         #region Properties
 
@@ -38,19 +39,18 @@ namespace HexWork.UI
         //(indicates the position of the center of the button)
         public Vector2 Position => new Vector2(Rect.X + Rect.Width/2, Rect.Y + Rect.Height/2);
 
-        public bool IsEnabled => _isEnabled?.Invoke() ?? true;
+        public bool IsEnabled;
 
         public Vector2 Padding { get; set; } = new Vector2(5.0f, 5.0f);
 
         #endregion
         
-        public UiButton(string text, SpriteFont font, Action<IInputProvider> onClickAction, Func<bool> isEnabledHandler)
+        public UiButton(string text, SpriteFont font, Action<IInputProvider> onClickAction, bool isEnabled)
         {
             Font = font;
             SetText(text);
             _onClick += onClickAction;
-            if (isEnabledHandler != null)
-                _isEnabled = new IsEnabledDelegate(isEnabledHandler);
+            IsEnabled = isEnabled;
         }
 
         public void Click(IInputProvider source)

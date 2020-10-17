@@ -4,7 +4,6 @@ using System.Linq;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
-using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Gameplay.GameObject.Characters
 {
@@ -12,9 +11,9 @@ namespace HexWork.Gameplay.GameObject.Characters
     {
         #region Attributes
 
-        private static HexAction _moveAction = new MoveAction("Move") { Range = 0 };
+        private static HexAction _moveAction = new MoveAction("Move") { Range = 0, PotentialCost = 0 };
         
-        private static PotentialGainAction _potentialGainAction = new PotentialGainAction("Wind", null, null, null, null);
+        private static PotentialGainAction _potentialGainAction = new PotentialGainAction("Charge Up (Ends Turn)", null, null, null, null) { PotentialCost = 0 };
 
         private static HexAction _zombieGrab = new HexAction(name: "Zombie Grab",
             statusEffect: new ImmobalisedEffect { StatusEffectType = StatusEffectType.Rooted },
@@ -30,6 +29,10 @@ namespace HexWork.Gameplay.GameObject.Characters
             new HexCoordinate(0, -1, 1),
             new HexCoordinate(-1, 0, 1),
             new HexCoordinate(-1, 1, 0),
+            new HexCoordinate(0, 1, -1));
+
+        static TargetPattern _triangleTargetPattern = new TargetPattern(new HexCoordinate(1, -1, 0),
+            new HexCoordinate(-1, 0, 1),
             new HexCoordinate(0, 1, -1));
 
         static TargetPattern _xAxisLinePattern = new TargetPattern(new HexCoordinate(0, 0, 0),
@@ -65,7 +68,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public static Character CreateMajin()
         {
-            var majinCharacter = new Character("Majin", 100, 100, 5)
+            var majinCharacter = new Character("Majin", 100, 100)
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes,
@@ -81,7 +84,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 PushFromCaster = true
             };
 
-            var exBurningBoltAction = new HexAction("Fire Wall! (1)",
+            var exBurningBoltAction = new HexAction("Fire Wall!",
                 TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
                 _fireStatus, null,
                 _rotatingLinePattern)
@@ -91,7 +94,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 TileEffect = _fireEffect
             };
 
-            var ringofFire = new HexAction("Ring of Fire! (2)",
+            var ringofFire = new HexAction("Ring of Fire!",
                 TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
                 _fireStatus, null,
                 _whirlWindTargetPattern)
@@ -101,11 +104,11 @@ namespace HexWork.Gameplay.GameObject.Characters
                 TileEffect = _fireEffect
             };
 
-            var lightningBolt = new HexAction("Lightning Bolt (1)", TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo() { PushForce = 1, PushFromCaster = false})
+            var lightningBolt = new HexAction("Lightning Bolt", TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo() { PushForce = 1, PushFromCaster = false})
             {
                 Range = 3,
                 Power = 2,
-                PotentialCost = 1
+                PotentialCost = 0
             };
 
             //create majin hero            
@@ -121,7 +124,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public static Character CreateGunner()
         {
-            var shotgunBlast = new LineAction("Shotgun Blast! (1)",
+            var shotgunBlast = new LineAction("Shotgun Blast!",
                 TargetingHelper.GetValidAxisTargetTilesLos,
                 null, new DamageComboAction(),
                 _cornerPattern)
@@ -138,22 +141,21 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 Power = 2,
                 Range = 5,
-                PushForce = 2,
-                TileEffect = _iceEffect
+                PushForce = 2
             };
 
-            var detonatingSnipeActionEx = new HexAction("Perfect Snipe! (1)",
+            var detonatingSnipeActionEx = new HexAction("Perfect Snipe!",
                 TargetingHelper.GetValidAxisTargetTilesLos,
                 null,
-                new DamageComboAction { Power = 4 })
+                new DamageComboAction { Power = 5 })
             {
-                PotentialCost = 1,
+                PotentialCost = 2,
                 Power = 1,
                 Range = 5
             };
 
             //create gunner hero
-            var gunnerCharacter = new Character("Gunner", 60, 100, 4)
+            var gunnerCharacter = new Character("Gunner", 60, 100)
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes,
@@ -189,16 +191,16 @@ namespace HexWork.Gameplay.GameObject.Characters
                 Range = 3
             };
 
-            var swapAction = new SwapAction("Swap Positions (1)", TargetingHelper.GetValidTargetTilesLos)
+            var swapAction = new SwapAction("Swap Positions", TargetingHelper.GetValidTargetTilesLos)
             {
                 Power = 3,
                 AllySafe = false,
-                PotentialCost = 1,
-                Range = 2
+                PotentialCost = 2,
+                Range = 5
             };
 
             //create ninja hero
-            var ninjaCharacter = new Character("Ninja", 80, 80, 4)
+            var ninjaCharacter = new Character("Ninja", 80, 80)
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes,
@@ -218,6 +220,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         {
             var pushingFist = new HexAction("Heavy Blow", TargetingHelper.GetValidTargetTilesLos, null, new StatusCombo()
             {
+                Power = 2,
                 Effect = new ImmobalisedEffect()
                 {
                     StatusEffectType = StatusEffectType.Rooted
@@ -225,11 +228,13 @@ namespace HexWork.Gameplay.GameObject.Characters
             })
             {
                 Range = 1,
-                Power = 3,
+                Power = 2,
                 PushForce = 2
             };
 
-            var stomp = new HexAction("Stomp", TargetingHelper.GetValidTargetTilesLos, new ImmobalisedEffect(), new DamageComboAction(),
+            var charge = new ChargeAction("Charge", TargetingHelper.GetValidAxisTargetTilesLos) { Range = 2, Power = 2, PotentialCost = 1, PushForce = 1 };
+
+            var stomp = new HexAction("Stomp", TargetingHelper.GetValidTargetTilesLos, new ImmobalisedEffect(), null,
                 _whirlWindTargetPattern)
             {
                 Power = 1,
@@ -237,36 +242,31 @@ namespace HexWork.Gameplay.GameObject.Characters
                 Range = 0
             };
 
-            var vampiricStrike = new VampiricAction("Blood Drain", TargetingHelper.GetValidAxisTargetTilesLos, null, new HealingCombo())
-            {
-                Range = 1,
-            };
-
             var exDetonatingSlash =
-            new HexAction("Massive Detonation! (1)", TargetingHelper.GetValidTargetTilesLos, null,
+            new HexAction("Massive Detonation!", TargetingHelper.GetValidTargetTilesLos, null,
                 new ExploderCombo
                 {
-                    Power = 5,
+                    Power = 2,
                     Pattern = _whirlWindTargetPattern,
                     AllySafe = false
                 })
             {
                 Range = 1,
                 PotentialCost = 1,
-                Power = 5
+                Power = 3
             };
 
             //create Iron Soul hero
-            var ironSoulCharacter = new Character("Iron Soul", 200, 120, 3)
+            var ironSoulCharacter = new Character("Iron Soul", 200, 120)
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes,
-                Power = 15,
+                Power = 12,
                 CharacterType = CharacterType.IronSoul
             };
             ironSoulCharacter.AddAction(_moveAction);
-            ironSoulCharacter.AddAction(vampiricStrike);
             ironSoulCharacter.AddAction(pushingFist);
+            ironSoulCharacter.AddAction(charge);
             ironSoulCharacter.AddAction(stomp);
             ironSoulCharacter.AddAction(exDetonatingSlash);
             ironSoulCharacter.AddAction(_potentialGainAction);
@@ -278,7 +278,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         {
             var spreadStatusCombo = new SpreadStatusCombo { AllySafe = true, Power = 1 };
             var detonatingSlash =
-              new HexAction("Detonating Strike! (1)", TargetingHelper.GetValidTargetTilesLos, null, spreadStatusCombo)
+              new HexAction("Detonating Strike!", TargetingHelper.GetValidTargetTilesLos, null, spreadStatusCombo)
               {
                   Range = 1,
                   PotentialCost = 1
@@ -290,7 +290,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 null,
                 _xAxisLinePattern)
             {
-                Range = 2,
+                Range = 1,
                 Power = 2
             };
 
@@ -305,7 +305,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             //create Barbarian hero
-            var barbarianCharacter = new Character("Barbarian", 150, 100, 2)
+            var barbarianCharacter = new Character("Barbarian", 150, 100)
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes,
@@ -360,7 +360,6 @@ namespace HexWork.Gameplay.GameObject.Characters
             _fireEffect = new TileEffect
             {
                 Damage = 15,
-                Effect = _fireStatus,
                 Name = "Fire",
                 Health = 5,
                 MaxHealth = 5,
@@ -370,7 +369,6 @@ namespace HexWork.Gameplay.GameObject.Characters
             _iceEffect = new TileEffect
             {
                 Damage = 0,
-                Effect = null,
                 Name = "Ice",
                 MovementModifier = 100,
                 Health = 50,
@@ -381,7 +379,6 @@ namespace HexWork.Gameplay.GameObject.Characters
             _windEffect = new TileEffect
             {
                 Damage = 0,
-                Effect = null,
                 Name = "Wind",
                 MovementModifier = -1,
                 Health = 5,
@@ -413,7 +410,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         private static Character CreateZombieKing()
         {
-            var zombieKing = new Character($"Zom-boy King", 160, 120, 1)
+            var zombieKing = new Character($"Zom-boy King", 160, 120)
             {
                 CharacterType = CharacterType.ZombieKing
             };
@@ -428,7 +425,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public static Character CreateZombie(int i = 0)
         {
-            var zombie = new Character($"Zom-boy {i}", 60, 100, 0)
+            var zombie = new Character($"Zom-boy {i}", 60, 100)
             {
                 Power = 5,
             };
@@ -457,7 +454,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 if (nearestNeighbour == null)
                     continue;
 
-                var path = gameState.FindShortestPath(position, nearestNeighbour);
+                var path = gameState.FindShortestPath(position, nearestNeighbour, 200);
                 if (path == null) continue;
                 if (path.Count >= shortestPathLength) continue;
                 shortestPathLength = path.Count;
@@ -481,8 +478,8 @@ namespace HexWork.Gameplay.GameObject.Characters
                     return;
                 }
             }
+
             //if we couldn't reach the closest hero move towards them.
-            //if we found a path to a hero
             if (!character.CanMove) return;
 
             //get all the tiles to which the zombie COULD move
@@ -502,7 +499,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 }
             }
             if (destination != null)
-                gameState.MoveEntityTo(character, destination);
+                gameState.MoveEntity(character, new List<HexCoordinate> { destination });
             foreach (var action in character.Actions.Where(action =>
                 action.IsValidTarget(character, closestHero.Position, gameState)
                 && action.IsDetonator == closestHero.HasStatus))
@@ -528,7 +525,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 var nearestNeighbour = GetNearestPassableTileAdjacentToDestination(position, hero.Position, gameState);
                 if (nearestNeighbour == null)
                     continue;
-                var path = gameState.FindShortestPath(position, nearestNeighbour);
+                var path = gameState.FindShortestPath(position, nearestNeighbour, 200);
                 
                 if (path == null) continue;
                 if (path.Count >= shortestPathLength) continue;
@@ -558,7 +555,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                         }
                     }
                     if (destination != null)
-                        gameState.MoveEntityTo(character, destination);
+                        gameState.MoveEntity(character, new List<HexCoordinate> { destination });
                 }
             }
             var zombies = gameState.CurrentGameState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie && c.IsAlive).ToList();

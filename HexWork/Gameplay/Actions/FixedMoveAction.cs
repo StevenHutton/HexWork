@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
-using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Gameplay.Actions
 {
@@ -31,7 +30,7 @@ namespace HexWork.Gameplay.Actions
             var position = character.Position;
 
             if (IsValidTarget(character, targetPosition, gameState))
-                gameState.MoveEntityTo(character, targetPosition);
+                gameState.MoveEntity(character, new List<HexCoordinate>{ targetPosition });
 
             if (TileEffect != null)
                 gameState.CreateTileEffect(position, TileEffect);

@@ -4,13 +4,12 @@ using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
-using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Gameplay.Actions
 {
 	public class MoveAction : HexAction
     {
-        public override bool IsAvailable(Character character)
+        public override bool IsAvailable(Character character, BoardState gameState)
         {
             return character.CanMove;
         }
@@ -39,8 +38,9 @@ namespace HexWork.Gameplay.Actions
 
             if (gameState.IsValidDestination(character, targetPosition))
             {
-                gameState.LosePotential(gameState.GetPathLengthToTile(character, targetPosition));
-                gameState.MoveEntityTo(character, targetPosition);
+                var path = gameState.FindShortestPath(position, targetPosition, gameState.CurrentGameState.Potential, character.MovementType, character.MovementSpeed);
+                gameState.LosePotential(gameState.GetPathLengthToTile(character, targetPosition, path));
+                gameState.MoveEntity(character, path);
             }
             
             if(TileEffect != null)

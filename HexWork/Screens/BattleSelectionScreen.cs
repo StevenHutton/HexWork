@@ -2,7 +2,6 @@
 using HexWork.Interfaces;
 using HexWork.UI;
 using Microsoft.Xna.Framework;
-using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Screens
 {

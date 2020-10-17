@@ -117,7 +117,7 @@ namespace HexWork.UI
 	        }
 	        else
 	        {
-				FindShortestPath(objectCharacter.Position, targetPosition, objectCharacter.MovementType);
+				FindShortestPath(objectCharacter.Position, targetPosition, gameState.CurrentGameState.Potential, objectCharacter.MovementType, objectCharacter.MovementSpeed);
 			}
 
 	        return isValid;
@@ -137,9 +137,10 @@ namespace HexWork.UI
 		    return isValid;
 	    }
 
-		public List<HexCoordinate> FindShortestPath(HexCoordinate startPosition, HexCoordinate destination, MovementType movementType = MovementType.NormalMove, MovementSpeed speed = MovementSpeed.Normal)
+		public List<HexCoordinate> FindShortestPath(HexCoordinate startPosition, HexCoordinate destination, int availableMovement,
+            MovementType movementType = MovementType.NormalMove, MovementSpeed speed = MovementSpeed.Normal)
 	    {
-			var path = gameState.FindShortestPath(startPosition, destination, movementType, speed);
+			var path = gameState.FindShortestPath(startPosition, destination, availableMovement, movementType, speed);
 		    if (path == null)
 			    return null;
 
@@ -163,10 +164,9 @@ namespace HexWork.UI
 		/// </summary>
 		/// <param name="character"></param>
 		/// <param name="targetPosition"></param>
-        public void MoveEntityTo(HexGameObject entity, HexCoordinate targetPosition)
+        public void MoveEntity(HexGameObject entity, List<HexCoordinate> path)
         {
-            var path = gameState.FindShortestPath(entity.Position, targetPosition);
-	        ResolveTileEffects(entity, path);
+            ResolveTileEffects(entity, path);
             ResolveTerrainEffects(entity, path);
         }
 
@@ -456,9 +456,9 @@ namespace HexWork.UI
 		    return new Vector2(posX, posY) + _screenCenter;
 	    }
 
-        public int GetPathLengthToTile(Character objectCharacter, HexCoordinate destination)
+        public int GetPathLengthToTile(Character objectCharacter, HexCoordinate destination, List<HexCoordinate> path)
         {
-            return gameState.GetPathLengthToTile(objectCharacter, destination);
+            return gameState.GetPathLengthToTile(objectCharacter, destination, path);
         }
 
         public void RemoveTileEffect(TileEffect effect)

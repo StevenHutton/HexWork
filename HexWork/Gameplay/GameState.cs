@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.GameObject;
@@ -147,19 +146,19 @@ namespace HexWork.Gameplay
                 NextTurn(CurrentGameState.ActiveCharacter);
                 return;
             }
-                
+            
             if (CurrentGameState.ActiveCharacter.IsHero)
                 return;
 
             //if they can't act, end turn
-            if (CurrentGameState.ActiveCharacter.HasActed)
+            if (!CurrentGameState.ActiveCharacter.CanAttack)
             {
                 NextTurn(CurrentGameState.ActiveCharacter);
                 return;
             }
 
             CurrentGameState.ActiveCharacter.DoTurn(this, CurrentGameState.ActiveCharacter);
-            CurrentGameState.ActiveCharacter.HasActed = true;                      
+            CurrentGameState.ActiveCharacter.CanAttack = false;                      
         }
 
         public void NextTurn(Character activeCharacter)
@@ -197,10 +196,11 @@ namespace HexWork.Gameplay
             //get the new active character
             CurrentGameState.ActiveCharacter = GetCharacterAtInitiative(0);
             activeCharacter = CurrentGameState.ActiveCharacter;
-            activeCharacter.StartTurn();
 
-            if (activeCharacter.IsHero)
-                GainPotential(1);
+            if (activeCharacter.CharacterType == CharacterType.Majin)
+                GainPotential(2);
+
+            activeCharacter.StartTurn();
 
             //apply any status effects for the new active character that trigger at the start of thier turn.
             foreach (var statusEffect in activeCharacter.StatusEffects)
@@ -258,23 +258,17 @@ namespace HexWork.Gameplay
             TeleportEntityTo(character, character.Position);
         }
 
-        public void MoveEntityTo(HexGameObject entity, HexCoordinate position)
+        public void MoveEntity(HexGameObject entity, List<HexCoordinate> path)
         {
-            List<HexCoordinate> path;
-            if (entity is Character character)
-                path = FindShortestPath(entity.Position, position, character.MovementType);
-            else
-                path = FindShortestPath(entity.Position, position);
-
             foreach (var coordinate in path)
             {
+                entity.MoveTo(coordinate);
                 CharacterMoveEvent?.Invoke(this, new MoveEventArgs
                 {
                     CharacterId = entity.Id,
                     Destination = coordinate
                 });
 
-                entity.MoveTo(coordinate);
                 ResolveTileEffects(entity, coordinate);
                 ResolveTerrainEffects(entity, coordinate);
             }
@@ -282,16 +276,16 @@ namespace HexWork.Gameplay
 
         public void TeleportEntityTo(HexGameObject gameObject, HexCoordinate position)
         {
+            ResolveTileEffects(gameObject, position);
+            ResolveTerrainEffects(gameObject, position);
+
+            gameObject.MoveTo(position);
             CharacterTeleportEvent?.Invoke(this,
                 new MoveEventArgs
                 {
                     CharacterId = gameObject.Id,
                     Destination = position
                 });
-
-            ResolveTileEffects(gameObject, position);
-            ResolveTerrainEffects(gameObject, position);
-            gameObject.MoveTo(position);
         }
 
         public void ResolveTileEffects(HexGameObject entity, HexCoordinate position)
@@ -370,11 +364,13 @@ namespace HexWork.Gameplay
 
         public void NotifyAction(HexAction action, HexGameObject entity)
         {
-            ActionEvent?.Invoke(this,
-                new ActionEventArgs { Action = action });
-
-            if(entity is Character character)
+            if (entity is Character character)
+            {
                 character.CanAttack = false;
+            }
+
+            ActionEvent?.Invoke(this,
+              new ActionEventArgs { Action = action });
         }
 
         public int ApplyDamage(HexGameObject entity, int damage, string message = null)
@@ -443,7 +439,7 @@ namespace HexWork.Gameplay
 
             //if the player scores a combo they gain potential.
             if (CurrentGameState.ActiveCharacter.IsHero)
-                GainPotential(1);
+                GainPotential(2);
             
             var status = targetEntity.StatusEffects.First();
 
@@ -477,7 +473,7 @@ namespace HexWork.Gameplay
                 }
                 else if (IsHexPassable(destinationPos))
                 {
-                    MoveEntityTo(targetEntity, destinationPos);
+                    MoveEntity(targetEntity, new List<HexCoordinate> { destinationPos });
 
                     var tile = CurrentGameState[destinationPos];
 
@@ -523,6 +519,9 @@ namespace HexWork.Gameplay
 
         public void CreateTileEffect(HexCoordinate location, TileEffect effect)
         {
+            if(!IsHexInMap(location))
+                return;
+
             //don't create a tile effect on unpassable tiles, occupied tiles or tiles that already have effects
             if (!IsHexWalkable(location) || !IsTileEmpty(location) || CurrentGameState.TileEffects.Any(te => te.Position == location))
                 return;
@@ -839,10 +838,14 @@ namespace HexWork.Gameplay
         public bool IsValidDestination(Character objectCharacter, HexCoordinate targetPosition)
         {
             var destinations = GetValidDestinations(objectCharacter);
-            var reachable = destinations.Keys.Contains(targetPosition);
-            var inRange = (this.CurrentGameState.Potential >= destinations[targetPosition]);
 
-            return (reachable && inRange);
+            if (!destinations.Keys.Contains(targetPosition))
+                return false;
+
+            if (CurrentGameState.Potential < destinations[targetPosition])
+                return false;
+
+            return true;
         }
 
         private void GetTilesInRangeRecursive(List<HexCoordinate> tilesInRange, HexCoordinate position, int range, int searchDepth = 0)
@@ -921,7 +924,7 @@ namespace HexWork.Gameplay
 
                 //get movement cost to next tile
                 int movementCostModifier = (int)GetTileTotalMovementCost(coord);
-                var movementCostToCoord = GetMoveSpeedCost(MovementSpeed.Normal, searchDepth) + movementCostModifier;
+                var movementCostToCoord = GetMoveSpeedCost(movementSpeed, searchDepth) + movementCostModifier;
 
                 GetWalkableNeighboursRecursive(pathLengthsToTiles, coord, movementType, movementSpeed,
                     movementCost + movementCostToCoord,
@@ -929,7 +932,7 @@ namespace HexWork.Gameplay
             }
         }
 
-        public List<HexCoordinate> FindShortestPath(HexCoordinate startPosition, HexCoordinate destination, 
+        public List<HexCoordinate> FindShortestPath(HexCoordinate startPosition, HexCoordinate destination, int availableMovement,
             MovementType movementType = MovementType.NormalMove, MovementSpeed speed = MovementSpeed.Normal)
         {
             if (startPosition == destination) return null;
@@ -941,18 +944,13 @@ namespace HexWork.Gameplay
             List<HexCoordinate> path = null;
 
             //get cost to move to this neighbour tile from the current search tile
-            FindShortestPathRecursive(ancestorPathmap, pathValues, startPosition, destination, movementType, speed, 0, 0);
-            try
+            FindShortestPathRecursive(ancestorPathmap, pathValues, startPosition, destination, movementType, speed, 0, 0, availableMovement);
+
+            if (ancestorPathmap.ContainsKey(destination))
             {
                 path = ancestorPathmap[destination];
                 path.Add(destination);
                 path.RemoveAt(0);
-            }
-            catch(Exception ex)
-            {
-                ancestorPathmap = new Dictionary<HexCoordinate, List<HexCoordinate>>();
-                pathValues = new Dictionary<HexCoordinate, float>();
-                FindShortestPathRecursive(ancestorPathmap, pathValues, startPosition, destination, movementType, speed, 0, 0);
             }
 
             return path;
@@ -966,7 +964,7 @@ namespace HexWork.Gameplay
             MovementSpeed speed,
             int movementCostPrevious,
             int searchDepth,
-            int availableMovement = 200)
+            int availableMovement)
         {
             var adjacentTiles = GetNeighbours(currentSearchCoord);
             var tilesToSearch = new List<HexCoordinate>();
@@ -993,7 +991,7 @@ namespace HexWork.Gameplay
                 else
                     shortestPathToCurrentSearchTile = new List<HexCoordinate> { currentSearchCoord };
 
-                var totalMovementCostToTile = movementCostToTile + movementCostPrevious;
+                var totalMovementCostToTile = (int)(movementCostToTile + movementCostPrevious);
 
                 if (totalMovementCostToTile > availableMovement)
                     continue;
@@ -1049,7 +1047,15 @@ namespace HexWork.Gameplay
                 int movementCost = (int)GetTileTotalMovementCost(searchCandidate);
                 var movementCostToCoord = GetMoveSpeedCost(speed, searchDepth) + movementCost;
 
-                FindShortestPathRecursive(ancestorPathmap, moveCostToSearchedTiles, searchCandidate, destination, movementType, speed, movementCostToCoord + movementCostPrevious, searchDepth + 1);
+                FindShortestPathRecursive(ancestorPathmap, 
+                    moveCostToSearchedTiles, 
+                    searchCandidate, 
+                    destination, 
+                    movementType,
+                    speed,
+                    movementCostToCoord + movementCostPrevious, 
+                    searchDepth + 1, 
+                    availableMovement);
             }
         }
 
@@ -1061,7 +1067,7 @@ namespace HexWork.Gameplay
 
             foreach (var coordinate in neighbours)
             {
-                if (!IsTilePassable(movementType, coordinate)) continue;
+                if (!IsTileEmpty(coordinate)) continue;
 
                 walkableNeighbours.Add(coordinate);
             }
@@ -1139,10 +1145,12 @@ namespace HexWork.Gameplay
             return CurrentGameState.Characters.FirstOrDefault(cha => cha.Id == characterId);
         }
 
-        public int GetPathLengthToTile(Character objectCharacter, HexCoordinate destination)
+        public int GetPathLengthToTile(Character objectCharacter, HexCoordinate destination, List<HexCoordinate> path)
         {
-            var path = FindShortestPath(objectCharacter.Position, destination, objectCharacter.MovementType, objectCharacter.MovementSpeed);
+            if(path == null)
+                path = FindShortestPath(objectCharacter.Position, destination, 200, objectCharacter.MovementType, objectCharacter.MovementSpeed);
             if (path == null) return 0;
+
             var pathLength = 0;
             switch (objectCharacter.MovementSpeed)
             {

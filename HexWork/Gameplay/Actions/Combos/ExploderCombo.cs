@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
-using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Gameplay.Actions
 {
@@ -59,7 +58,7 @@ namespace HexWork.Gameplay.Actions
 	            if (AllySafe && targetCharacter.IsHero == character.IsHero)
 		            continue;
 
-				gameState.ApplyDamage(newTargetCharacter, (Power+ powerBonus) * character.Power);
+				gameState.ApplyDamage(newTargetCharacter, (Power + powerBonus) * character.Power);
             }
 
             var tileEffect = gameState.GetTileEffectAtCoordinate(targetPosition);

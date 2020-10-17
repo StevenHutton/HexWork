@@ -27,7 +27,6 @@ namespace HexWork.Gameplay.GameObject
 
         public TileEffect(string name, int maxHealth) : base(name, maxHealth) { }
 
-
         public TileEffect(HexCoordinate pos)
         {
             Position = pos;

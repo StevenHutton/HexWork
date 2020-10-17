@@ -1,7 +1,6 @@
 ﻿using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
 using HexWork.UI.Interfaces;
-using MonoGameTestProject.Gameplay;
 using System.Linq;
 using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;

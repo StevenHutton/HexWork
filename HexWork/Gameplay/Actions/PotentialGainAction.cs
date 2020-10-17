@@ -2,7 +2,6 @@
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
-using MonoGameTestProject.Gameplay;
 
 namespace HexWork.Gameplay.Actions
 {
@@ -19,12 +18,19 @@ namespace HexWork.Gameplay.Actions
             combo, targetPattern)
         { }
 
+        public override bool IsAvailable(Character character, BoardState gameState)
+        {
+            return true;
+        }
+
         /// <summary>
         /// immediately gains one potential and ends turn.
         /// </summary>
         public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
         {
-            gameState.GainPotential();
+            if(character.CanAttack && character.IsHero)
+                gameState.GainPotential();
+            
             gameState.NextTurn(character);
         }
     }

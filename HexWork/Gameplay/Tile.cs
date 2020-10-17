@@ -34,7 +34,6 @@ namespace HexWork.Gameplay
 
         public Tile()
         {
-        }
-        
+        }        
     }
 }

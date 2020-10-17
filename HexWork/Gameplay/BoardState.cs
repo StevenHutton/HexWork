@@ -19,7 +19,7 @@ namespace HexWork.Gameplay
         public List<HexGameObject> Entities = new List<HexGameObject>();
 
         public int MaxPotential = 9;
-        public int Potential = 0;
+        public int Potential = 3;
 
         #endregion
 

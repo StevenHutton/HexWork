@@ -25,9 +25,6 @@ namespace HexWork.Gameplay.GameObject.Characters
         //Feeds into damage - all damage dealt by this character is multiplied by this number.
         public int Power = 5;
 
-        //indicates how much potential your team can have if this character is your commander.
-        public int Command = 0;
-
         #endregion
 
         public List<HexAction> Actions = new List<HexAction>();
@@ -54,7 +51,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         
         #region Methods
 
-        public Character(string name, int maxHealth, int turnLength, int potential) : base()
+        public Character(string name, int maxHealth, int turnLength) : base()
         {
             if(_rand == null)
                 _rand = new Random(DateTime.Now.Millisecond);
@@ -66,7 +63,6 @@ namespace HexWork.Gameplay.GameObject.Characters
             MaxHealth = maxHealth;
             Health = maxHealth;
             TurnCooldown = turnLength;
-            Command = potential;
 
             TurnTimer = _rand.Next(0, TurnCooldown);
         }

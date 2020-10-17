@@ -4,7 +4,6 @@ using HexWork.Gameplay;
 using HexWork.Interfaces;
 using HexWork.Screens;
 using HexWork.UI;
-using MonoGameTestProject.Gameplay;
 
 namespace HexWork
 {
@@ -17,8 +16,8 @@ namespace HexWork
 
 		GraphicsDeviceManager _graphics;
 
-		public readonly int ScreenHeight = 1080;
-		public readonly int ScreenWidth = 1920;
+		public readonly int ScreenHeight = 864;
+		public readonly int ScreenWidth = 1536;
 
 		private IScreenManager _screenManager;
 		private IInputManager _inputManager;

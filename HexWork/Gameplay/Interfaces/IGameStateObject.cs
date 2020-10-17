@@ -30,7 +30,7 @@ namespace HexWork.Gameplay.Interfaces
 
 		void NotifyAction(HexAction action, HexGameObject entity);
 
-        void MoveEntityTo(HexGameObject entity, HexCoordinate targetPosition);
+        void MoveEntity(HexGameObject entity, List<HexCoordinate> path);
 
         void TeleportEntityTo(HexGameObject entity, HexCoordinate position);
 
@@ -100,7 +100,7 @@ namespace HexWork.Gameplay.Interfaces
 		/// 
 		/// Rad as shit.
 		/// </summary>
-		List<HexCoordinate> FindShortestPath(HexCoordinate startPosition, HexCoordinate destination,
+		List<HexCoordinate> FindShortestPath(HexCoordinate startPosition, HexCoordinate destination, int availableMovement,
 			MovementType movementType = MovementType.NormalMove, MovementSpeed speed = MovementSpeed.Normal);
 
 
@@ -115,7 +115,7 @@ namespace HexWork.Gameplay.Interfaces
         bool IsHexInMap(HexCoordinate destinationPos);
         TileEffect GetTileEffectAtCoordinate(HexCoordinate targetPosition);
 
-        int GetPathLengthToTile(Character character, HexCoordinate destination);
+        int GetPathLengthToTile(Character character, HexCoordinate destination, List<HexCoordinate> path);
 
         List<HexCoordinate> GetWalkableAdjacentTiles(HexCoordinate position, MovementType movementType);
 
