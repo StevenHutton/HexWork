@@ -66,6 +66,31 @@ namespace HexWork.Gameplay.GameObject.Characters
 
             TurnTimer = _rand.Next(0, TurnCooldown);
         }
+
+        //copy constructor
+        public Character(Character ch): base(ch)
+        {
+            Power = ch.Power;
+            foreach(var action in ch.Actions)
+            {
+                Actions.Add(action);
+            }
+
+            CharacterType = ch.CharacterType;
+
+            MovementType = ch.MovementType;
+            MovementSpeed = ch.MovementSpeed;
+
+            IsAlive = ch.IsAlive;
+            CanAttack = ch.CanAttack;
+            RangeModifier = ch.RangeModifier;
+            HasActed = ch.HasActed;
+            IsActive = ch.IsActive;
+
+            TurnCooldown = ch.TurnCooldown;
+            TurnTimer = ch.TurnTimer;
+            DoTurn = ch.DoTurn;
+        }
         
         public void StartTurn()
         {
@@ -93,6 +118,11 @@ namespace HexWork.Gameplay.GameObject.Characters
         {
             if(!Actions.Contains(action))
                 Actions.Add(action);
+        }
+
+        public override HexGameObject Copy()
+        {
+            return new Character(this);
         }
 
         #endregion

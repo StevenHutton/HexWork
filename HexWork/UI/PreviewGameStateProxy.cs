@@ -46,9 +46,9 @@ namespace HexWork.UI
 
 		#region Properties
 
-        public BoardState CurrentGameState  => gameState.CurrentGameState;
+        public BoardState BoardState  => gameState.BoardState;
 
-        public IEnumerable<TileEffect> TileEffects => CurrentGameState.TileEffects;
+        public IEnumerable<TileEffect> TileEffects => BoardState.TileEffects;
 
 		#endregion
 
@@ -117,7 +117,7 @@ namespace HexWork.UI
 	        }
 	        else
 	        {
-				FindShortestPath(objectCharacter.Position, targetPosition, gameState.CurrentGameState.Potential, objectCharacter.MovementType, objectCharacter.MovementSpeed);
+				FindShortestPath(objectCharacter.Position, targetPosition, gameState.BoardState.Potential, objectCharacter.MovementType, objectCharacter.MovementSpeed);
 			}
 
 	        return isValid;
@@ -219,7 +219,7 @@ namespace HexWork.UI
 
         private void ResolveTerrainEffect(HexGameObject entity, HexCoordinate position)
         {
-            var tile = gameState.GetTileAtCoordinate(position);
+            var tile = gameState.BoardState[position];
             switch (tile.TerrainType)
             {
                 case TerrainType.Ground:
@@ -381,7 +381,7 @@ namespace HexWork.UI
                     break;
                 }
 				
-	            var tile = GetTileAtCoordinate(destinationPos);
+	            var tile = BoardState[destinationPos];
 	            if (tile.TerrainType != TerrainType.Ice && tile.TerrainType != TerrainType.ThinIce)
 		            pushForce--;
 
@@ -440,11 +440,6 @@ namespace HexWork.UI
         {
             return gameState.GetTileEffectAtCoordinate(targetPosition);
         }
-
-        public Tile GetTileAtCoordinate(HexCoordinate coordinate)
-	    {
-		    return gameState.GetTileAtCoordinate(coordinate);
-	    }
 
         #region HelperMethods
 

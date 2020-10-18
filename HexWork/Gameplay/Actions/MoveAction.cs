@@ -38,7 +38,7 @@ namespace HexWork.Gameplay.Actions
 
             if (gameState.IsValidDestination(character, targetPosition))
             {
-                var path = gameState.FindShortestPath(position, targetPosition, gameState.CurrentGameState.Potential, character.MovementType, character.MovementSpeed);
+                var path = gameState.FindShortestPath(position, targetPosition, gameState.BoardState.Potential, character.MovementType, character.MovementSpeed);
                 gameState.LosePotential(gameState.GetPathLengthToTile(character, targetPosition, path));
                 gameState.MoveEntity(character, path);
             }

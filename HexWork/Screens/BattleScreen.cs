@@ -201,7 +201,7 @@ namespace HexWork.UI
 
         public void Initialise()
         {
-            UpdateInitiative(GameState.CurrentGameState.Characters);
+            UpdateInitiative(GameState.BoardState.Characters);
         }
 
         #endregion
@@ -316,11 +316,11 @@ namespace HexWork.UI
             var gameState = GameState;
 
             List<string> rightSideStrings = new List<string>();
-            if (gameState.CurrentGameState.ActiveCharacter != null)
+            if (gameState.BoardState.ActiveCharacter != null)
             {
-                rightSideStrings.Add("Active Character : " + gameState.CurrentGameState.ActiveCharacter.Name);
+                rightSideStrings.Add("Active Character : " + gameState.BoardState.ActiveCharacter.Name);
             }
-            rightSideStrings.Add($"Current Potential : {gameState.CurrentGameState.Potential}");
+            rightSideStrings.Add($"Current Potential : {gameState.BoardState.Potential}");
             if (_selectedCharacter != null)
             {
                 rightSideStrings.Add($"Selected Character : {_selectedCharacter.Name}");
@@ -339,14 +339,14 @@ namespace HexWork.UI
 			        new Vector2(ScreenEdgeMargin, ScreenEdgeMargin), Color.Black);
 			}
 
-			var startPositionX = _screenCenter.X - ((float)gameState.CurrentGameState.MaxPotential / 2 * 65);
+			var startPositionX = _screenCenter.X - ((float)gameState.BoardState.MaxPotential / 2 * 65);
             var potentialPosY = 100 * _hexScreenScale;
 
             var screenPosition = new Vector2(startPositionX, potentialPosY);
 
-            for (int i = 0; i < gameState.CurrentGameState.MaxPotential; i++)
+            for (int i = 0; i < gameState.BoardState.MaxPotential; i++)
             {
-                var color = gameState.CurrentGameState.Potential <= i ? Color.LightPink : Color.Red;
+                var color = gameState.BoardState.Potential <= i ? Color.LightPink : Color.Red;
 
                 _spriteBatch.Draw(_blankTexture, screenPosition, null, color, 0.0f, Vector2.Zero, new Vector2(30.0f, 2.0f),
                     SpriteEffects.None, 0.0f);
@@ -434,7 +434,7 @@ namespace HexWork.UI
 
         private void DrawMap()
         {
-            var gameState = GameState.CurrentGameState;
+            var gameState = GameState.BoardState;
             _spriteBatch.Begin();
             foreach (var kvp in gameState)
             {
@@ -456,7 +456,7 @@ namespace HexWork.UI
 
         private void DrawHighlightedMap(List<HexCoordinate> highlightedTiles)
         {
-            var gameState = GameState.CurrentGameState;
+            var gameState = GameState.BoardState;
             _spriteBatch.Begin();
 
             foreach (var kvp in gameState)
@@ -539,7 +539,7 @@ namespace HexWork.UI
 
         private void DrawEntities()
         {
-            var gameState = GameState.CurrentGameState;
+            var gameState = GameState.BoardState;
             //draw highlighted elements
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend,
                 null, null,
@@ -552,7 +552,6 @@ namespace HexWork.UI
             foreach (var kvp in _gameObjectDictionary)
             {
                 var sprite = kvp.Value;
-	            var character = GameState.GetCharacter(kvp.Key);
 
 				if (kvp.Key == _selectedCharacter?.Id)
                 {
@@ -666,7 +665,7 @@ namespace HexWork.UI
         /// <param name="clickPosition">The position of the click in screen space.</param>
         private void MouseUp(Point clickPosition)
         {
-            var gameState = GameState.CurrentGameState;
+            var gameState = GameState.BoardState;
             //get mouse position in hex space
             var mouseOffsetX = clickPosition.X - (_screenWidth / 2);
             var mouseOffsetY = clickPosition.Y - (_screenHeight / 2);
@@ -779,7 +778,7 @@ namespace HexWork.UI
                                 GameState);
                             followUpAction = followUpAction.FollowUpAction;
                         }
-                    }, action.IsAvailable(_selectedCharacter, GameState.CurrentGameState));
+                    }, action.IsAvailable(_selectedCharacter, GameState.BoardState));
             }
             UpdateButtonPositions();
         }
@@ -829,7 +828,7 @@ namespace HexWork.UI
 
 		private HexCoordinate GetHexCoordinate(float posX, float posY)
         {
-            var gameState = GameState.CurrentGameState;
+            var gameState = GameState.BoardState;
             var x = (_sqrt3 / 3 * posX - 1.0f / 3 * posY) / (_hexHalfSize * _hexScale);
 		    var z = 2.0f / 3 * posY / (_hexHalfSize * _hexScale);
 		    var y = -(x + z);

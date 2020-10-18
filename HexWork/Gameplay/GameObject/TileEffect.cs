@@ -31,10 +31,11 @@ namespace HexWork.Gameplay.GameObject
         {
             Position = pos;
         }
-
-        public TileEffect(TileEffect effectToCopy, HexCoordinate pos)
+        
+        //copy constructor
+        public TileEffect(TileEffect effectToCopy)
         {
-            Position = pos;
+            Position = effectToCopy.Position;
             Damage = effectToCopy.Damage;
             Effect = effectToCopy.Effect;
             Name = effectToCopy.Name;
@@ -42,6 +43,11 @@ namespace HexWork.Gameplay.GameObject
             MaxHealth = effectToCopy.MaxHealth;
             MovementModifier = effectToCopy.MovementModifier;
             BlocksMovement = effectToCopy.BlocksMovement;
+        }
+
+        public override HexGameObject Copy()
+        {
+            return new TileEffect(this);
         }
     }
 }

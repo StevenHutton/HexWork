@@ -11,6 +11,8 @@ namespace HexWork.Gameplay
     {
         #region Attributes
 
+        public Character ActiveCharacter;
+
         //list of all characters in the current match ordered by initiative count
         public IEnumerable<Character> Characters => Entities.OfType<Character>();
 
@@ -20,12 +22,12 @@ namespace HexWork.Gameplay
 
         public int MaxPotential = 9;
         public int Potential = 3;
+        public int MapWith, MapHeight;
 
         #endregion
 
         #region Properties
 
-        public Character ActiveCharacter;
         public IEnumerable<Character> Heroes => LivingCharacters.Where(character => character.IsHero);
         public IEnumerable<Character> LivingCharacters => Characters.Where(c => c.IsAlive);
         public IEnumerable<Character> Enemies => LivingCharacters.Where(character => !character.IsHero);
@@ -34,6 +36,8 @@ namespace HexWork.Gameplay
 
         public BoardState(int mapWidth, int mapHeight)
         {
+            MapWith = mapWidth;
+            MapHeight = mapHeight;
             GenerateMap(mapWidth, mapHeight);
         }
 
@@ -164,9 +168,20 @@ namespace HexWork.Gameplay
             }
         }
 
-        public Character GetCharacterAtInitiativeZero()
+        public BoardState Copy()
         {
-            return LivingCharacters.OrderBy(a => a.TurnTimer).First();
+            var bs = new BoardState(this.MapWith, this.MapHeight);
+            foreach(var kvp in this)
+            {
+                bs.Add(kvp.Key, kvp.Value);
+            }
+            bs.Potential = Potential;
+            foreach(var ent in this.Entities)
+            {
+                bs.Entities.Add(ent.Copy());
+            }
+
+            return bs;
         }
     }
 }

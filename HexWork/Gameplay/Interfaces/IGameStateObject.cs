@@ -26,7 +26,7 @@ namespace HexWork.Gameplay.Interfaces
 
 	public interface IGameStateObject
     {
-		BoardState CurrentGameState { get; }
+		BoardState BoardState { get; }
 
 		void NotifyAction(HexAction action, HexGameObject entity);
 
@@ -104,14 +104,12 @@ namespace HexWork.Gameplay.Interfaces
 			MovementType movementType = MovementType.NormalMove, MovementSpeed speed = MovementSpeed.Normal);
 
 
-		List<HexCoordinate> GetAxisTilesInRange(Character objectCharacter, int range);
+		List<HexCoordinate> GetAxisTilesInRange(BoardState board, HexCoordinate position, int range);
         
         bool IsHexPassable(HexCoordinate coordinate);
 
         bool IsTileEmpty(HexCoordinate coordinate);
-
-	    Tile GetTileAtCoordinate(HexCoordinate coordinate);
-        
+		        
         bool IsHexInMap(HexCoordinate destinationPos);
         TileEffect GetTileEffectAtCoordinate(HexCoordinate targetPosition);
 

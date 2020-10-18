@@ -445,7 +445,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             var position = character.Position;
             int shortestPathLength = int.MaxValue;
             Character closestHero = null;
-            var heroes = gameState.CurrentGameState.Heroes;
+            var heroes = gameState.BoardState.Heroes;
 
             //find the closest hero
             foreach (var hero in heroes)
@@ -517,7 +517,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             var position = character.Position;
             int shortestPathLength = int.MaxValue;
             Character closestHero = null;
-            var heroes = gameState.CurrentGameState.Heroes;
+            var heroes = gameState.BoardState.Heroes;
 
             //find the closest hero
             foreach (var hero in heroes)
@@ -558,7 +558,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                         gameState.MoveEntity(character, new List<HexCoordinate> { destination });
                 }
             }
-            var zombies = gameState.CurrentGameState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie && c.IsAlive).ToList();
+            var zombies = gameState.BoardState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie && c.IsAlive).ToList();
             var rand = new Random(DateTime.Now.Millisecond);
             
             if (rand.Next(0, 10) >= zombies.Count)

@@ -20,6 +20,22 @@ namespace HexWork.Gameplay.GameObject
         public HexGameObject()
         { }
 
+        //copy constructor
+        public HexGameObject(HexGameObject toCopy)
+        {
+            Id = toCopy.Id;
+            Name = toCopy.Name;
+            Position = toCopy.Position;
+            BlocksMovement = toCopy.BlocksMovement ;
+            CanMove = toCopy.CanMove;
+            Health = toCopy.Health;
+            MaxHealth = toCopy.MaxHealth;
+            IsHero = toCopy.IsHero;
+
+            foreach(var statusEffect in toCopy.StatusEffects)
+                StatusEffects.Add(statusEffect.Copy());
+        }
+
         public HexGameObject(string name, int maxHealth)
         {
             Name = name;
@@ -31,6 +47,11 @@ namespace HexWork.Gameplay.GameObject
         {
             CanMove = false;
             Position = position;
+        }
+
+        public virtual HexGameObject Copy()
+        {
+            return new HexGameObject(this);
         }
     }
 }
