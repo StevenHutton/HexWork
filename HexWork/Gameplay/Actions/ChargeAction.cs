@@ -20,7 +20,7 @@ namespace HexWork.Gameplay.Actions
         {
         }
 
-        public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
         {
             var targetPosition = await input.GetTargetAsync(this);
 
@@ -28,16 +28,14 @@ namespace HexWork.Gameplay.Actions
                 return;
 
             //check validity
-            if (!IsValidTarget(character, targetPosition, gameState))
+            if (!IsValidTarget(state, character, targetPosition))
                 return;
 
-            gameState.NotifyAction(this, character);
-
             if (PotentialCost != 0)
-                gameState.LosePotential(PotentialCost);
+                gameState.LosePotential(state, PotentialCost);
 
             var position = character.Position;
-            var direction = GameState.GetPushDirection(position, targetPosition);
+            var direction = BoardState.GetPushDirection(position, targetPosition);
 
             List<HexCoordinate> path = new List<HexCoordinate>();
 
@@ -46,24 +44,24 @@ namespace HexWork.Gameplay.Actions
                 position += direction;
                 path.Add(position);
             }            
-            gameState.MoveEntity(character, path);
+            gameState.MoveEntity(state, character, path);
             
             var strikePosition = targetPosition + direction;
 
-            ApplyToTile(strikePosition, gameState, character, direction);
+            ApplyToTile(state, strikePosition, gameState, character, direction);
         }
 
         /// <summary>
         /// Get a list of coordinates that are valid target locations for this action for the passed in character
         /// </summary>
-        public override List<HexCoordinate> GetValidTargets(Character character, IGameStateObject gameState)
+        public override List<HexCoordinate> GetValidTargets(BoardState state, Character character)
         {
-            return gameState.GetVisibleAxisTilesInRange(character, Range + character.RangeModifier).Where(d => gameState.IsHexPassable(d)).ToList();
+            return BoardState.GetVisibleAxisTilesInRange(state, character.Position, Range + character.RangeModifier).Where(d => BoardState.IsHexPassable(state, d)).ToList();
         }
 
-        public override bool IsValidTarget(Character character, HexCoordinate targetCoordinate, IGameStateObject gameState)
+        public override bool IsValidTarget(BoardState state, Character character, HexCoordinate targetCoordinate)
         {
-            return GetValidTargets(character, gameState).Contains(targetCoordinate);
+            return GetValidTargets(state, character).Contains(targetCoordinate);
         }
     }
 }

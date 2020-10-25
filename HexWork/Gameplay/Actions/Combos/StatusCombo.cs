@@ -14,23 +14,23 @@ namespace HexWork.Gameplay.Actions
             Name = "Status Combo";
         }
 
-        public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
         {
             var targetPosition = await input.GetTargetAsync(this);
 
             if (targetPosition == null)
                 return;
 
-            var targetCharacter = gameState.GetEntityAtCoordinate(targetPosition);
+            var targetCharacter = BoardState.GetEntityAtCoordinate(state, targetPosition);
             if (targetCharacter == null)
                 return;
 
             if (!targetCharacter.HasStatus)
                 return;
 
-            var powerBonus = gameState.ApplyCombo(targetCharacter, this);
-            gameState.ApplyStatus(targetCharacter, Effect);
-            gameState.ApplyDamage(targetCharacter, (Power + powerBonus) * character.Power);
+            var powerBonus = gameState.ApplyCombo(state, targetCharacter, this);
+            gameState.ApplyStatus(state, targetCharacter, Effect);
+            gameState.ApplyDamage(state, targetCharacter, (Power + powerBonus) * character.Power);
         }
     }
 }

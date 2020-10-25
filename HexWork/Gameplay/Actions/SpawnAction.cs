@@ -8,19 +8,18 @@ namespace HexWork.Gameplay.Actions
 {
     public class SpawnAction : HexAction
     {
-        public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
         {
             //spawn zombie
             var zombie = CharacterFactory.CreateZombie();
 
-            var tile = GameState.GetNeighbours(character.Position)
-                .FirstOrDefault(gameState.IsHexPassable);
+            var tile = BoardState.GetNeighbours(character.Position)
+                .FirstOrDefault(d => BoardState.IsHexPassable(gameState.BoardState, d));
 
             if (tile != null)
             {
-                gameState.NotifyAction(this, character);
                 zombie.SpawnAt(tile);
-                gameState.SpawnCharacter(zombie);
+                gameState.AddEntity(gameState.BoardState, zombie);
             }
 
             character.HasActed = true;

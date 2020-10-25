@@ -8,16 +8,16 @@ namespace HexWork.Gameplay.GameObject
         public StatusEffect Effect;
         public float MovementModifier = 0.1f;
 
-	    public virtual async void TriggerEffect(IGameStateObject gameState, HexGameObject entity)
+	    public virtual async void TriggerEffect(BoardState state, IRulesProvider gameState, HexGameObject entity)
         {
             if (entity == null)
                 return;
 
             if(Damage > 0)
-                gameState.ApplyDamage(entity, Damage);
+                gameState.ApplyDamage(state, entity, Damage);
             
             if(Effect != null)
-                gameState.ApplyStatus(entity, Effect);
+                gameState.ApplyStatus(state, entity, Effect);
 	    }
 
         public TileEffect() : base()

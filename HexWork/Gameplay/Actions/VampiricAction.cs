@@ -22,18 +22,15 @@ namespace HexWork.Gameplay.Actions
             combo, targetPattern)
         { }
 
-        public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
         {
             //get user input
             var targetPosition = await input.GetTargetAsync(this);
             if (targetPosition == null)
                 return;
             //check validity
-            if (!_getValidTargets.Invoke(character, character.RangeModifier + this.Range, gameState)
-                .Contains(targetPosition))
+            if (!IsValidTarget(state, character, targetPosition))
                 return;
-
-            gameState.NotifyAction(this, character);
 
             int amountToHeal = 0;
 
@@ -41,7 +38,7 @@ namespace HexWork.Gameplay.Actions
             var targetTiles = GetTargetTiles(targetPosition);
             foreach (var targetTile in targetTiles)
             {
-                var targetCharacter = gameState.GetEntityAtCoordinate(targetTile);
+                var targetCharacter = BoardState.GetEntityAtCoordinate(state, targetTile);
 
                 //if no one is there, next tile
                 if (targetCharacter == null)
@@ -52,15 +49,15 @@ namespace HexWork.Gameplay.Actions
 
 
                 if (Combo != null)
-                    await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState);
-                amountToHeal += gameState.ApplyDamage(targetCharacter, Power * character.Power);
-                gameState.ApplyStatus(targetCharacter, StatusEffect);
+                    await Combo.TriggerAsync(state, character, new DummyInputProvider(targetTile), gameState);
+                amountToHeal += gameState.ApplyDamage(state, targetCharacter, Power * character.Power);
+                gameState.ApplyStatus(state, targetCharacter, StatusEffect);
             }
 
-            gameState.ApplyHealing(character, amountToHeal);
+            gameState.ApplyHealing(state, character, amountToHeal);
 
             if (PotentialCost != 0)
-                gameState.LosePotential(PotentialCost);
+                gameState.LosePotential(state, PotentialCost);
 
             character.HasActed = true;
         }

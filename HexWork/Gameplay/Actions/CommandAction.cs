@@ -9,12 +9,10 @@ namespace HexWork.Gameplay.Actions
 {
     public class CommandAction : HexAction
     {
-        public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
         {
             var zombies = gameState.BoardState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie && c.IsAlive).ToList();
             var rand = new Random(DateTime.Now.Millisecond);
-
-            gameState.NotifyAction(this, character);
             
             if (zombies.Count == 0) return;
             var zombie = zombies[rand.Next(0, zombies.Count)];

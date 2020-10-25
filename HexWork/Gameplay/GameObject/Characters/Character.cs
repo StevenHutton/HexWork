@@ -45,7 +45,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         private static Random _rand;
 
-        public Action<IGameStateObject, Character> DoTurn { get; set; }
+        public Action<IRulesProvider, Character> DoTurn { get; set; }
 
         #endregion
         
@@ -71,10 +71,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         public Character(Character ch): base(ch)
         {
             Power = ch.Power;
-            foreach(var action in ch.Actions)
-            {
-                Actions.Add(action);
-            }
+            Actions = ch.Actions;
 
             CharacterType = ch.CharacterType;
 

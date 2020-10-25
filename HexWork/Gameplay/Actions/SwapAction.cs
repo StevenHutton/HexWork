@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
@@ -24,33 +20,30 @@ namespace HexWork.Gameplay.Actions
             CanRotateTargetting = false;
         }
 
-        public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
         {
             var targetPosition = await input.GetTargetAsync(this);
             if (targetPosition == null)
                 return;
 
-            if (!_getValidTargets.Invoke(character, character.RangeModifier + this.Range, gameState)
-                .Contains(targetPosition))
+            if (!IsValidTarget(state, character, targetPosition))
                 return;
 
-            var target = gameState.GetEntityAtCoordinate(targetPosition);
+            var target = BoardState.GetEntityAtCoordinate(state, targetPosition);
 
             if(target == null)
                 return;
 
-            gameState.NotifyAction(this, character);
-
             //swap positions of character and target character.
             var characterPosition = character.Position; 
             
-            gameState.TeleportEntityTo(character, targetPosition);
-            gameState.TeleportEntityTo(target, characterPosition);
+            gameState.TeleportEntityTo(state, character, targetPosition);
+            gameState.TeleportEntityTo(state, target, characterPosition);
 
             if (Combo != null)
-                await Combo.TriggerAsync(character, new DummyInputProvider(characterPosition), gameState);
-            gameState.ApplyDamage(target, Power * character.Power);
-            gameState.ApplyStatus(target, StatusEffect);
+                await Combo.TriggerAsync(state, character, new DummyInputProvider(characterPosition), gameState);
+            gameState.ApplyDamage(state, target, Power * character.Power);
+            gameState.ApplyStatus(state, target, StatusEffect);
 
 
             character.HasActed = true;

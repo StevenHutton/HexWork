@@ -27,7 +27,7 @@ namespace HexWork.Gameplay.Actions
 
 		}
 
-		public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+		public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
 		{
 			var targetPosition = await input.GetTargetAsync(this);
 
@@ -36,28 +36,28 @@ namespace HexWork.Gameplay.Actions
 
             var position = character.Position;
 
-            if (gameState.IsValidDestination(character, targetPosition))
+            if (BoardState.IsValidDestination(state, character, targetPosition))
             {
-                var path = gameState.FindShortestPath(position, targetPosition, gameState.BoardState.Potential, character.MovementType, character.MovementSpeed);
-                gameState.LosePotential(gameState.GetPathLengthToTile(character, targetPosition, path));
-                gameState.MoveEntity(character, path);
+                var path = BoardState.FindShortestPath(state, position, targetPosition, state.Potential, character.MovementType, character.MovementSpeed);
+                gameState.LosePotential(state, BoardState.GetPathLengthToTile(state, character, targetPosition, path));
+                gameState.MoveEntity(state, character, path);
             }
             
             if(TileEffect != null)
-				gameState.CreateTileEffect(position, TileEffect);
+				gameState.CreateTileEffect(state, TileEffect, position);
         }		
 
         /// <summary>
         /// Get a list of coordinates that are valid target locations for this action for the passed in character
         /// </summary>
-        public override List<HexCoordinate> GetValidTargets(Character character, IGameStateObject gameState)
+        public override List<HexCoordinate> GetValidTargets(BoardState state, Character character)
         {
-            return gameState.GetValidDestinations(character).Keys.ToList();
+            return BoardState.GetValidDestinations(state, character).Keys.ToList();
         }
 
-        public override bool IsValidTarget(Character character, HexCoordinate targetCoordinate, IGameStateObject gameState)
+        public override bool IsValidTarget(BoardState state, Character character, HexCoordinate targetCoordinate)
         {
-            return GetValidTargets(character, gameState).Contains(targetCoordinate);
+            return GetValidTargets(state, character).Contains(targetCoordinate);
         }
 	}
 }

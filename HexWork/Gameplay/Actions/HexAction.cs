@@ -84,39 +84,37 @@ namespace HexWork.Gameplay.Actions
                 Pattern.RotateClockwise();
         }
 
-        public virtual async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+        public virtual async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
         {
 			//get user input
 	        var targetPosition = await input.GetTargetAsync(this);
 	        if (targetPosition == null)
 		        return;
 			//check validity
-	        if (!IsValidTarget(character, targetPosition, gameState))
+	        if (!IsValidTarget(state, character, targetPosition))
 		        return;
 
             if (PotentialCost != 0)
-                gameState.LosePotential(PotentialCost);
-
-            gameState.NotifyAction(this, character);
+                gameState.LosePotential(state, PotentialCost);
 
 			//loop through the affected tiles.
             var targetTiles = GetTargetTiles(targetPosition);
 	        foreach (var targetTile in targetTiles)
             {
                 var direction = PushFromCaster ?
-                    GameState.GetPushDirection(character.Position, targetTile) :
-                    GameState.GetPushDirection(targetPosition, targetTile);
+                    BoardState.GetPushDirection(character.Position, targetTile) :
+                    BoardState.GetPushDirection(targetPosition, targetTile);
 
-                ApplyToTile(targetTile, gameState, character, direction);
+                ApplyToTile(state, targetTile, gameState, character, direction);
             }
         }
 
-        public virtual async void ApplyToTile(HexCoordinate targetTile, IGameStateObject gameState, Character character, HexCoordinate direction = null)
+        public virtual async void ApplyToTile(BoardState state, HexCoordinate targetTile, IRulesProvider gameState, Character character, HexCoordinate direction = null)
         {
-            var targetCharacter = gameState.GetEntityAtCoordinate(targetTile);
+            var targetCharacter = BoardState.GetEntityAtCoordinate(state, targetTile);
                                     
             if (Combo != null)
-                await Combo.TriggerAsync(character, new DummyInputProvider(targetTile), gameState);
+                await Combo.TriggerAsync(state, character, new DummyInputProvider(targetTile), gameState);
 
             //if no one is there, next tile
             if (targetCharacter != null)
@@ -124,30 +122,30 @@ namespace HexWork.Gameplay.Actions
                 //only apply damage and status effects to legal targets
                 if (!AllySafe || targetCharacter.IsHero != character.IsHero)
                 { 
-                    gameState.ApplyDamage(targetCharacter, Power * character.Power);
-                    gameState.ApplyStatus(targetCharacter, StatusEffect);
+                    gameState.ApplyDamage(state, targetCharacter, Power * character.Power);
+                    gameState.ApplyStatus(state, targetCharacter, StatusEffect);
                 }
 
                 //everyone gets pushed
                 if (direction != null)
-                    gameState.ApplyPush(targetCharacter, direction, PushForce);
+                    gameState.ApplyPush(state, targetCharacter, direction, PushForce);
             }
 
             if (TileEffect != null)
-                gameState.CreateTileEffect(targetTile, TileEffect);
+                gameState.CreateTileEffect(state, TileEffect, targetTile);
         }
 
         /// <summary>
         /// Get a list of coordinates that are valid target locations for this action for the passed in character
         /// </summary>
-        public virtual List<HexCoordinate> GetValidTargets(Character character, IGameStateObject gameState)
+        public virtual List<HexCoordinate> GetValidTargets(BoardState state, Character character)
         {
-            return _getValidTargets?.Invoke(character, character.RangeModifier + this.Range, gameState);
+            return _getValidTargets?.Invoke(state, character.Position, character.RangeModifier + this.Range);
         }
 
-        public virtual bool IsValidTarget(Character character, HexCoordinate targetCoordinate, IGameStateObject gameState)
+        public virtual bool IsValidTarget(BoardState state, Character character, HexCoordinate targetCoordinate)
         {
-            return _getValidTargets != null && _getValidTargets.Invoke(character, character.RangeModifier + this.Range, gameState).Contains(targetCoordinate);
+            return _getValidTargets != null && _getValidTargets.Invoke(state, character.Position, character.RangeModifier + this.Range).Contains(targetCoordinate);
         }
         
         #endregion

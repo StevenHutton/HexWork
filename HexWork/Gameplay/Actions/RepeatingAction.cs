@@ -34,29 +34,23 @@ namespace HexWork.Gameplay.Actions
                 combo, targetPattern)
         { }
         
-        public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
         {
             var targetPosition = await input.GetTargetAsync(this);
 
             if (targetPosition == null)
                 return;
 
-            if (!gameState.IsValidTarget(character,
-                targetPosition,
-                character.RangeModifier + this.Range,
-                _getValidTargets))
-            {
+            if (!IsValidTarget(state, character, targetPosition))
                 return;
-            }
-            var targetTiles = GetTargetTiles(targetPosition);
 
-            gameState.NotifyAction(this, character);
+            var targetTiles = GetTargetTiles(targetPosition);
 
             for (int i = NumberOfAttacks - 1; i >= 0; i--)
             {
                 foreach (var targetTile in targetTiles)
                 {
-                    var targetCharacter = gameState.GetEntityAtCoordinate(targetTile);
+                    var targetCharacter = BoardState.GetEntityAtCoordinate(state, targetTile);
 
                     //if no one is there, next tile
                     if (targetCharacter == null)
@@ -66,14 +60,14 @@ namespace HexWork.Gameplay.Actions
                         continue;
 
                     if (Combo != null)
-                        await Combo.TriggerAsync(character, new DummyInputProvider(targetPosition), gameState);
-                    gameState.ApplyDamage(targetCharacter, Power * character.Power);
-                    gameState.ApplyStatus(targetCharacter, StatusEffect);
+                        await Combo.TriggerAsync(state, character, new DummyInputProvider(targetPosition), gameState);
+                    gameState.ApplyDamage(state, targetCharacter, Power * character.Power);
+                    gameState.ApplyStatus(state, targetCharacter, StatusEffect);
                 }
             }
 
             if (PotentialCost != 0)
-                gameState.LosePotential(PotentialCost);
+                gameState.LosePotential(state, PotentialCost);
             
             character.HasActed = true;
         }

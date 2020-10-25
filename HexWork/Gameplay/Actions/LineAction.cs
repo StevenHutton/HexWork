@@ -21,14 +21,17 @@ namespace HexWork.Gameplay.Actions
             CanRotateTargetting = false;
         }
 
-        public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
         {
             var targetPosition = await input.GetTargetAsync(this);
 
             if (targetPosition == null)
                 return;
 
-            if (!gameState.IsValidTarget(character,
+            if (_getValidTargets?.Invoke(state, character.Position, character.RangeModifier + this.Range).Contains(targetPosition) ?? false == false)
+                return;
+
+            if (!RulesProvider.IsValidTarget(state, character,
                 targetPosition,
                 character.RangeModifier + this.Range,
                 _getValidTargets))
@@ -36,7 +39,7 @@ namespace HexWork.Gameplay.Actions
                 return;
             }
 
-            var nearestNeighbor = GameState.GetNearestNeighbor(character.Position, targetPosition);
+            var nearestNeighbor = BoardState.GetNearestNeighbor(character.Position, targetPosition);
 
             var direction = targetPosition - nearestNeighbor;
 
@@ -44,15 +47,13 @@ namespace HexWork.Gameplay.Actions
 
             var targetTiles = GetTargetTiles(targetPosition);
 
-            gameState.NotifyAction(this, character);
-
             foreach (var targetTile in targetTiles)
             {
-                ApplyToTile(targetTile, gameState, character);
+                ApplyToTile(state, targetTile, gameState, character);
             }
 
             if (PotentialCost != 0)
-                gameState.LosePotential(PotentialCost);
+                gameState.LosePotential(state, PotentialCost);
 
 
             character.HasActed = true;

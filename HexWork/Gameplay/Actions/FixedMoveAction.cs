@@ -20,7 +20,7 @@ namespace HexWork.Gameplay.Actions
 
         }
 
-        public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
         {
             var targetPosition = await input.GetTargetAsync(this);
 
@@ -29,11 +29,11 @@ namespace HexWork.Gameplay.Actions
 
             var position = character.Position;
 
-            if (IsValidTarget(character, targetPosition, gameState))
-                gameState.MoveEntity(character, new List<HexCoordinate>{ targetPosition });
+            if (IsValidTarget(state, character, targetPosition))
+                gameState.MoveEntity(state, character, new List<HexCoordinate>{ targetPosition });
 
             if (TileEffect != null)
-                gameState.CreateTileEffect(position, TileEffect);
+                gameState.CreateTileEffect(state, TileEffect, position);
 
             character.CanMove = false;
         }
@@ -41,14 +41,14 @@ namespace HexWork.Gameplay.Actions
         /// <summary>
         /// Get a list of coordinates that are valid target locations for this action for the passed in character
         /// </summary>
-        public override List<HexCoordinate> GetValidTargets(Character character, IGameStateObject gameState)
+        public override List<HexCoordinate> GetValidTargets(BoardState state, Character character)
         {
-            return gameState.GetWalkableAdjacentTiles(character.Position, character.MovementType);
+            return BoardState.GetWalkableAdjacentTiles(state, character.Position, character.MovementType);
         }
 
-        public override bool IsValidTarget(Character character, HexCoordinate targetCoordinate, IGameStateObject gameState)
+        public override bool IsValidTarget(BoardState state, Character character, HexCoordinate targetCoordinate)
         {
-            return gameState.GetWalkableAdjacentTiles(character.Position, character.MovementType).Contains(targetCoordinate);
+            return BoardState.GetWalkableAdjacentTiles(state, character.Position, character.MovementType).Contains(targetCoordinate);
         }
 	}
 }

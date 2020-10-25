@@ -18,11 +18,11 @@ namespace HexWork.Gameplay
 
         StatusEffect Copy();
 
-        void StartTurn(Character character, GameState state);
+        void StartTurn(BoardState state, Character character, RulesProvider ruleProvider);
 
-        void Tick(Character character, GameState state);
+        void Tick(Character character, RulesProvider state);
 
-        void EndTurn(Character character, GameState state);
+        void EndTurn(Character character, RulesProvider state);
 
         void Reset();
     }
@@ -64,17 +64,17 @@ namespace HexWork.Gameplay
             return new StatusEffect(this);
         }
 
-        public virtual void StartTurn(Character character, GameState state)
+        public virtual void StartTurn(BoardState state, Character character, RulesProvider ruleProvider)
         {
 
         }
 
-        public virtual void Tick(Character character, GameState state)
+        public virtual void Tick(Character character, RulesProvider state)
         {
 
         }
 
-        public virtual void EndTurn(Character character, GameState state)
+        public virtual void EndTurn(Character character, RulesProvider state)
         {
             Duration -= 1;
         }
@@ -105,7 +105,7 @@ namespace HexWork.Gameplay
 		        Name = StatusEffectType.ToString();
 		}
 
-        public override void StartTurn(Character character, GameState state)
+        public override void StartTurn(BoardState state, Character character, RulesProvider ruleProvider)
         {
             character.CanMove = false;
         }
@@ -139,9 +139,9 @@ namespace HexWork.Gameplay
 		        Name = StatusEffectType.ToString();
 		}
 
-        public override void StartTurn(Character character, GameState state)
+        public override void StartTurn(BoardState state, Character character, RulesProvider ruleProvider)
         {
-            state.ApplyDamage(character, Damage, Name);
+            ruleProvider.ApplyDamage(state, character, Damage, Name);
         }
 
         public override StatusEffect Copy()
@@ -170,7 +170,7 @@ namespace HexWork.Gameplay
         }
 
 
-        public override void StartTurn(Character character, GameState state)
+        public override void StartTurn(BoardState state, Character character, RulesProvider ruleProvider)
         {
             character.HasActed = true;
             character.CanAttack = false;

@@ -18,11 +18,11 @@ namespace HexWork.Gameplay.GameObject.Characters
         private static HexAction _zombieGrab = new HexAction(name: "Zombie Grab",
             statusEffect: new ImmobalisedEffect { StatusEffectType = StatusEffectType.Rooted },
             combo: null,
-            targetDelegate: TargetingHelper.GetValidTargetTilesNoLos) { Range = 1, Power = 2 };
+            targetDelegate: BoardState.GetTilesInRange) { Range = 1, Power = 2 };
 
         private static HexAction _zombieBite = new HexAction(name: "Zombie Bite",
             combo: new DamageComboAction() { Power = 2 },
-            targetDelegate: TargetingHelper.GetValidTargetTilesNoLos) { Range = 1, Power = 2 };
+            targetDelegate: BoardState.GetTilesInRange) { Range = 1, Power = 2 };
 
         static TargetPattern _whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
             new HexCoordinate(1, -1, 0),
@@ -76,7 +76,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             var burningBolt = new HexAction("Fire Bolt",
-                TargetingHelper.GetValidAxisTargetTilesLos)
+                BoardState.GetAxisTilesInRange)
             {
                 Range = 3,
                 StatusEffect = _fireStatus,
@@ -85,7 +85,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             var exBurningBoltAction = new HexAction("Fire Wall!",
-                TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
+                BoardState.GetVisibleAxisTilesInRangeIgnoreUnits,
                 _fireStatus, null,
                 _rotatingLinePattern)
             {
@@ -95,7 +95,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             var ringofFire = new HexAction("Ring of Fire!",
-                TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits,
+                BoardState.GetVisibleAxisTilesInRangeIgnoreUnits,
                 _fireStatus, null,
                 _whirlWindTargetPattern)
             {
@@ -104,7 +104,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 TileEffect = _fireEffect
             };
 
-            var lightningBolt = new HexAction("Lightning Bolt", TargetingHelper.GetValidAxisTargetTilesLosIgnoreUnits, null, new SpreadStatusCombo() { PushForce = 1, PushFromCaster = false})
+            var lightningBolt = new HexAction("Lightning Bolt", BoardState.GetVisibleAxisTilesInRangeIgnoreUnits, null, new SpreadStatusCombo() { PushForce = 1, PushFromCaster = false})
             {
                 Range = 3,
                 Power = 2,
@@ -125,7 +125,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         public static Character CreateGunner()
         {
             var shotgunBlast = new LineAction("Shotgun Blast!",
-                TargetingHelper.GetValidAxisTargetTilesLos,
+                BoardState.GetVisibleAxisTilesInRange,
                 null, new DamageComboAction(),
                 _cornerPattern)
             {
@@ -136,7 +136,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             var shovingSnipeAction = new HexAction(name: "Shoving Snipe",
-                targetDelegate: TargetingHelper.GetValidAxisTargetTilesLos,
+                targetDelegate: BoardState.GetVisibleAxisTilesInRange,
                 combo: null)
             {
                 Power = 2,
@@ -145,7 +145,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             var detonatingSnipeActionEx = new HexAction("Perfect Snipe!",
-                TargetingHelper.GetValidAxisTargetTilesLos,
+                BoardState.GetVisibleAxisTilesInRange,
                 null,
                 new DamageComboAction { Power = 5 })
             {
@@ -173,7 +173,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         public static Character CreateNinja()
         {
             var shurikenHailAction = new HexAction("Shuriken",
-                TargetingHelper.GetValidTargetTilesLos,
+                BoardState.GetVisibleTilesInRange,
                 _bleedingStatus)
             {
                 Range = 2,
@@ -183,7 +183,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             var shurikenPattern = new TargetPattern(new HexCoordinate(-1, 1), new HexCoordinate(0, -1),
                 new HexCoordinate(1, 0));
             var shurikenHailActionEx = new HexAction("Shuriken Hail!",
-                TargetingHelper.GetValidTargetTilesLosIgnoreUnits,
+                BoardState.GetVisibleAxisTilesInRangeIgnoreUnits,
                 _bleedingStatus,
                 null, shurikenPattern)
             {
@@ -191,7 +191,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 Range = 3
             };
 
-            var swapAction = new SwapAction("Swap Positions", TargetingHelper.GetValidTargetTilesLos)
+            var swapAction = new SwapAction("Swap Positions", BoardState.GetVisibleTilesInRange)
             {
                 Power = 3,
                 AllySafe = false,
@@ -218,7 +218,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public static Character CreateIronSoul()
         {
-            var pushingFist = new HexAction("Heavy Blow", TargetingHelper.GetValidTargetTilesLos, null, new StatusCombo()
+            var pushingFist = new HexAction("Heavy Blow", BoardState.GetVisibleTilesInRange, null, new StatusCombo()
             {
                 Power = 2,
                 Effect = new ImmobalisedEffect()
@@ -232,9 +232,9 @@ namespace HexWork.Gameplay.GameObject.Characters
                 PushForce = 2
             };
 
-            var charge = new ChargeAction("Charge", TargetingHelper.GetValidAxisTargetTilesLos) { Range = 2, Power = 2, PotentialCost = 1, PushForce = 1 };
+            var charge = new ChargeAction("Charge", BoardState.GetVisibleAxisTilesInRange) { Range = 2, Power = 2, PotentialCost = 1, PushForce = 1 };
 
-            var stomp = new HexAction("Stomp", TargetingHelper.GetValidTargetTilesLos, new ImmobalisedEffect(), null,
+            var stomp = new HexAction("Stomp", BoardState.GetVisibleTilesInRange, new ImmobalisedEffect(), null,
                 _whirlWindTargetPattern)
             {
                 Power = 1,
@@ -243,7 +243,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             var exDetonatingSlash =
-            new HexAction("Massive Detonation!", TargetingHelper.GetValidTargetTilesLos, null,
+            new HexAction("Massive Detonation!", BoardState.GetVisibleTilesInRange, null,
                 new ExploderCombo
                 {
                     Power = 2,
@@ -278,14 +278,14 @@ namespace HexWork.Gameplay.GameObject.Characters
         {
             var spreadStatusCombo = new SpreadStatusCombo { AllySafe = true, Power = 1 };
             var detonatingSlash =
-              new HexAction("Detonating Strike!", TargetingHelper.GetValidTargetTilesLos, null, spreadStatusCombo)
+              new HexAction("Detonating Strike!", BoardState.GetVisibleTilesInRange, null, spreadStatusCombo)
               {
                   Range = 1,
                   PotentialCost = 1
               };
 
             var earthQuakeStrike = new LineAction("Earthquake Strike",
-                TargetingHelper.GetValidAxisTargetTilesLos,
+                BoardState.GetVisibleAxisTilesInRange,
                 new ImmobalisedEffect(),
                 null,
                 _xAxisLinePattern)
@@ -294,7 +294,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 Power = 2
             };
 
-            var whirlwindAttack = new HexAction("Spin Attack", TargetingHelper.GetValidTargetTilesLos, null, new DamageComboAction(),
+            var whirlwindAttack = new HexAction("Spin Attack", BoardState.GetVisibleTilesInRange, null, new DamageComboAction(),
                 _whirlWindTargetPattern)
             {
                 Power = 2,
@@ -440,12 +440,13 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         #region TurnFunctions
 
-        public static void ZombieTurn(IGameStateObject gameState, Character character)
+        public static void ZombieTurn(IRulesProvider gameState, Character character)
         {
             var position = character.Position;
             int shortestPathLength = int.MaxValue;
             Character closestHero = null;
             var heroes = gameState.BoardState.Heroes;
+            var state = gameState.BoardState;
 
             //find the closest hero
             foreach (var hero in heroes)
@@ -454,7 +455,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 if (nearestNeighbour == null)
                     continue;
 
-                var path = gameState.FindShortestPath(position, nearestNeighbour, 200);
+                var path = BoardState.FindShortestPath(gameState.BoardState, position, nearestNeighbour, 200);
                 if (path == null) continue;
                 if (path.Count >= shortestPathLength) continue;
                 shortestPathLength = path.Count;
@@ -467,14 +468,13 @@ namespace HexWork.Gameplay.GameObject.Characters
             foreach (var action in character.Actions)
             {
                 //if we can hit the hero, hit them now and end turn. - don't move.
-                if (action.IsValidTarget(character, closestHero.Position, gameState) &&
+                if (action.IsValidTarget(state, character, closestHero.Position) &&
                     action.IsDetonator == closestHero.HasStatus
                     && action.IsDetonator == closestHero.HasStatus)
                 {
-                    gameState.NotifyAction(action, character);
-                    gameState.ApplyDamage(closestHero, action.Power * character.Power);
-                    gameState.ApplyStatus(closestHero, action.StatusEffect);
-                    action.Combo?.TriggerAsync(character, new DummyInputProvider(closestHero.Position), gameState);
+                    gameState.ApplyDamage(state, closestHero, action.Power * character.Power);
+                    gameState.ApplyStatus(state, closestHero, action.StatusEffect);
+                    action.Combo?.TriggerAsync(state, character, new DummyInputProvider(closestHero.Position), gameState);
                     return;
                 }
             }
@@ -483,14 +483,14 @@ namespace HexWork.Gameplay.GameObject.Characters
             if (!character.CanMove) return;
 
             //get all the tiles to which the zombie COULD move
-            var tilesInRange = character.Actions.FirstOrDefault(data => data.Name == "Shamble")?.GetValidTargets(character, gameState) ?? new List<HexCoordinate>();
+            var tilesInRange = character.Actions.FirstOrDefault(data => data.Name == "Shamble")?.GetValidTargets(state, character) ?? new List<HexCoordinate>();
 
             float shortestDistance = 100;
             HexCoordinate destination = null;
             //look at all the possible destinations and get the one which is closest to a hero
             foreach (var tile in tilesInRange)
             {
-                var distanceToHeroes = heroes.Select(data => GameState.DistanceBetweenPoints(tile, data.Position));
+                var distanceToHeroes = heroes.Select(data => BoardState.DistanceBetweenPoints(tile, data.Position));
                 var distance = (float)distanceToHeroes.Sum() / (float)heroes.Count();
                 if (distance < shortestDistance)
                 {
@@ -499,25 +499,25 @@ namespace HexWork.Gameplay.GameObject.Characters
                 }
             }
             if (destination != null)
-                gameState.MoveEntity(character, new List<HexCoordinate> { destination });
+                gameState.MoveEntity(state, character, new List<HexCoordinate> { destination });
             foreach (var action in character.Actions.Where(action =>
-                action.IsValidTarget(character, closestHero.Position, gameState)
+                action.IsValidTarget(state, character, closestHero.Position)
                 && action.IsDetonator == closestHero.HasStatus))
             {
-                gameState.NotifyAction(action, character);
-                gameState.ApplyDamage(closestHero, action.Power * character.Power);
-                gameState.ApplyStatus(closestHero, action.StatusEffect);
-                action.Combo?.TriggerAsync(character, new DummyInputProvider(closestHero.Position), gameState);
+                gameState.ApplyDamage(state, closestHero, action.Power * character.Power);
+                gameState.ApplyStatus(state, closestHero, action.StatusEffect);
+                action.Combo?.TriggerAsync(state, character, new DummyInputProvider(closestHero.Position), gameState);
                 return;
             }
         }
 
-        private static void ZombieKingTurn(IGameStateObject gameState, Character character)
+        private static void ZombieKingTurn(IRulesProvider gameState, Character character)
         {
             var position = character.Position;
             int shortestPathLength = int.MaxValue;
             Character closestHero = null;
             var heroes = gameState.BoardState.Heroes;
+            var state = gameState.BoardState;
 
             //find the closest hero
             foreach (var hero in heroes)
@@ -525,7 +525,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 var nearestNeighbour = GetNearestPassableTileAdjacentToDestination(position, hero.Position, gameState);
                 if (nearestNeighbour == null)
                     continue;
-                var path = gameState.FindShortestPath(position, nearestNeighbour, 200);
+                var path = BoardState.FindShortestPath(gameState.BoardState, position, nearestNeighbour, 200);
                 
                 if (path == null) continue;
                 if (path.Count >= shortestPathLength) continue;
@@ -539,14 +539,14 @@ namespace HexWork.Gameplay.GameObject.Characters
                 if (shortestPathLength <= 3)
                 {
                     //get all the tiles to which the zombie COULD move
-                    var tilesInRange = character.Actions.FirstOrDefault(data => data.Name == "Shamble")?.GetValidTargets(character, gameState) ?? new List<HexCoordinate>();
+                    var tilesInRange = character.Actions.FirstOrDefault(data => data.Name == "Shamble")?.GetValidTargets(state, character) ?? new List<HexCoordinate>();
 
                     float greatestDistance = 0;
                     HexCoordinate destination = null;
                     //look at all the possible destinations and get the one which is the furthest average distance away from heroes
                     foreach (var tile in tilesInRange)
                     {
-                        var distanceToHeroes = heroes.Select(data => GameState.DistanceBetweenPoints(tile, data.Position));
+                        var distanceToHeroes = heroes.Select(data => BoardState.DistanceBetweenPoints(tile, data.Position));
                         var distance = (float)distanceToHeroes.Sum() / (float)heroes.Count();
                         if (distance > greatestDistance)
                         {
@@ -555,7 +555,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                         }
                     }
                     if (destination != null)
-                        gameState.MoveEntity(character, new List<HexCoordinate> { destination });
+                        gameState.MoveEntity(state, character, new List<HexCoordinate> { destination });
                 }
             }
             var zombies = gameState.BoardState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie && c.IsAlive).ToList();
@@ -564,20 +564,20 @@ namespace HexWork.Gameplay.GameObject.Characters
             if (rand.Next(0, 10) >= zombies.Count)
             {
                 character.Actions.FirstOrDefault(data => data.Name == "Summon Zombie")?
-                    .TriggerAsync(character, null, gameState);
+                    .TriggerAsync(state, character, null, gameState);
             }
             else
             {
                 character.Actions.FirstOrDefault(data => data.Name == "Zombie Rush")
-                    ?.TriggerAsync(character, null, gameState);
+                    ?.TriggerAsync(state, character, null, gameState);
             }
         }
 
         #region Turn Helper
 
-        private static HexCoordinate GetNearestPassableTileAdjacentToDestination(HexCoordinate start, HexCoordinate end, IGameStateObject gameState)
+        private static HexCoordinate GetNearestPassableTileAdjacentToDestination(HexCoordinate start, HexCoordinate end, IRulesProvider gameState)
         {
-            var neighbours = GameState.GetNeighbours(end);
+            var neighbours = BoardState.GetNeighbours(end);
 
             //if the start tile is adjacent then there isn't a nearer tile.
             if (neighbours.Contains(start))
@@ -591,13 +591,13 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 foreach (var neighbor in neighbours)
                 {
-                    var delta = GameState.DistanceBetweenPoints(start, neighbor);
+                    var delta = BoardState.DistanceBetweenPoints(start, neighbor);
                     if (delta <= distance)
                     {
                         nearest = neighbor;
                         distance = delta;
 
-                        if (gameState.IsHexPassable(neighbor))
+                        if (BoardState.IsHexPassable(gameState.BoardState, neighbor))
                         { 
                             found = true;
                             result = neighbor;
@@ -605,7 +605,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                     }
                 }
 
-                neighbours = GameState.GetNeighbours(nearest);
+                neighbours = BoardState.GetNeighbours(nearest);
                 if (neighbours.Contains(end))
                     neighbours.Remove(end);
 

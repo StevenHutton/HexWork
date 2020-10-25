@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
@@ -16,22 +12,22 @@ namespace HexWork.Gameplay.Actions
             Name = "Healing Combo";
         }
 
-        public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
         {
             var targetPosition = await input.GetTargetAsync(this);
 
             if (targetPosition == null)
                 return;
 
-            var targetCharacter = gameState.GetEntityAtCoordinate(targetPosition);
+            var targetCharacter = BoardState.GetEntityAtCoordinate(state, targetPosition);
             if (targetCharacter == null)
                 return;
 
             if (!targetCharacter.HasStatus)
                 return;
             
-            var powerBonus = gameState.ApplyCombo(targetCharacter, this);
-            gameState.ApplyHealing(character, (Power + powerBonus) * character.Power);
+            var powerBonus = gameState.ApplyCombo(state, targetCharacter, this);
+            gameState.ApplyHealing(state, character, (Power + powerBonus) * character.Power);
         }
     }
 }

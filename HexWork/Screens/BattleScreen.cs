@@ -41,7 +41,7 @@ namespace HexWork.UI
         private readonly List<InitiativeTrackButton> _initiativeTrack = new List<InitiativeTrackButton>();
 
         private List<UiAction> _uiActions = new List<UiAction>();
-	    private PreviewGameStateProxy _gameStateProxy;
+	    private PreviewRulesProvider _gameStateProxy;
 
         private Character _selectedCharacter;
         private HexCoordinate _focusedTile = null;
@@ -51,7 +51,7 @@ namespace HexWork.UI
 
         private HexAction SelectedHexAction = null;
 
-        private GameState GameState;
+        private RulesProvider GameState;
 
         #region Rendering Attributes
 
@@ -133,7 +133,7 @@ namespace HexWork.UI
             _hexScale = 0.4f * _screenWidth / 1920;
             _hexScaleV = new Vector2(_hexScale);
 
-            GameState = new GameState();
+            GameState = new RulesProvider();
             
             GameState.CharacterMoveEvent += OnCharacterMove;
             GameState.CharacterTeleportEvent += OnCharacterTeleport;
@@ -168,7 +168,7 @@ namespace HexWork.UI
             _effectFont = game.Content.Load<SpriteFont>("MenuFont");
 
             _spriteBatch = new SpriteBatch(game.GraphicsDevice);
-	        _gameStateProxy = new PreviewGameStateProxy(_hexGame);
+	        _gameStateProxy = new PreviewRulesProvider(_hexGame);
 
             GameState.StartGame();
         }
@@ -302,7 +302,7 @@ namespace HexWork.UI
 
 				_gameStateProxy.SpriteBatchBegin();
 
-		        SelectedHexAction?.TriggerAsync(_selectedCharacter,
+		        SelectedHexAction?.TriggerAsync(GameState.BoardState, _selectedCharacter,
 			        new DummyInputProvider(_cursorPosition), _gameStateProxy);
 					
 		        _gameStateProxy.SpriteBatchEnd();
@@ -770,11 +770,11 @@ namespace HexWork.UI
                 AddButton(name,
                     async (input) =>
                     {
-                        await action.TriggerAsync(_selectedCharacter, input, GameState);
+                        await action.TriggerAsync(GameState.BoardState, _selectedCharacter, input, GameState);
                         var followUpAction = action.FollowUpAction;
                         while (followUpAction != null)
                         {
-                            await followUpAction.TriggerAsync(_selectedCharacter, input,
+                            await followUpAction.TriggerAsync(GameState.BoardState, _selectedCharacter, input,
                                 GameState);
                             followUpAction = followUpAction.FollowUpAction;
                         }
@@ -823,7 +823,7 @@ namespace HexWork.UI
 		/// <returns></returns>
 		private List<HexCoordinate> GetHighlightedCoordinates()
 		{
-            return SelectedHexAction?.GetValidTargets(_selectedCharacter, GameState);
+            return SelectedHexAction?.GetValidTargets(GameState.BoardState, _selectedCharacter);
 		}
 
 		private HexCoordinate GetHexCoordinate(float posX, float posY)

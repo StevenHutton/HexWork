@@ -11,9 +11,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace HexWork.UI
 {
-    public class PreviewGameStateProxy : IGameStateObject, IDisposable
+    public class PreviewRulesProvider : IRulesProvider, IDisposable
     {
-        public IGameStateObject gameState;
+        public IRulesProvider gameState;
 
 	    private SpriteBatch _spriteBatch;
 
@@ -61,7 +61,7 @@ namespace HexWork.UI
 		    _spriteBatch.End();
 		}
 
-        public PreviewGameStateProxy(HexWork game)
+        public PreviewRulesProvider(HexWork game)
         {
 	        _screenHeight = game.ScreenHeight;
 	        _screenWidth = game.ScreenWidth;
@@ -90,9 +90,9 @@ namespace HexWork.UI
             _hexGame = (HexWork)game;
         }
 
-	    public Dictionary<HexCoordinate, int> GetValidDestinations(Character objectCharacter)
+	    public Dictionary<HexCoordinate, int> GetValidDestinations(BoardState state, Character objectCharacter)
 	    {
-		    var destinations =  gameState.GetValidDestinations(objectCharacter);
+		    var destinations = BoardState.GetValidDestinations(state, objectCharacter);
 
             foreach (var coord in destinations)
             {
@@ -105,9 +105,9 @@ namespace HexWork.UI
             return destinations;
         }
 
-	    public bool IsValidDestination(Character objectCharacter, HexCoordinate targetPosition)
+	    public bool IsValidDestination(BoardState state, Character objectCharacter, HexCoordinate targetPosition)
         {
-			var isValid = GetValidDestinations(objectCharacter).Keys.Contains(targetPosition);
+			var isValid = BoardState.GetValidDestinations(state, objectCharacter).Keys.Contains(targetPosition);
 
 	        if (!isValid)
 	        {
@@ -117,15 +117,15 @@ namespace HexWork.UI
 	        }
 	        else
 	        {
-				FindShortestPath(objectCharacter.Position, targetPosition, gameState.BoardState.Potential, objectCharacter.MovementType, objectCharacter.MovementSpeed);
+				FindShortestPath(state, objectCharacter.Position, targetPosition, gameState.BoardState.Potential, objectCharacter.MovementType, objectCharacter.MovementSpeed);
 			}
 
 	        return isValid;
         }
 
-	    public bool IsValidTarget(Character objectCharacter, HexCoordinate targetPosition, int range, GetValidTargetsDelegate targetDelegate)
+	    public bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, GetValidTargetsDelegate targetDelegate)
 	    {
-		    var isValid = gameState.IsValidTarget(objectCharacter, targetPosition, range, targetDelegate);
+		    var isValid = RulesProvider.IsValidTarget(state, objectCharacter, targetPosition, range, targetDelegate);
 
 		    if (!isValid)
 		    {
@@ -137,10 +137,10 @@ namespace HexWork.UI
 		    return isValid;
 	    }
 
-		public List<HexCoordinate> FindShortestPath(HexCoordinate startPosition, HexCoordinate destination, int availableMovement,
+		public List<HexCoordinate> FindShortestPath(BoardState state, HexCoordinate startPosition, HexCoordinate destination, int availableMovement,
             MovementType movementType = MovementType.NormalMove, MovementSpeed speed = MovementSpeed.Normal)
 	    {
-			var path = gameState.FindShortestPath(startPosition, destination, availableMovement, movementType, speed);
+			var path = BoardState.FindShortestPath(state, startPosition, destination, availableMovement, movementType, speed);
 		    if (path == null)
 			    return null;
 
@@ -154,29 +154,28 @@ namespace HexWork.UI
 			return new List<HexCoordinate>();
 	    }
 
-	    public List<HexCoordinate> GetAxisTilesInRange(Character objectCharacter, int range)
-	    {
-		    return gameState.GetAxisTilesInRange(objectCharacter, range);
-	    }
+        public BoardState AddEntity(BoardState state, HexGameObject entity) { return state; }
 
 	    /// <summary>
 		/// Intentionally does nothing
 		/// </summary>
 		/// <param name="character"></param>
 		/// <param name="targetPosition"></param>
-        public void MoveEntity(HexGameObject entity, List<HexCoordinate> path)
+        public BoardState MoveEntity(BoardState state, HexGameObject entity, List<HexCoordinate> path)
         {
-            ResolveTileEffects(entity, path);
-            ResolveTerrainEffects(entity, path);
+            ResolveTileEffects(state, entity, path);
+            ResolveTerrainEffects(state, entity, path);
+            return state;
         }
 
-        public void TeleportEntityTo(HexGameObject entity, HexCoordinate position)
+        public BoardState TeleportEntityTo(BoardState state, HexGameObject entity, HexCoordinate position)
         {
-	        ResolveTileEffects(entity, new List<HexCoordinate> { position});
-			ResolveTerrainEffects(entity, new List<HexCoordinate>{position});
-		}
+	        ResolveTileEffects(state, entity, new List<HexCoordinate> { position });
+			ResolveTerrainEffects(state, entity, new List<HexCoordinate>{ position }); 
+            return state;
+        }
 
-	    private void ResolveTileEffects(HexGameObject entity, List<HexCoordinate> path)
+	    private void ResolveTileEffects(BoardState state, HexGameObject entity, List<HexCoordinate> path)
 	    {
 		    //don't count terrain effects from a tile you're standing. We don't punish players for e.g. leaving lava.
 		    if (path.First() == entity.Position)
@@ -191,16 +190,21 @@ namespace HexWork.UI
 			    if (tileEffect == null)
 				    continue;
 
-                ResolveTileEffect(tileEffect, entity);
+                ResolveTileEffect(state, tileEffect, entity);
             }
 		}
 
-        public void ResolveTileEffect(TileEffect effect, HexGameObject entity = null)
+        public void ResolveTileEffect(BoardState state, TileEffect effect, HexGameObject entity = null)
         {
-            effect.TriggerEffect(this, entity);
+            effect.TriggerEffect(state, this, entity);
         }
 
-        private void ResolveTerrainEffects(HexGameObject entity, List<HexCoordinate> path)
+        public BoardState CreateTileEffect(BoardState state, TileEffect effect, HexCoordinate location)
+        {
+            return state;
+        }
+
+        private void ResolveTerrainEffects(BoardState state, HexGameObject entity, List<HexCoordinate> path)
         {
             if (path == null || path.Count == 0)
                 return;
@@ -213,11 +217,11 @@ namespace HexWork.UI
 
 			foreach (var position in path)
             {
-                ResolveTerrainEffect(entity, position);
+                ResolveTerrainEffect(state, entity, position);
             }
         }
 
-        private void ResolveTerrainEffect(HexGameObject entity, HexCoordinate position)
+        private void ResolveTerrainEffect(BoardState state, HexGameObject entity, HexCoordinate position)
         {
             var tile = gameState.BoardState[position];
             switch (tile.TerrainType)
@@ -227,7 +231,7 @@ namespace HexWork.UI
                 case TerrainType.Water:
                     break;
                 case TerrainType.Lava:
-                    ApplyStatus(entity, new StatusEffect{StatusEffectType = StatusEffectType.Burning});
+                    ApplyStatus(state, entity, new StatusEffect{StatusEffectType = StatusEffectType.Burning});
                     break;
                 case TerrainType.Ice:
                     break;
@@ -246,31 +250,17 @@ namespace HexWork.UI
             }
         }
 
-        /// <summary>
-        /// intentionally does nothing
-        /// </summary>
-        /// <param name="action"></param>
-        public void NotifyAction(HexAction action, HexGameObject entity)
-        {
-
-        }
-
-        public HexGameObject GetEntityAtCoordinate(HexCoordinate coordinate)
-        {
-	        return gameState.GetEntityAtCoordinate(coordinate);
-        }
-
-        public int ApplyDamage(HexGameObject entity, int power, string message = null)
+        public int ApplyDamage(BoardState state, HexGameObject entity, int power, string message = null)
         {
 	        var position = GetHexScreenPosition(entity.Position);
             _spriteBatch.Draw(_damageTexture, position, null, Color.Red, 0.0f, new Vector2(128), _hexScaleV, SpriteEffects.None, 0.0f );
 	        return power;
         }
 
-        public void CheckDied(HexGameObject entity)
+        public void CheckDied(BoardState state, HexGameObject entity)
         { }
 
-        public void ApplyHealing(Character character, int power)
+        public void ApplyHealing(BoardState state, Character character, int power)
         {
             var position = GetHexScreenPosition(character.Position);
 
@@ -278,7 +268,7 @@ namespace HexWork.UI
                 SpriteEffects.None, 0.0f);
         }
 
-        public void ApplyStatus(HexGameObject entity, StatusEffect effect)
+        public void ApplyStatus(BoardState state, HexGameObject entity, StatusEffect effect)
         {
             if (effect == null) return;
 
@@ -313,12 +303,12 @@ namespace HexWork.UI
 		        0.0f);
 		}
 
-        public void CreateTileEffect(HexCoordinate location, TileEffect effect)
+        public BoardState CreateTileEffect(BoardState state, HexCoordinate location, TileEffect effect)
         {
             Texture2D statusTexture = _hexGame.Content.Load<Texture2D>(effect.Name);
 
             if (statusTexture == null)
-                return;
+                return state;
 
             var position = GetHexScreenPosition(location);
 
@@ -336,14 +326,16 @@ namespace HexWork.UI
                 new Vector2(scaleFactor), 
                 SpriteEffects.None,
                 0.0f);
+
+            return state;
         }
 
-        public int ApplyCombo(HexGameObject entity, DamageComboAction combo)
+        public int ApplyCombo(BoardState state, HexGameObject entity, DamageComboAction combo)
         {
             return 0;
         }
 
-        public void ApplyPush(HexGameObject entity, HexCoordinate direction, int pushForce = 0)
+        public void ApplyPush(BoardState state, HexGameObject entity, HexCoordinate direction, int pushForce = 0)
         {
 	        var characterPos = entity.Position;
 	        var destinationPos = characterPos + direction;
@@ -356,18 +348,18 @@ namespace HexWork.UI
                 var rotation = (float)Math.Atan2(pushVector.Y, pushVector.X);
                 var drawPosition = characterScreenPos + (pushVector * 0.8f);
 
-                if (!IsHexInMap(destinationPos))
+                if (!BoardState.IsHexInMap(destinationPos))
                 {
                     _spriteBatch.Draw(_damageTexture, characterScreenPos, null, Color.White, 0.0f, new Vector2(128),
                         _hexScaleV, SpriteEffects.None, 0.0f);
                     pushForce = 0;
                     break;
                 }
-                if (IsHexPassable(destinationPos))
+                if (BoardState.IsHexPassable(state, destinationPos))
                 {
                     _spriteBatch.Draw(_arrowTexture, drawPosition, null, Color.White, rotation, new Vector2(64, 64), _hexScale, SpriteEffects.None, 0.0f);
                 }
-                else if (!IsTileEmpty(destinationPos))
+                else if (!BoardState.IsTileEmpty(state, destinationPos))
                 {
                     _spriteBatch.Draw(_damageTexture, characterScreenPos, null, Color.White, 0.0f, new Vector2(128), _hexScaleV, SpriteEffects.None, 0.0f);
                     _spriteBatch.Draw(_damageTexture, destinationScreenPos, null, Color.White, 0.0f, new Vector2(128),
@@ -390,55 +382,9 @@ namespace HexWork.UI
             }
         }
 
-        public void LosePotential(int potentialCost)
+        public void LosePotential(BoardState state, int potentialCost)
         {
-            //throw new System.NotImplementedException();
-        }
 
-	    public List<HexCoordinate> GetVisibleAxisTilesInRange(Character objectCharacter, int range)
-	    {
-		    return gameState.GetVisibleAxisTilesInRange(objectCharacter, range);
-	    }
-
-	    public List<HexCoordinate> GetVisibleAxisTilesInRangeIgnoreUnits(Character objectCharacter, int range)
-		{
-			return gameState.GetVisibleAxisTilesInRangeIgnoreUnits(objectCharacter, range);
-		}
-
-		public List<HexCoordinate> GetVisibleTilesInRange(Character objectCharacter, int range)
-		{
-			return gameState.GetVisibleTilesInRange(objectCharacter, range);
-
-		}
-
-		public List<HexCoordinate> GetVisibleTilesInRangeIgnoreUnits(Character objectCharacter, int range)
-		{
-			return gameState.GetVisibleTilesInRangeIgnoreUnits(objectCharacter, range);
-		}
-
-		public List<HexCoordinate> GetTilesInRange(Character objectCharacter, int range)
-		{
-			return gameState.GetTilesInRange(objectCharacter, range);
-		}
-
-        public bool IsHexPassable(HexCoordinate coordinate)
-        {
-            return gameState.IsHexPassable(coordinate);
-        }
-
-        public bool IsTileEmpty(HexCoordinate coordinate)
-        {
-            return gameState.IsTileEmpty(coordinate);
-        }
-
-        public bool IsHexInMap(HexCoordinate coordinate)
-        {
-            return gameState.IsHexInMap(coordinate);
-        }
-
-        public TileEffect GetTileEffectAtCoordinate(HexCoordinate targetPosition)
-        {
-            return gameState.GetTileEffectAtCoordinate(targetPosition);
         }
 
         #region HelperMethods
@@ -451,30 +397,20 @@ namespace HexWork.UI
 		    return new Vector2(posX, posY) + _screenCenter;
 	    }
 
-        public int GetPathLengthToTile(Character objectCharacter, HexCoordinate destination, List<HexCoordinate> path)
-        {
-            return gameState.GetPathLengthToTile(objectCharacter, destination, path);
-        }
-
-        public void RemoveTileEffect(TileEffect effect)
+        public void RemoveTileEffect(BoardState state, TileEffect effect)
         { }
 
         #endregion
 
-        public void NextTurn(Character activeCharacter) { }
-
-        public void GainPotential(int potentialGain = 1) { }
+        public void NextTurn(BoardState state, Character activeCharacter) { }
+        
+        public void GainPotential(BoardState state, int potentialGain = 1) { }
 
         #region IDisposable
 
         public void Dispose()
         {
             _spriteBatch?.Dispose();
-        }
-
-        public List<HexCoordinate> GetWalkableAdjacentTiles(HexCoordinate position, MovementType movementType)
-        {
-            return gameState.GetWalkableAdjacentTiles(position, movementType);
         }
 
         public void SpawnCharacter(Character character)

@@ -26,7 +26,7 @@ namespace HexWork.Gameplay.GameObject
             Id = toCopy.Id;
             Name = toCopy.Name;
             Position = toCopy.Position;
-            BlocksMovement = toCopy.BlocksMovement ;
+            BlocksMovement = toCopy.BlocksMovement;
             CanMove = toCopy.CanMove;
             Health = toCopy.Health;
             MaxHealth = toCopy.MaxHealth;

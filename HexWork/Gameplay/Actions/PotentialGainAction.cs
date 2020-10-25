@@ -26,12 +26,12 @@ namespace HexWork.Gameplay.Actions
         /// <summary>
         /// immediately gains one potential and ends turn.
         /// </summary>
-        public override async Task TriggerAsync(Character character, IInputProvider input, IGameStateObject gameState)
+        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
         {
             if(character.CanAttack && character.IsHero)
-                gameState.GainPotential();
+                gameState.GainPotential(state);
             
-            gameState.NextTurn(character);
+            gameState.NextTurn(state, character);
         }
     }
 }
