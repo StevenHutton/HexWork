@@ -14,10 +14,10 @@ namespace HexWork.Gameplay.Actions
     public class VampiricAction : HexAction
     {
         public VampiricAction(string name,
-            GetValidTargetsDelegate targetDelegate,
+            TargetType targetType,
             StatusEffect statusEffect = null,
             DamageComboAction combo = null, TargetPattern targetPattern = null) : base(name,
-            targetDelegate,
+            targetType,
             statusEffect,
             combo, targetPattern)
         { }
@@ -28,8 +28,9 @@ namespace HexWork.Gameplay.Actions
             var targetPosition = await input.GetTargetAsync(this);
             if (targetPosition == null)
                 return;
+
             //check validity
-            if (!IsValidTarget(state, character, targetPosition))
+            if (!gameState.IsValidTarget(state, character, targetPosition, character.RangeModifier + Range, TargetType))
                 return;
 
             int amountToHeal = 0;

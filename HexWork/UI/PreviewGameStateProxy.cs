@@ -90,42 +90,9 @@ namespace HexWork.UI
             _hexGame = (HexWork)game;
         }
 
-	    public Dictionary<HexCoordinate, int> GetValidDestinations(BoardState state, Character objectCharacter)
+	    public bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType)
 	    {
-		    var destinations = BoardState.GetValidDestinations(state, objectCharacter);
-
-            foreach (var coord in destinations)
-            {
-                var postion = coord.Key;
-                var movementCost = coord.Value.ToString();
-                
-                _spriteBatch.DrawString(_font, movementCost, GetHexScreenPosition(postion), Color.White, 0.0f, _font.MeasureString(movementCost) / 2, Vector2.One, SpriteEffects.None, 0.0f);
-            }
-            
-            return destinations;
-        }
-
-	    public bool IsValidDestination(BoardState state, Character objectCharacter, HexCoordinate targetPosition)
-        {
-			var isValid = BoardState.GetValidDestinations(state, objectCharacter).Keys.Contains(targetPosition);
-
-	        if (!isValid)
-	        {
-		        var pos = GetHexScreenPosition(targetPosition);
-
-				_spriteBatch.Draw(_invalidTexture, pos, null, Color.White, 0.0f, _hexCenter, _hexScaleV, SpriteEffects.None, 0.0f );
-	        }
-	        else
-	        {
-				FindShortestPath(state, objectCharacter.Position, targetPosition, gameState.BoardState.Potential, objectCharacter.MovementType, objectCharacter.MovementSpeed);
-			}
-
-	        return isValid;
-        }
-
-	    public bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, GetValidTargetsDelegate targetDelegate)
-	    {
-		    var isValid = RulesProvider.IsValidTarget(state, objectCharacter, targetPosition, range, targetDelegate);
+		    var isValid = gameState.IsValidTarget(state, objectCharacter, targetPosition, range, targetType);
 
 		    if (!isValid)
 		    {
@@ -154,6 +121,8 @@ namespace HexWork.UI
 			return new List<HexCoordinate>();
 	    }
 
+        public void CompleteAction(Character ch) { }
+
         public BoardState AddEntity(BoardState state, HexGameObject entity) { return state; }
 
 	    /// <summary>
@@ -163,6 +132,13 @@ namespace HexWork.UI
 		/// <param name="targetPosition"></param>
         public BoardState MoveEntity(BoardState state, HexGameObject entity, List<HexCoordinate> path)
         {
+            foreach (var hex in path)
+            {
+                _spriteBatch.Draw(_blankTexture, GetHexScreenPosition(hex), null,
+                    Color.White, 0.0f, new Vector2(1.0f, 1.0f),
+                    6.0f, SpriteEffects.None, 0.0f);
+            }
+
             ResolveTileEffects(state, entity, path);
             ResolveTerrainEffects(state, entity, path);
             return state;

@@ -8,12 +8,12 @@ namespace HexWork.Gameplay.Actions
     public class PotentialGainAction : HexAction
     {
         public PotentialGainAction(string name,
-            GetValidTargetsDelegate targetDelegate,
+            TargetType targetType,
             StatusEffect statusEffect = null,
             DamageComboAction combo = null, 
             TargetPattern targetPattern = null) :
         base(name,
-            targetDelegate,
+            targetType,
             statusEffect,
             combo, targetPattern)
         { }

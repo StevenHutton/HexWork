@@ -5,8 +5,6 @@ using HexWork.Gameplay.GameObject.Characters;
 
 namespace HexWork.Gameplay.Interfaces
 {
-	public delegate List<HexCoordinate> GetValidTargetsDelegate(BoardState gameState, HexCoordinate position, int range);
-
 	public enum MovementType
 	{
 		NormalMove,
@@ -16,6 +14,18 @@ namespace HexWork.Gameplay.Interfaces
 		Etheral,
 		Flying
 	}
+
+    public enum TargetType
+    {
+        Free,
+        FreeIgnoreUnits,
+        FreeIgnoreLos,
+        AxisAligned,
+        AxisAlignedIgnoreUnits,
+        AxisAlignedIgnoreLos,
+        Move,
+        FixedMove
+    }
 
     public enum MovementSpeed
     {
@@ -59,6 +69,10 @@ namespace HexWork.Gameplay.Interfaces
         void RemoveTileEffect(BoardState state, TileEffect effect);
 
         BoardState AddEntity(BoardState state, HexGameObject entity);
+
+        void CompleteAction(Character ch);
+
+        bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType);
 
         #endregion
     }

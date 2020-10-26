@@ -11,18 +11,18 @@ namespace HexWork.Gameplay.GameObject.Characters
     {
         #region Attributes
 
-        private static HexAction _moveAction = new MoveAction("Move") { Range = 0, PotentialCost = 0 };
+        private static HexAction _moveAction = new MoveAction("Move", TargetType.Move) { Range = 0, PotentialCost = 0 };
         
-        private static PotentialGainAction _potentialGainAction = new PotentialGainAction("Charge Up (Ends Turn)", null, null, null, null) { PotentialCost = 0 };
+        private static PotentialGainAction _potentialGainAction = new PotentialGainAction("Charge Up (Ends Turn)", TargetType.Free, null, null, null) { PotentialCost = 0 };
 
         private static HexAction _zombieGrab = new HexAction(name: "Zombie Grab",
             statusEffect: new ImmobalisedEffect { StatusEffectType = StatusEffectType.Rooted },
             combo: null,
-            targetDelegate: BoardState.GetTilesInRange) { Range = 1, Power = 2 };
+            targetType: TargetType.Free) { Range = 1, Power = 2 };
 
         private static HexAction _zombieBite = new HexAction(name: "Zombie Bite",
             combo: new DamageComboAction() { Power = 2 },
-            targetDelegate: BoardState.GetTilesInRange) { Range = 1, Power = 2 };
+            targetType: TargetType.Free) { Range = 1, Power = 2 };
 
         static TargetPattern _whirlWindTargetPattern = new TargetPattern(new HexCoordinate(1, 0, -1),
             new HexCoordinate(1, -1, 0),
@@ -76,7 +76,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             var burningBolt = new HexAction("Fire Bolt",
-                BoardState.GetAxisTilesInRange)
+                TargetType.AxisAligned)
             {
                 Range = 3,
                 StatusEffect = _fireStatus,
@@ -85,7 +85,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             var exBurningBoltAction = new HexAction("Fire Wall!",
-                BoardState.GetVisibleAxisTilesInRangeIgnoreUnits,
+                TargetType.AxisAlignedIgnoreLos,
                 _fireStatus, null,
                 _rotatingLinePattern)
             {
@@ -95,7 +95,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             var ringofFire = new HexAction("Ring of Fire!",
-                BoardState.GetVisibleAxisTilesInRangeIgnoreUnits,
+                TargetType.AxisAlignedIgnoreLos,
                 _fireStatus, null,
                 _whirlWindTargetPattern)
             {
@@ -104,7 +104,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 TileEffect = _fireEffect
             };
 
-            var lightningBolt = new HexAction("Lightning Bolt", BoardState.GetVisibleAxisTilesInRangeIgnoreUnits, null, new SpreadStatusCombo() { PushForce = 1, PushFromCaster = false})
+            var lightningBolt = new HexAction("Lightning Bolt", TargetType.FreeIgnoreUnits, null, new SpreadStatusCombo() { PushForce = 1, PushFromCaster = false})
             {
                 Range = 3,
                 Power = 2,
@@ -125,7 +125,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         public static Character CreateGunner()
         {
             var shotgunBlast = new LineAction("Shotgun Blast!",
-                BoardState.GetVisibleAxisTilesInRange,
+                TargetType.Free,
                 null, new DamageComboAction(),
                 _cornerPattern)
             {
@@ -136,7 +136,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             var shovingSnipeAction = new HexAction(name: "Shoving Snipe",
-                targetDelegate: BoardState.GetVisibleAxisTilesInRange,
+                targetType: TargetType.AxisAligned,
                 combo: null)
             {
                 Power = 2,
@@ -145,7 +145,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             var detonatingSnipeActionEx = new HexAction("Perfect Snipe!",
-                BoardState.GetVisibleAxisTilesInRange,
+                TargetType.AxisAligned,
                 null,
                 new DamageComboAction { Power = 5 })
             {
@@ -173,17 +173,17 @@ namespace HexWork.Gameplay.GameObject.Characters
         public static Character CreateNinja()
         {
             var shurikenHailAction = new HexAction("Shuriken",
-                BoardState.GetVisibleTilesInRange,
+                TargetType.Free,
                 _bleedingStatus)
             {
                 Range = 2,
-                FollowUpAction = new FixedMoveAction("Shift") { Range = 1, TileEffect = _windEffect }
+                FollowUpAction = new FixedMoveAction("Shift", TargetType.FixedMove) { Range = 1, TileEffect = _windEffect }
             };
 
             var shurikenPattern = new TargetPattern(new HexCoordinate(-1, 1), new HexCoordinate(0, -1),
                 new HexCoordinate(1, 0));
             var shurikenHailActionEx = new HexAction("Shuriken Hail!",
-                BoardState.GetVisibleAxisTilesInRangeIgnoreUnits,
+                TargetType.Free,
                 _bleedingStatus,
                 null, shurikenPattern)
             {
@@ -191,7 +191,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 Range = 3
             };
 
-            var swapAction = new SwapAction("Swap Positions", BoardState.GetVisibleTilesInRange)
+            var swapAction = new SwapAction("Swap Positions", TargetType.Free)
             {
                 Power = 3,
                 AllySafe = false,
@@ -218,7 +218,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public static Character CreateIronSoul()
         {
-            var pushingFist = new HexAction("Heavy Blow", BoardState.GetVisibleTilesInRange, null, new StatusCombo()
+            var pushingFist = new HexAction("Heavy Blow", TargetType.Free, null, new StatusCombo()
             {
                 Power = 2,
                 Effect = new ImmobalisedEffect()
@@ -232,9 +232,9 @@ namespace HexWork.Gameplay.GameObject.Characters
                 PushForce = 2
             };
 
-            var charge = new ChargeAction("Charge", BoardState.GetVisibleAxisTilesInRange) { Range = 2, Power = 2, PotentialCost = 1, PushForce = 1 };
+            var charge = new ChargeAction("Charge", TargetType.AxisAlignedIgnoreUnits) { Range = 2, Power = 2, PotentialCost = 1, PushForce = 1 };
 
-            var stomp = new HexAction("Stomp", BoardState.GetVisibleTilesInRange, new ImmobalisedEffect(), null,
+            var stomp = new HexAction("Stomp", TargetType.Free, new ImmobalisedEffect(), null,
                 _whirlWindTargetPattern)
             {
                 Power = 1,
@@ -243,7 +243,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             var exDetonatingSlash =
-            new HexAction("Massive Detonation!", BoardState.GetVisibleTilesInRange, null,
+            new HexAction("Massive Detonation!", TargetType.Free, null,
                 new ExploderCombo
                 {
                     Power = 2,
@@ -278,14 +278,14 @@ namespace HexWork.Gameplay.GameObject.Characters
         {
             var spreadStatusCombo = new SpreadStatusCombo { AllySafe = true, Power = 1 };
             var detonatingSlash =
-              new HexAction("Detonating Strike!", BoardState.GetVisibleTilesInRange, null, spreadStatusCombo)
+              new HexAction("Detonating Strike!", TargetType.Free, null, spreadStatusCombo)
               {
                   Range = 1,
                   PotentialCost = 1
               };
 
             var earthQuakeStrike = new LineAction("Earthquake Strike",
-                BoardState.GetVisibleAxisTilesInRange,
+                TargetType.Free,
                 new ImmobalisedEffect(),
                 null,
                 _xAxisLinePattern)
@@ -294,7 +294,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 Power = 2
             };
 
-            var whirlwindAttack = new HexAction("Spin Attack", BoardState.GetVisibleTilesInRange, null, new DamageComboAction(),
+            var whirlwindAttack = new HexAction("Spin Attack", TargetType.Free, null, new DamageComboAction(),
                 _whirlWindTargetPattern)
             {
                 Power = 2,
@@ -429,7 +429,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 Power = 5,
             };
-            zombie.AddAction(new FixedMoveAction("Shamble"){Range = 1});
+            zombie.AddAction(new FixedMoveAction("Shamble", TargetType.FixedMove) {Range = 1});
             zombie.AddAction(_zombieGrab);
             zombie.AddAction(_zombieBite);
             zombie.DoTurn = ZombieTurn;
@@ -468,8 +468,8 @@ namespace HexWork.Gameplay.GameObject.Characters
             foreach (var action in character.Actions)
             {
                 //if we can hit the hero, hit them now and end turn. - don't move.
-                if (action.IsValidTarget(state, character, closestHero.Position) &&
-                    action.IsDetonator == closestHero.HasStatus
+                if (gameState.IsValidTarget(state, character, closestHero.Position, action.Range, action.TargetType)
+                    && action.IsDetonator == closestHero.HasStatus
                     && action.IsDetonator == closestHero.HasStatus)
                 {
                     gameState.ApplyDamage(state, closestHero, action.Power * character.Power);
@@ -483,8 +483,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             if (!character.CanMove) return;
 
             //get all the tiles to which the zombie COULD move
-            var tilesInRange = character.Actions.FirstOrDefault(data => data.Name == "Shamble")?.GetValidTargets(state, character) ?? new List<HexCoordinate>();
-
+            var tilesInRange = BoardState.GetWalkableAdjacentTiles(state, character.Position, character.MovementType);
             float shortestDistance = 100;
             HexCoordinate destination = null;
             //look at all the possible destinations and get the one which is closest to a hero
@@ -501,7 +500,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             if (destination != null)
                 gameState.MoveEntity(state, character, new List<HexCoordinate> { destination });
             foreach (var action in character.Actions.Where(action =>
-                action.IsValidTarget(state, character, closestHero.Position)
+                gameState.IsValidTarget(state, character, closestHero.Position, action.Range, action.TargetType)
                 && action.IsDetonator == closestHero.HasStatus))
             {
                 gameState.ApplyDamage(state, closestHero, action.Power * character.Power);
@@ -539,7 +538,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 if (shortestPathLength <= 3)
                 {
                     //get all the tiles to which the zombie COULD move
-                    var tilesInRange = character.Actions.FirstOrDefault(data => data.Name == "Shamble")?.GetValidTargets(state, character) ?? new List<HexCoordinate>();
+                    var tilesInRange = BoardState.GetWalkableAdjacentTiles(state, character.Position, character.MovementType);
 
                     float greatestDistance = 0;
                     HexCoordinate destination = null;

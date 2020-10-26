@@ -9,11 +9,11 @@ namespace HexWork.Gameplay.Actions
     public class FixedMoveAction : HexAction
     {
         public FixedMoveAction(string name,
-            GetValidTargetsDelegate targetDelegate = null,
+            TargetType targetType,
             StatusEffect statusEffect = null,
             DamageComboAction combo = null, TargetPattern targetPattern = null) :
             base(name,
-                targetDelegate,
+                targetType,
                 statusEffect,
                 combo, targetPattern)
         {
@@ -29,26 +29,16 @@ namespace HexWork.Gameplay.Actions
 
             var position = character.Position;
 
-            if (IsValidTarget(state, character, targetPosition))
-                gameState.MoveEntity(state, character, new List<HexCoordinate>{ targetPosition });
+            //check validity
+            if (!gameState.IsValidTarget(state, character, targetPosition, character.RangeModifier + Range, TargetType))
+                return;
+
+            gameState.MoveEntity(state, character, new List<HexCoordinate>{ targetPosition });
 
             if (TileEffect != null)
                 gameState.CreateTileEffect(state, TileEffect, position);
 
             character.CanMove = false;
-        }
-        
-        /// <summary>
-        /// Get a list of coordinates that are valid target locations for this action for the passed in character
-        /// </summary>
-        public override List<HexCoordinate> GetValidTargets(BoardState state, Character character)
-        {
-            return BoardState.GetWalkableAdjacentTiles(state, character.Position, character.MovementType);
-        }
-
-        public override bool IsValidTarget(BoardState state, Character character, HexCoordinate targetCoordinate)
-        {
-            return BoardState.GetWalkableAdjacentTiles(state, character.Position, character.MovementType).Contains(targetCoordinate);
-        }
+        }        
 	}
 }

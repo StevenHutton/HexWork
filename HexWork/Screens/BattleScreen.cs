@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using HexWork.Gameplay;
@@ -823,7 +824,7 @@ namespace HexWork.UI
 		/// <returns></returns>
 		private List<HexCoordinate> GetHighlightedCoordinates()
 		{
-            return SelectedHexAction?.GetValidTargets(GameState.BoardState, _selectedCharacter);
+            return SelectedHexAction == null ? null : new List<HexCoordinate>();
 		}
 
 		private HexCoordinate GetHexCoordinate(float posX, float posY)

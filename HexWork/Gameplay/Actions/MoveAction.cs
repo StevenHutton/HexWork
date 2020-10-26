@@ -15,24 +15,24 @@ namespace HexWork.Gameplay.Actions
         }
 
         public MoveAction(string name,
-			GetValidTargetsDelegate targetDelegate= null,
+			TargetType targetType,
 			StatusEffect statusEffect = null,
 			DamageComboAction combo = null, 
             TargetPattern targetPattern = null) :
 			base(name,
-				targetDelegate,
+				targetType,
 				statusEffect,
 				combo, targetPattern)
 		{
 
 		}
 
-		public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
-		{
-			var targetPosition = await input.GetTargetAsync(this);
+        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        {
+            var targetPosition = await input.GetTargetAsync(this);
 
-			if (targetPosition == null || character.Position == targetPosition)
-				return;
+            if (targetPosition == null || character.Position == targetPosition)
+                return;
 
             var position = character.Position;
 
@@ -42,22 +42,9 @@ namespace HexWork.Gameplay.Actions
                 gameState.LosePotential(state, BoardState.GetPathLengthToTile(state, character, targetPosition, path));
                 gameState.MoveEntity(state, character, path);
             }
-            
-            if(TileEffect != null)
-				gameState.CreateTileEffect(state, TileEffect, position);
-        }		
 
-        /// <summary>
-        /// Get a list of coordinates that are valid target locations for this action for the passed in character
-        /// </summary>
-        public override List<HexCoordinate> GetValidTargets(BoardState state, Character character)
-        {
-            return BoardState.GetValidDestinations(state, character).Keys.ToList();
-        }
-
-        public override bool IsValidTarget(BoardState state, Character character, HexCoordinate targetCoordinate)
-        {
-            return GetValidTargets(state, character).Contains(targetCoordinate);
+            if (TileEffect != null)
+                gameState.CreateTileEffect(state, TileEffect, position);
         }
 	}
 }

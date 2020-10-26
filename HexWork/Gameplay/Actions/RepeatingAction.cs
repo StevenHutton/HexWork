@@ -25,11 +25,11 @@ namespace HexWork.Gameplay.Actions
         { }
 
         public RepeatingAction(string name,
-            GetValidTargetsDelegate targetDelegate,
+            TargetType targetType,
             StatusEffect statusEffect = null,
             DamageComboAction combo = null, TargetPattern targetPattern = null) :
             base(name,
-                targetDelegate,
+                targetType,
                 statusEffect,
                 combo, targetPattern)
         { }
@@ -41,7 +41,8 @@ namespace HexWork.Gameplay.Actions
             if (targetPosition == null)
                 return;
 
-            if (!IsValidTarget(state, character, targetPosition))
+            //check validity
+            if (!gameState.IsValidTarget(state, character, targetPosition, character.RangeModifier + Range, TargetType))
                 return;
 
             var targetTiles = GetTargetTiles(targetPosition);

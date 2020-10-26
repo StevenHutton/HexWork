@@ -12,7 +12,7 @@ namespace HexWork.Gameplay.Actions
     {
         #region Attributes
 
-        protected readonly GetValidTargetsDelegate _getValidTargets;
+        public TargetType TargetType = TargetType.Free;
 
         protected bool CanRotateTargetting = true;
 
@@ -54,7 +54,7 @@ namespace HexWork.Gameplay.Actions
         { }
         
         public HexAction(string name, 
-            GetValidTargetsDelegate targetDelegate,
+            TargetType targetType,
             StatusEffect statusEffect = null,
             HexAction combo = null, TargetPattern targetPattern = null)
         {
@@ -62,7 +62,7 @@ namespace HexWork.Gameplay.Actions
             Combo = combo;
             Name = name;
             Pattern = targetPattern ?? new TargetPattern(new HexCoordinate(0,0));
-            _getValidTargets = targetDelegate;
+            TargetType = targetType;
         }
 
         /// <summary>
@@ -90,9 +90,10 @@ namespace HexWork.Gameplay.Actions
 	        var targetPosition = await input.GetTargetAsync(this);
 	        if (targetPosition == null)
 		        return;
-			//check validity
-	        if (!IsValidTarget(state, character, targetPosition))
-		        return;
+
+            //check validity
+            if (!gameState.IsValidTarget(state, character, targetPosition, character.RangeModifier + Range, TargetType))
+                return;
 
             if (PotentialCost != 0)
                 gameState.LosePotential(state, PotentialCost);
@@ -107,6 +108,8 @@ namespace HexWork.Gameplay.Actions
 
                 ApplyToTile(state, targetTile, gameState, character, direction);
             }
+
+            gameState.CompleteAction(character);
         }
 
         public virtual async void ApplyToTile(BoardState state, HexCoordinate targetTile, IRulesProvider gameState, Character character, HexCoordinate direction = null)
@@ -133,19 +136,6 @@ namespace HexWork.Gameplay.Actions
 
             if (TileEffect != null)
                 gameState.CreateTileEffect(state, TileEffect, targetTile);
-        }
-
-        /// <summary>
-        /// Get a list of coordinates that are valid target locations for this action for the passed in character
-        /// </summary>
-        public virtual List<HexCoordinate> GetValidTargets(BoardState state, Character character)
-        {
-            return _getValidTargets?.Invoke(state, character.Position, character.RangeModifier + this.Range);
-        }
-
-        public virtual bool IsValidTarget(BoardState state, Character character, HexCoordinate targetCoordinate)
-        {
-            return _getValidTargets != null && _getValidTargets.Invoke(state, character.Position, character.RangeModifier + this.Range).Contains(targetCoordinate);
         }
         
         #endregion

@@ -1,7 +1,5 @@
 ﻿using HexWork.Gameplay.Interfaces;
-using HexWork.UI;
 using HexWork.UI.Interfaces;
-using System.Linq;
 using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 
@@ -10,11 +8,11 @@ namespace HexWork.Gameplay.Actions
     public class LineAction : HexAction
     {
         public LineAction(string name,
-            GetValidTargetsDelegate targetDelegate,
+            TargetType targetType,
             StatusEffect statusEffect = null,
             DamageComboAction combo = null, TargetPattern targetPattern = null) :
             base(name,
-                targetDelegate,
+                targetType,
                 statusEffect,
                 combo, targetPattern)
         {
@@ -28,16 +26,9 @@ namespace HexWork.Gameplay.Actions
             if (targetPosition == null)
                 return;
 
-            if (_getValidTargets?.Invoke(state, character.Position, character.RangeModifier + this.Range).Contains(targetPosition) ?? false == false)
+            //check validity
+            if (!gameState.IsValidTarget(state, character, targetPosition, character.RangeModifier + Range, TargetType))
                 return;
-
-            if (!RulesProvider.IsValidTarget(state, character,
-                targetPosition,
-                character.RangeModifier + this.Range,
-                _getValidTargets))
-            {
-                return;
-            }
 
             var nearestNeighbor = BoardState.GetNearestNeighbor(character.Position, targetPosition);
 
@@ -54,9 +45,6 @@ namespace HexWork.Gameplay.Actions
 
             if (PotentialCost != 0)
                 gameState.LosePotential(state, PotentialCost);
-
-
-            character.HasActed = true;
         }
     }
 }

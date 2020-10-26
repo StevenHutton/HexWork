@@ -46,16 +46,13 @@ namespace HexWork.Gameplay
 
         #endregion
 
-        public BoardState()
-        {
-            GenerateMap(MapWidth, MapHeight);
-        }
+        public BoardState() { }
 
-        protected void GenerateMap(int columns, int rows)
+        public void GenerateMap()
         {
-            for (var columnIndex = -columns; columnIndex <= columns; columnIndex++)
+            for (var columnIndex = -MapWidth; columnIndex <= MapWidth; columnIndex++)
             {
-                for (var rowIndex = -rows; rowIndex <= rows; rowIndex++)
+                for (var rowIndex = -MapHeight; rowIndex <= MapHeight; rowIndex++)
                 {
                     var x = columnIndex - (rowIndex - (rowIndex & 1)) / 2;
                     var z = rowIndex;
@@ -161,7 +158,7 @@ namespace HexWork.Gameplay
             //go through again and check the neighbors for terrain
             foreach (var entry in this)
             {
-                var neighbors = BoardState.GetNeighbours(entry.Key);
+                var neighbors = GetNeighbours(entry.Key);
 
                 foreach (var neighbor in neighbors)
                 {
@@ -183,7 +180,7 @@ namespace HexWork.Gameplay
             var bs = new BoardState();
             foreach(var kvp in this)
             {
-                bs.Add(kvp.Key, kvp.Value);
+                bs[kvp.Key] = kvp.Value;
             }
             bs.Potential = Potential;
             foreach(var ent in this.Entities)
@@ -374,11 +371,11 @@ namespace HexWork.Gameplay
         /// <summary>
         /// Get all the visible tiles within range of a target position
         /// </summary>
-        public List<HexCoordinate> GetVisibleTilesInRangeIgnoreUnits(BoardState state, Character objectCharacter, int range)
+        public static List<HexCoordinate> GetVisibleTilesInRangeIgnoreUnits(BoardState state, HexCoordinate position, int range)
         {
-            var targets = new List<HexCoordinate>() { objectCharacter.Position };
+            var targets = new List<HexCoordinate>() { position };
 
-            GetVisibleTilesRecursive(state, targets, objectCharacter.Position, objectCharacter.Position, range, 0, true);
+            GetVisibleTilesRecursive(state, targets, position, position, range, 0, true);
 
             return targets;
         }
@@ -451,7 +448,7 @@ namespace HexWork.Gameplay
         /// </summary>
         public static bool IsValidDestination(BoardState state, Character objectCharacter, HexCoordinate targetPosition)
         {
-            var destinations = GetValidDestinations(state, objectCharacter);
+            var destinations = GetValidDestinations(state, objectCharacter.Position, objectCharacter.MovementType, objectCharacter.MovementSpeed);
 
             if (!destinations.Keys.Contains(targetPosition))
                 return false;
@@ -462,11 +459,11 @@ namespace HexWork.Gameplay
             return true;
         }
 
-        public static Dictionary<HexCoordinate, int> GetValidDestinations(BoardState state, Character objectCharacter)
+        public static Dictionary<HexCoordinate, int> GetValidDestinations(BoardState state, HexCoordinate position, MovementType mType, MovementSpeed mSpeed)
         {
-            Dictionary<HexCoordinate, int> pathValues = new Dictionary<HexCoordinate, int> { { objectCharacter.Position, 0 } };
+            Dictionary<HexCoordinate, int> pathValues = new Dictionary<HexCoordinate, int> { { position, 0 } };
 
-            GetWalkableNeighboursRecursive(state, pathValues, objectCharacter.Position, objectCharacter.MovementType, objectCharacter.MovementSpeed, 0, 0, state.Potential);
+            GetWalkableNeighboursRecursive(state, pathValues, position, mType, mSpeed, 0, 0, state.Potential);
             return pathValues;
         }
 
@@ -528,6 +525,11 @@ namespace HexWork.Gameplay
                     movementCost + movementCostToCoord,
                     searchDepth + 1, availableMovement);
             }
+        }
+
+        public static bool IsValidTarget(BoardState state, HexCoordinate position, HexCoordinate targetPosition, int range, TargetType targetType)
+        {
+            throw new NotImplementedException();
         }
 
         public static List<HexCoordinate> FindShortestPath(BoardState state, HexCoordinate startPosition, HexCoordinate destination, int availableMovement,

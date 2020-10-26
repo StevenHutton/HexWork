@@ -6,7 +6,6 @@ using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.GameplayEvents;
-using Microsoft.Xna.Framework;
 
 namespace HexWork.Gameplay
 {
@@ -59,6 +58,7 @@ namespace HexWork.Gameplay
         public RulesProvider()
         {
             BoardState = new BoardState();
+            BoardState.GenerateMap();
         }
 
         public void CreateCharacters(int difficulty = 1)
@@ -251,7 +251,7 @@ namespace HexWork.Gameplay
 
             TeleportEntityTo(state, entity, entity.Position);
 
-            return newState;
+            return state;
         }
 
         public BoardState MoveEntity(BoardState state, HexGameObject entity, List<HexCoordinate> path)
@@ -271,7 +271,7 @@ namespace HexWork.Gameplay
                 ResolveTerrainEffects(newState, entity, coordinate);
             }
 
-            return newState;
+            return state;
         }
 
         public BoardState TeleportEntityTo(BoardState state, HexGameObject gameObject, HexCoordinate position)
@@ -528,21 +528,51 @@ namespace HexWork.Gameplay
                 Entity = tileEffect
             });
 
-            return newState;
+            return state;
+        }
+
+        public void CompleteAction(Character ch)
+        {
+            ch.HasActed = true;
+            ch.CanAttack = false;
         }
 
         #endregion
 
-
         #region Public Accessor Methods
 
-
-
-        public static bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, GetValidTargetsDelegate targetDelegate)
+        public bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType)
         {
-            return targetDelegate != null && targetDelegate.Invoke(state, objectCharacter.Position, range).Contains(targetPosition);
+            return GetValidTargets(state, objectCharacter, range, targetType).Contains(targetPosition);
         }
-                
+
+        public List<HexCoordinate> GetValidTargets(BoardState state, Character objectCharacter, int range, TargetType targetType)
+        {
+            var position = objectCharacter.Position;
+
+            switch (targetType)
+            {
+                case TargetType.Free:
+                    return BoardState.GetVisibleTilesInRange(state, position, range);
+                case TargetType.FreeIgnoreUnits:
+                    return BoardState.GetVisibleTilesInRangeIgnoreUnits(state, position, range);
+                case TargetType.FreeIgnoreLos:
+                    return BoardState.GetTilesInRange(state, position, range);
+                case TargetType.AxisAligned:
+                    return BoardState.GetVisibleAxisTilesInRange(state, position, range);
+                case TargetType.AxisAlignedIgnoreUnits:
+                    return BoardState.GetVisibleAxisTilesInRangeIgnoreUnits(state, position, range);
+                case TargetType.AxisAlignedIgnoreLos:
+                    return BoardState.GetAxisTilesInRange(state, position, range);
+                case TargetType.Move:
+                    return BoardState.GetValidDestinations(state, position, objectCharacter.MovementType, objectCharacter.MovementSpeed).Keys.ToList();
+                case TargetType.FixedMove:
+                    return BoardState.GetWalkableAdjacentTiles(state, position, objectCharacter.MovementType);
+                default:
+                    return null;
+            }
+        }
+
         #endregion
 
         #region Private Helper Methods
