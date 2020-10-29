@@ -531,10 +531,11 @@ namespace HexWork.Gameplay
             return state;
         }
 
-        public void CompleteAction(Character ch)
+        public void CompleteAction(Character ch, HexAction action)
         {
             ch.HasActed = true;
             ch.CanAttack = false;
+            ActionEvent?.Invoke(this, new ActionEventArgs { Action = action });
         }
 
         #endregion
@@ -543,34 +544,7 @@ namespace HexWork.Gameplay
 
         public bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType)
         {
-            return GetValidTargets(state, objectCharacter, range, targetType).Contains(targetPosition);
-        }
-
-        public List<HexCoordinate> GetValidTargets(BoardState state, Character objectCharacter, int range, TargetType targetType)
-        {
-            var position = objectCharacter.Position;
-
-            switch (targetType)
-            {
-                case TargetType.Free:
-                    return BoardState.GetVisibleTilesInRange(state, position, range);
-                case TargetType.FreeIgnoreUnits:
-                    return BoardState.GetVisibleTilesInRangeIgnoreUnits(state, position, range);
-                case TargetType.FreeIgnoreLos:
-                    return BoardState.GetTilesInRange(state, position, range);
-                case TargetType.AxisAligned:
-                    return BoardState.GetVisibleAxisTilesInRange(state, position, range);
-                case TargetType.AxisAlignedIgnoreUnits:
-                    return BoardState.GetVisibleAxisTilesInRangeIgnoreUnits(state, position, range);
-                case TargetType.AxisAlignedIgnoreLos:
-                    return BoardState.GetAxisTilesInRange(state, position, range);
-                case TargetType.Move:
-                    return BoardState.GetValidDestinations(state, position, objectCharacter.MovementType, objectCharacter.MovementSpeed).Keys.ToList();
-                case TargetType.FixedMove:
-                    return BoardState.GetWalkableAdjacentTiles(state, position, objectCharacter.MovementType);
-                default:
-                    return null;
-            }
+            return BoardState.IsValidTarget(state, objectCharacter, targetPosition, range, targetType);
         }
 
         #endregion

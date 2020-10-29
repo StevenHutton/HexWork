@@ -70,7 +70,7 @@ namespace HexWork.Gameplay.Interfaces
 
         BoardState AddEntity(BoardState state, HexGameObject entity);
 
-        void CompleteAction(Character ch);
+        void CompleteAction(Character ch, HexAction action);
 
         bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType);
 

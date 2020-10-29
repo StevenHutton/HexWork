@@ -70,7 +70,7 @@ namespace HexWork.Gameplay.Actions
             if (PotentialCost != 0)
                 gameState.LosePotential(state, PotentialCost);
             
-            character.HasActed = true;
+            gameState.CompleteAction(character, this);
         }
 
         #endregion

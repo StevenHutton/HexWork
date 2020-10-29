@@ -22,7 +22,7 @@ namespace HexWork.Gameplay.Actions
                 gameState.AddEntity(gameState.BoardState, zombie);
             }
 
-            character.HasActed = true;
+            gameState.CompleteAction(character, this);
         }
     }
 }

@@ -25,6 +25,8 @@ namespace HexWork.Gameplay.Actions
             zombie2.EndTurn();
 
             character.HasActed = true;
+
+            gameState.CompleteAction(character, this);
         }
     }
 }

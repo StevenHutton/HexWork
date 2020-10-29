@@ -496,11 +496,9 @@ namespace HexWork.UI
                     purple, 0.0f,
                     _hexCenter, _hexScaleV, SpriteEffects.None, 0.0f);
             }
-
-            var cursorPosition = _cursorPosition;
-            var highlightedCoords = GetHighlightedCoordinates();
-
             _spriteBatch.End();
+
+            var highlightedCoords = GetHighlightedCoordinates();
 
             if (highlightedCoords != null)
             {
@@ -512,16 +510,16 @@ namespace HexWork.UI
             }
 
             _spriteBatch.Begin();
-
+            
             //If the cursor is within the map area the highlight the appropriate tile.
-	        if (cursorPosition != null)
+	        if (_cursorPosition != null)
 	        {
-		        var highlightRenderPosition = GetHexScreenPosition(cursorPosition);
+		        var highlightRenderPosition = GetHexScreenPosition(_cursorPosition);
 
 		        _spriteBatch.Draw(_hexagonOutlineTexture, highlightRenderPosition, null, _cursorColor, 0.0f,
 			        _hexCenter, _hexScaleV, SpriteEffects.None, 0.0f);
 					
-				var targetPattern = SelectedHexAction?.GetTargetTiles(cursorPosition);
+				var targetPattern = SelectedHexAction?.GetTargetTiles(_cursorPosition);
                 if (targetPattern != null)
                 {
                     foreach (var hex in targetPattern)
@@ -824,7 +822,10 @@ namespace HexWork.UI
 		/// <returns></returns>
 		private List<HexCoordinate> GetHighlightedCoordinates()
 		{
-            return SelectedHexAction == null ? null : new List<HexCoordinate>();
+            if (SelectedHexAction == null)
+                return null;
+
+            return BoardState.GetValidTargets(_gameStateProxy.BoardState, _selectedCharacter, _selectedCharacter.RangeModifier + SelectedHexAction.Range, SelectedHexAction.TargetType);
 		}
 
 		private HexCoordinate GetHexCoordinate(float posX, float posY)

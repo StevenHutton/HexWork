@@ -527,9 +527,36 @@ namespace HexWork.Gameplay
             }
         }
 
-        public static bool IsValidTarget(BoardState state, HexCoordinate position, HexCoordinate targetPosition, int range, TargetType targetType)
+        public static bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType)
         {
-            throw new NotImplementedException();
+            return GetValidTargets(state, objectCharacter, range, targetType).Contains(targetPosition);
+        }
+
+        public static List<HexCoordinate> GetValidTargets(BoardState state, Character objectCharacter, int range, TargetType targetType)
+        {
+            var position = objectCharacter.Position;
+
+            switch (targetType)
+            {
+                case TargetType.Free:
+                    return GetVisibleTilesInRange(state, position, range);
+                case TargetType.FreeIgnoreUnits:
+                    return GetVisibleTilesInRangeIgnoreUnits(state, position, range);
+                case TargetType.FreeIgnoreLos:
+                    return GetTilesInRange(state, position, range);
+                case TargetType.AxisAligned:
+                    return GetVisibleAxisTilesInRange(state, position, range);
+                case TargetType.AxisAlignedIgnoreUnits:
+                    return GetVisibleAxisTilesInRangeIgnoreUnits(state, position, range);
+                case TargetType.AxisAlignedIgnoreLos:
+                    return GetAxisTilesInRange(state, position, range);
+                case TargetType.Move:
+                    return GetValidDestinations(state, position, objectCharacter.MovementType, objectCharacter.MovementSpeed).Keys.ToList();
+                case TargetType.FixedMove:
+                    return GetWalkableAdjacentTiles(state, position, objectCharacter.MovementType);
+                default:
+                    return null;
+            }
         }
 
         public static List<HexCoordinate> FindShortestPath(BoardState state, HexCoordinate startPosition, HexCoordinate destination, int availableMovement,

@@ -46,8 +46,7 @@ namespace HexWork.Gameplay.Actions
             gameState.ApplyDamage(state, target, Power * character.Power);
             gameState.ApplyStatus(state, target, StatusEffect);
 
-
-            character.HasActed = true;
+            gameState.CompleteAction(character, this);
         }
     }
 }

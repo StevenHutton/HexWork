@@ -49,6 +49,8 @@ namespace HexWork.Gameplay.Actions
             var strikePosition = targetPosition + direction;
 
             ApplyToTile(state, strikePosition, gameState, character, direction);
+
+            gameState.CompleteAction(character, this);
         }
     }
 }

@@ -104,24 +104,7 @@ namespace HexWork.UI
 		    return isValid;
 	    }
 
-		public List<HexCoordinate> FindShortestPath(BoardState state, HexCoordinate startPosition, HexCoordinate destination, int availableMovement,
-            MovementType movementType = MovementType.NormalMove, MovementSpeed speed = MovementSpeed.Normal)
-	    {
-			var path = BoardState.FindShortestPath(state, startPosition, destination, availableMovement, movementType, speed);
-		    if (path == null)
-			    return null;
-
-		    foreach (var hex in path)
-		    {
-			    _spriteBatch.Draw(_blankTexture, GetHexScreenPosition(hex), null,
-				    Color.White, 0.0f, new Vector2(1.0f, 1.0f),
-				    6.0f, SpriteEffects.None, 0.0f);
-		    }
-
-			return new List<HexCoordinate>();
-	    }
-
-        public void CompleteAction(Character ch) { }
+        public void CompleteAction(Character ch, HexAction action) { }
 
         public BoardState AddEntity(BoardState state, HexGameObject entity) { return state; }
 
@@ -173,11 +156,6 @@ namespace HexWork.UI
         public void ResolveTileEffect(BoardState state, TileEffect effect, HexGameObject entity = null)
         {
             effect.TriggerEffect(state, this, entity);
-        }
-
-        public BoardState CreateTileEffect(BoardState state, TileEffect effect, HexCoordinate location)
-        {
-            return state;
         }
 
         private void ResolveTerrainEffects(BoardState state, HexGameObject entity, List<HexCoordinate> path)
@@ -279,7 +257,7 @@ namespace HexWork.UI
 		        0.0f);
 		}
 
-        public BoardState CreateTileEffect(BoardState state, HexCoordinate location, TileEffect effect)
+        public BoardState CreateTileEffect(BoardState state, TileEffect effect, HexCoordinate location)
         {
             Texture2D statusTexture = _hexGame.Content.Load<Texture2D>(effect.Name);
 

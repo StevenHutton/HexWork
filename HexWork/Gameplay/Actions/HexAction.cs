@@ -109,7 +109,7 @@ namespace HexWork.Gameplay.Actions
                 ApplyToTile(state, targetTile, gameState, character, direction);
             }
 
-            gameState.CompleteAction(character);
+            gameState.CompleteAction(character, this);
         }
 
         public virtual async void ApplyToTile(BoardState state, HexCoordinate targetTile, IRulesProvider gameState, Character character, HexCoordinate direction = null)
