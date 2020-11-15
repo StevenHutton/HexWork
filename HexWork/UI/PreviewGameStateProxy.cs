@@ -13,7 +13,7 @@ namespace HexWork.UI
 {
     public class PreviewRulesProvider : IRulesProvider, IDisposable
     {
-        public IRulesProvider gameState;
+        public IRulesProvider rulesProvider;
 
 	    private SpriteBatch _spriteBatch;
 
@@ -43,14 +43,6 @@ namespace HexWork.UI
         private readonly Vector2 _iconOrigin;
 
         private HexWork _hexGame;
-
-		#region Properties
-
-        public BoardState BoardState  => gameState.BoardState;
-
-        public IEnumerable<TileEffect> TileEffects => BoardState.TileEffects;
-
-		#endregion
 
 	    public void SpriteBatchBegin()
 	    {
@@ -92,7 +84,7 @@ namespace HexWork.UI
 
 	    public bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType)
 	    {
-		    var isValid = gameState.IsValidTarget(state, objectCharacter, targetPosition, range, targetType);
+		    var isValid = rulesProvider.IsValidTarget(state, objectCharacter, targetPosition, range, targetType);
 
 		    if (!isValid)
 		    {
@@ -104,7 +96,7 @@ namespace HexWork.UI
 		    return isValid;
 	    }
 
-        public void CompleteAction(Character ch, HexAction action) { }
+        public BoardState CompleteAction(BoardState state, Guid characterId, HexAction action) { return state; }
 
         public BoardState AddEntity(BoardState state, HexGameObject entity) { return state; }
 
@@ -113,7 +105,7 @@ namespace HexWork.UI
 		/// </summary>
 		/// <param name="character"></param>
 		/// <param name="targetPosition"></param>
-        public BoardState MoveEntity(BoardState state, HexGameObject entity, List<HexCoordinate> path)
+        public BoardState MoveEntity(BoardState state, Guid entityId, List<HexCoordinate> path)
         {
             foreach (var hex in path)
             {
@@ -122,44 +114,48 @@ namespace HexWork.UI
                     6.0f, SpriteEffects.None, 0.0f);
             }
 
-            ResolveTileEffects(state, entity, path);
-            ResolveTerrainEffects(state, entity, path);
+            ResolveTileEffects(state, entityId, path);
+            ResolveTerrainEffects(state, entityId, path);
             return state;
         }
 
-        public BoardState TeleportEntityTo(BoardState state, HexGameObject entity, HexCoordinate position)
+        public BoardState TeleportEntityTo(BoardState state, Guid entityId, HexCoordinate position)
         {
-	        ResolveTileEffects(state, entity, new List<HexCoordinate> { position });
-			ResolveTerrainEffects(state, entity, new List<HexCoordinate>{ position }); 
+	        ResolveTileEffects(state, entityId, new List<HexCoordinate> { position });
+			ResolveTerrainEffects(state, entityId, new List<HexCoordinate>{ position }); 
             return state;
         }
 
-	    private void ResolveTileEffects(BoardState state, HexGameObject entity, List<HexCoordinate> path)
+	    private void ResolveTileEffects(BoardState state, Guid entityId, List<HexCoordinate> path)
 	    {
-		    //don't count terrain effects from a tile you're standing. We don't punish players for e.g. leaving lava.
-		    if (path.First() == entity.Position)
+            var entity = state.GetEntityById(entityId);
+
+            //don't count terrain effects from a tile you're standing. We don't punish players for e.g. leaving lava.
+            if (path.First() == entity.Position)
 		    {
 			    path.Remove(entity.Position);
 		    }
 
 		    foreach (var tile in path)
-		    {
-			    var tileEffect = TileEffects.FirstOrDefault(data => data.Position == tile);
-
-			    if (tileEffect == null)
-				    continue;
-
-                ResolveTileEffect(state, tileEffect, entity);
+            {
+                ResolveTileEffect(state, tile);
             }
 		}
 
-        public void ResolveTileEffect(BoardState state, TileEffect effect, HexGameObject entity = null)
+        public BoardState ResolveTileEffect(BoardState state, HexCoordinate position)
         {
-            effect.TriggerEffect(state, this, entity);
+            var tileEffect = state.TileEffects.FirstOrDefault(data => data.Position == position);
+
+            if (tileEffect == null)
+                return state;
+
+            return tileEffect.TriggerEffect(state, this).Result;
         }
 
-        private void ResolveTerrainEffects(BoardState state, HexGameObject entity, List<HexCoordinate> path)
+        private void ResolveTerrainEffects(BoardState state, Guid entityId, List<HexCoordinate> path)
         {
+            var entity = state.GetEntityById(entityId);
+
             if (path == null || path.Count == 0)
                 return;
 
@@ -177,7 +173,7 @@ namespace HexWork.UI
 
         private void ResolveTerrainEffect(BoardState state, HexGameObject entity, HexCoordinate position)
         {
-            var tile = gameState.BoardState[position];
+            var tile = state[position];
             switch (tile.TerrainType)
             {
                 case TerrainType.Ground:
@@ -185,7 +181,7 @@ namespace HexWork.UI
                 case TerrainType.Water:
                     break;
                 case TerrainType.Lava:
-                    ApplyStatus(state, entity, new StatusEffect{StatusEffectType = StatusEffectType.Burning});
+                    ApplyStatus(state, entity.Id, new StatusEffect{StatusEffectType = StatusEffectType.Burning});
                     break;
                 case TerrainType.Ice:
                     break;
@@ -204,27 +200,34 @@ namespace HexWork.UI
             }
         }
 
-        public int ApplyDamage(BoardState state, HexGameObject entity, int power, string message = null)
+        public BoardState ApplyDamage(BoardState state, Guid entityId, int power)
         {
+            var entity = state.GetEntityById(entityId);
+
 	        var position = GetHexScreenPosition(entity.Position);
             _spriteBatch.Draw(_damageTexture, position, null, Color.Red, 0.0f, new Vector2(128), _hexScaleV, SpriteEffects.None, 0.0f );
-	        return power;
+	        return state;
         }
 
-        public void CheckDied(BoardState state, HexGameObject entity)
-        { }
+        public BoardState CheckDied(BoardState state, Guid entityId)
+        { return state; }
 
-        public void ApplyHealing(BoardState state, Character character, int power)
+        public BoardState ApplyHealing(BoardState state, Guid characterId, int power)
         {
+            var character = state.GetCharacterById(characterId);
+
             var position = GetHexScreenPosition(character.Position);
 
             _spriteBatch.Draw(_healingTexture, position, null, Color.Green, 0.0f, new Vector2(128), _hexScaleV,
                 SpriteEffects.None, 0.0f);
+            return state;
         }
 
-        public void ApplyStatus(BoardState state, HexGameObject entity, StatusEffect effect)
+        public BoardState ApplyStatus(BoardState state, Guid entityId, StatusEffect effect)
         {
-            if (effect == null) return;
+            if (effect == null) return state;
+
+            var entity = state.GetEntityById(entityId);
 
             Texture2D statusTexture;
             switch (effect.StatusEffectType)
@@ -255,6 +258,7 @@ namespace HexWork.UI
 		        new Vector2(0.3f), 
 		        SpriteEffects.None, 
 		        0.0f);
+            return state;
 		}
 
         public BoardState CreateTileEffect(BoardState state, TileEffect effect, HexCoordinate location)
@@ -284,13 +288,16 @@ namespace HexWork.UI
             return state;
         }
 
-        public int ApplyCombo(BoardState state, HexGameObject entity, DamageComboAction combo)
+        public BoardState ApplyCombo(BoardState state, Guid entityId, DamageComboAction combo, out int damage)
         {
-            return 0;
+            damage = 0;
+            return state;
         }
 
-        public void ApplyPush(BoardState state, HexGameObject entity, HexCoordinate direction, int pushForce = 0)
+        public BoardState ApplyPush(BoardState state, Guid entityId, HexCoordinate direction, int pushForce = 0)
         {
+            var entity = state.GetEntityById(entityId);
+
 	        var characterPos = entity.Position;
 	        var destinationPos = characterPos + direction;
 
@@ -327,18 +334,19 @@ namespace HexWork.UI
                     break;
                 }
 				
-	            var tile = BoardState[destinationPos];
+	            var tile = state[destinationPos];
 	            if (tile.TerrainType != TerrainType.Ice && tile.TerrainType != TerrainType.ThinIce)
 		            pushForce--;
 
 				characterPos = destinationPos;
                 destinationPos += direction;
             }
+            return state;
         }
 
-        public void LosePotential(BoardState state, int potentialCost)
+        public BoardState LosePotential(BoardState state, int potentialCost)
         {
-
+            return state;
         }
 
         #region HelperMethods
@@ -351,14 +359,14 @@ namespace HexWork.UI
 		    return new Vector2(posX, posY) + _screenCenter;
 	    }
 
-        public void RemoveTileEffect(BoardState state, TileEffect effect)
-        { }
+        public BoardState RemoveTileEffect(BoardState state, Guid effectId)
+        { return state; }
 
         #endregion
 
-        public void NextTurn(BoardState state, Character activeCharacter) { }
+        public BoardState NextTurn(BoardState state, Guid activeCharacterId) { return state; }
         
-        public void GainPotential(BoardState state, int potentialGain = 1) { }
+        public BoardState GainPotential(BoardState state, int potentialGain = 1) { return state; }
 
         #region IDisposable
 

@@ -141,7 +141,7 @@ namespace HexWork.Gameplay
 
         public override void StartTurn(BoardState state, Character character, RulesProvider ruleProvider)
         {
-            ruleProvider.ApplyDamage(state, character, Damage, Name);
+            ruleProvider.ApplyDamage(state, character.Id, Damage);
         }
 
         public override StatusEffect Copy()

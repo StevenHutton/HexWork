@@ -440,29 +440,30 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         #region TurnFunctions
 
-        public static void ZombieTurn(IRulesProvider gameState, Character character)
+        public static BoardState ZombieTurn(BoardState state, IRulesProvider gameState, Character character)
         {
+            var newState = state.Copy();
+
             var position = character.Position;
             int shortestPathLength = int.MaxValue;
             Character closestHero = null;
-            var heroes = gameState.BoardState.Heroes;
-            var state = gameState.BoardState;
+            var heroes = newState.Heroes;
 
             //find the closest hero
             foreach (var hero in heroes)
             {
-                var nearestNeighbour = GetNearestPassableTileAdjacentToDestination(position, hero.Position, gameState);
+                var nearestNeighbour = GetNearestPassableTileAdjacentToDestination(newState, position, hero.Position, gameState);
                 if (nearestNeighbour == null)
                     continue;
 
-                var path = BoardState.FindShortestPath(gameState.BoardState, position, nearestNeighbour, 200);
+                var path = BoardState.FindShortestPath(newState, position, nearestNeighbour, 200);
                 if (path == null) continue;
                 if (path.Count >= shortestPathLength) continue;
                 shortestPathLength = path.Count;
                 closestHero = hero;
             }
             if (closestHero == null)
-                return;
+                return newState;
 
             //loop through available actions
             foreach (var action in character.Actions)
@@ -472,15 +473,15 @@ namespace HexWork.Gameplay.GameObject.Characters
                     && action.IsDetonator == closestHero.HasStatus
                     && action.IsDetonator == closestHero.HasStatus)
                 {
-                    gameState.ApplyDamage(state, closestHero, action.Power * character.Power);
-                    gameState.ApplyStatus(state, closestHero, action.StatusEffect);
-                    action.Combo?.TriggerAsync(state, character, new DummyInputProvider(closestHero.Position), gameState);
-                    return;
+                    newState = gameState.ApplyDamage(newState, closestHero.Id, action.Power * character.Power);
+                    newState = gameState.ApplyStatus(newState, closestHero.Id, action.StatusEffect);
+                    newState = action.Combo?.TriggerAsync(newState, character.Id, new DummyInputProvider(closestHero.Position), gameState).Result;
+                    return newState;
                 }
             }
 
             //if we couldn't reach the closest hero move towards them.
-            if (!character.CanMove) return;
+            if (!character.CanMove) return newState;
 
             //get all the tiles to which the zombie COULD move
             var tilesInRange = BoardState.GetWalkableAdjacentTiles(state, character.Position, character.MovementType);
@@ -498,33 +499,36 @@ namespace HexWork.Gameplay.GameObject.Characters
                 }
             }
             if (destination != null)
-                gameState.MoveEntity(state, character, new List<HexCoordinate> { destination });
+                newState = gameState.MoveEntity(newState, character.Id, new List<HexCoordinate> { destination });
             foreach (var action in character.Actions.Where(action =>
                 gameState.IsValidTarget(state, character, closestHero.Position, action.Range, action.TargetType)
                 && action.IsDetonator == closestHero.HasStatus))
             {
-                gameState.ApplyDamage(state, closestHero, action.Power * character.Power);
-                gameState.ApplyStatus(state, closestHero, action.StatusEffect);
-                action.Combo?.TriggerAsync(state, character, new DummyInputProvider(closestHero.Position), gameState);
-                return;
+                newState = gameState.ApplyDamage(state, closestHero.Id, action.Power * character.Power);
+                newState = gameState.ApplyStatus(state, closestHero.Id, action.StatusEffect);
+                newState = action.Combo?.TriggerAsync(state, character.Id, new DummyInputProvider(closestHero.Position), gameState).Result;
+                return newState;
             }
+
+            return newState;
         }
 
-        private static void ZombieKingTurn(IRulesProvider gameState, Character character)
+        private static BoardState ZombieKingTurn(BoardState state, IRulesProvider gameState, Character character)
         {
+            var newState = state.Copy();
+
             var position = character.Position;
             int shortestPathLength = int.MaxValue;
             Character closestHero = null;
-            var heroes = gameState.BoardState.Heroes;
-            var state = gameState.BoardState;
+            var heroes = newState.Heroes;
 
             //find the closest hero
             foreach (var hero in heroes)
             {
-                var nearestNeighbour = GetNearestPassableTileAdjacentToDestination(position, hero.Position, gameState);
+                var nearestNeighbour = GetNearestPassableTileAdjacentToDestination(newState, position, hero.Position, gameState);
                 if (nearestNeighbour == null)
                     continue;
-                var path = BoardState.FindShortestPath(gameState.BoardState, position, nearestNeighbour, 200);
+                var path = BoardState.FindShortestPath(newState, position, nearestNeighbour, 200);
                 
                 if (path == null) continue;
                 if (path.Count >= shortestPathLength) continue;
@@ -554,27 +558,29 @@ namespace HexWork.Gameplay.GameObject.Characters
                         }
                     }
                     if (destination != null)
-                        gameState.MoveEntity(state, character, new List<HexCoordinate> { destination });
+                        newState = gameState.MoveEntity(state, character.Id, new List<HexCoordinate> { destination });
                 }
             }
-            var zombies = gameState.BoardState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie && c.IsAlive).ToList();
+            var zombies = newState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie && c.IsAlive).ToList();
             var rand = new Random(DateTime.Now.Millisecond);
             
             if (rand.Next(0, 10) >= zombies.Count)
             {
-                character.Actions.FirstOrDefault(data => data.Name == "Summon Zombie")?
-                    .TriggerAsync(state, character, null, gameState);
+                newState = character.Actions.FirstOrDefault(data => data.Name == "Summon Zombie")?
+                    .TriggerAsync(state, character.Id, null, gameState).Result;
             }
             else
             {
-                character.Actions.FirstOrDefault(data => data.Name == "Zombie Rush")
-                    ?.TriggerAsync(state, character, null, gameState);
+                newState = character.Actions.FirstOrDefault(data => data.Name == "Zombie Rush")
+                    ?.TriggerAsync(state, character.Id, null, gameState).Result;
             }
+
+            return newState;
         }
 
         #region Turn Helper
 
-        private static HexCoordinate GetNearestPassableTileAdjacentToDestination(HexCoordinate start, HexCoordinate end, IRulesProvider gameState)
+        private static HexCoordinate GetNearestPassableTileAdjacentToDestination(BoardState state, HexCoordinate start, HexCoordinate end, IRulesProvider gameState)
         {
             var neighbours = BoardState.GetNeighbours(end);
 
@@ -596,7 +602,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                         nearest = neighbor;
                         distance = delta;
 
-                        if (BoardState.IsHexPassable(gameState.BoardState, neighbor))
+                        if (BoardState.IsHexPassable(state, neighbor))
                         { 
                             found = true;
                             result = neighbor;

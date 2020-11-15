@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI;
@@ -20,33 +21,40 @@ namespace HexWork.Gameplay.Actions
             CanRotateTargetting = false;
         }
 
-        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {
+            var newState = state.Copy();
+            var character = newState.GetEntityById(characterId) as Character;
+            if (character == null)
+                return state;
+
             var targetPosition = await input.GetTargetAsync(this);
             if (targetPosition == null)
-                return;
+                return state;
 
             //check validity
-            if (!gameState.IsValidTarget(state, character, targetPosition, character.RangeModifier + Range, TargetType))
-                return;
+            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+                return state;
 
-            var target = BoardState.GetEntityAtCoordinate(state, targetPosition);
+            var target = BoardState.GetEntityAtCoordinate(newState, targetPosition);
 
             if(target == null)
-                return;
+                return state;
 
             //swap positions of character and target character.
-            var characterPosition = character.Position; 
-            
-            gameState.TeleportEntityTo(state, character, targetPosition);
-            gameState.TeleportEntityTo(state, target, characterPosition);
+            var characterPosition = character.Position;
+
+            newState = gameState.TeleportEntityTo(newState, characterId, targetPosition);
+            newState = gameState.TeleportEntityTo(newState, target.Id, characterPosition);
 
             if (Combo != null)
-                await Combo.TriggerAsync(state, character, new DummyInputProvider(characterPosition), gameState);
-            gameState.ApplyDamage(state, target, Power * character.Power);
-            gameState.ApplyStatus(state, target, StatusEffect);
+                newState = await Combo.TriggerAsync(newState, characterId, new DummyInputProvider(characterPosition), gameState);
+            newState = gameState.ApplyDamage(newState, target.Id, Power * character.Power);
+            newState = gameState.ApplyStatus(newState, target.Id, StatusEffect);
 
-            gameState.CompleteAction(character, this);
+            newState = gameState.CompleteAction(newState, characterId, this);
+
+            return newState;
         }
     }
 }

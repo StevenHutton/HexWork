@@ -17,8 +17,6 @@ namespace HexWork.Gameplay
 
         public const int CollisionDamage = 15;
 
-        public BoardState BoardState { get; set; }
-
         #endregion
 
         #region Events
@@ -57,31 +55,32 @@ namespace HexWork.Gameplay
         
         public RulesProvider()
         {
-            BoardState = new BoardState();
-            BoardState.GenerateMap();
         }
 
-        public void CreateCharacters(int difficulty = 1)
+        public BoardState CreateCharacters(BoardState state, int difficulty = 1)
         {
-            BoardState.Entities.AddRange(CharacterFactory.CreateHeroes());
-            BoardState.Entities.AddRange(CharacterFactory.CreateEnemies(difficulty));
+            var newState = state.Copy();
+            newState.Entities.AddRange(CharacterFactory.CreateHeroes());
+            newState.Entities.AddRange(CharacterFactory.CreateEnemies(difficulty));
+            return newState;
         }
 
         #endregion
 
         #region Game Start
         
-        public void StartGame()
+        public BoardState StartGame(BoardState state)
         {
-            var characters = BoardState.Characters;
+            var newState = state.Copy();
+            var characters = newState.Characters;
 
             //spawn enemies
-            foreach (var character in BoardState.Characters.Where(c => !c.IsHero))
+            foreach (var character in newState.Characters.Where(c => !c.IsHero))
             {
                 var coordinate = BoardState.GetRandomCoordinateInMap();
 
                 //one unit per tile and only deploy to walkable spaces.
-                while (characters.Select(cha => cha.Position).Contains(coordinate) || !BoardState[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
+                while (characters.Select(cha => cha.Position).Contains(coordinate) || !newState[coordinate].IsWalkable || !IsInEnemySpawnArea(coordinate))
                 {
                     coordinate = BoardState.GetRandomCoordinateInMap();
                 }
@@ -96,17 +95,17 @@ namespace HexWork.Gameplay
 
             //spawn heroes
             var spawnPoint = new HexCoordinate(-2, -2, 4);
-            foreach (var character in BoardState.Heroes)
+            foreach (var character in newState.Heroes)
             {
                 var position = spawnPoint;
-                var validTile = BoardState.IsHexPassable(BoardState, position);
+                var validTile = BoardState.IsHexPassable(newState, position);
 
                 while (!validTile)
                 {
-                    position = BoardState.GetNearestEmptyNeighbourRecursive(BoardState, position, 9);
+                    position = BoardState.GetNearestEmptyNeighbourRecursive(newState, position, 9);
                     //tiles are only valid so long as they're walkable and have at least one passable neighbor.
-                    validTile = BoardState.IsHexPassable(BoardState, position) &&
-                                BoardState.GetNeighbours(position).Any(d => BoardState.IsHexPassable(BoardState, d));
+                    validTile = BoardState.IsHexPassable(newState, position) &&
+                                BoardState.GetNeighbours(position).Any(d => BoardState.IsHexPassable(newState, d));
                 }
 
                 character.SpawnAt(position);
@@ -117,77 +116,59 @@ namespace HexWork.Gameplay
                     });
             }
 
-            NextTurn(BoardState, BoardState.GetCharacterAtInitiative(BoardState, 0));            
+            newState = NextTurn(newState, BoardState.GetCharacterAtInitiative(newState, 0).Id);
+            return newState;
         }
 
         #endregion
 
         #region Metegame
 
-        public void CharacterGainPower(Guid characterId)
-        {
-            var character = FindCharacterById(characterId);
-
-            if (character == null)
-                return;
-
-            character.Power += 1;
-        }
-
-        public void CharacterGainHealth(Guid characterId)
-        {
-            var character = FindCharacterById(characterId);
-
-            if (character == null)
-                return;
-
-            character.MaxHealth += 10;
-            character.Health += 10;
-
-            if (character.Health >= character.MaxHealth)
-                character.Health = character.MaxHealth;
-        }
-
         #endregion
 
         #region Public Update Methods
 
-        public void Update()
+        public BoardState Update(BoardState state)
         {
-            if (BoardState.ActiveCharacter == null)
-                return;
+            var newState = state.Copy();
+            if (newState.ActiveCharacter == null)
+                return newState;
 
-            if (!BoardState.ActiveCharacter.IsAlive)
+            if (!newState.ActiveCharacter.IsAlive)
             {
-                NextTurn(BoardState, BoardState.ActiveCharacter);
-                return;
+                newState = NextTurn(newState, newState.ActiveCharacter.Id);
+                return newState;
             }
             
-            if (BoardState.ActiveCharacter.IsHero)
-                return;
+            if (newState.ActiveCharacter.IsHero)
+                return newState;
 
             //if they can't act, end turn
-            if (!BoardState.ActiveCharacter.CanAttack)
+            if (!newState.ActiveCharacter.CanAttack)
             {
-                NextTurn(BoardState, BoardState.ActiveCharacter);
-                return;
+                newState = NextTurn(newState, newState.ActiveCharacter.Id);
+                return newState;
             }
 
-            BoardState.ActiveCharacter.DoTurn(this, BoardState.ActiveCharacter);
-            BoardState.ActiveCharacter.CanAttack = false;                      
+            newState = newState.ActiveCharacter.DoTurn(newState, this, newState.ActiveCharacter);
+            newState.ActiveCharacter.CanAttack = false;
+            return newState;
         }
 
-        public void NextTurn(BoardState state, Character activeCharacter)
+        public BoardState NextTurn(BoardState state, Guid id)
         {
+            var newState = state.Copy();
+            var activeCharacter = newState.Characters.FirstOrDefault(data => data.Id == id);
+
             //if we have an active character then update all the initiative values
             if (activeCharacter != null)
             {
-                ResolveTileEffects(state, activeCharacter, activeCharacter.Position);
-                ResolveTerrainEffects(state, activeCharacter, activeCharacter.Position);
+                newState = ResolveTileEffect(newState, activeCharacter.Position);
+                newState = ResolveTerrainEffects(newState, activeCharacter.Position);
                 activeCharacter.EndTurn();
 
                 var deltaTime = activeCharacter.TurnTimer;
-                foreach (var character in BoardState.Characters)
+                foreach (var character in newState.Characters)
                 {
                     character.TurnTimer -= deltaTime;
                 }
@@ -210,22 +191,19 @@ namespace HexWork.Gameplay
             }
 
             //get the new active character
-            BoardState.ActiveCharacter = BoardState.GetCharacterAtInitiative(BoardState, 0);
-            activeCharacter = BoardState.ActiveCharacter;
-
-            if (activeCharacter.CharacterType == CharacterType.Majin)
-                GainPotential(state, 2);
+            newState.ActiveCharacter = BoardState.GetCharacterAtInitiative(newState, 0);
+            activeCharacter = newState.ActiveCharacter;
 
             activeCharacter.StartTurn();
 
             //apply any status effects for the new active character that trigger at the start of thier turn.
             foreach (var statusEffect in activeCharacter.StatusEffects)
             {
-                statusEffect.StartTurn(BoardState, activeCharacter, this);
+                statusEffect.StartTurn(newState, activeCharacter, this);
             }
 
             //apply any status effects for characters that apply whenever initiative moves.
-            foreach (var character in BoardState.Characters)
+            foreach (var character in newState.Characters)
             {
                 foreach (var statusEffect in character.StatusEffects)
                 {
@@ -233,7 +211,9 @@ namespace HexWork.Gameplay
                 }
             }
 
-            EndTurnEvent?.Invoke(this, new EndTurnEventArgs(BoardState.GetInitiativeList(BoardState).ToList()));
+            EndTurnEvent?.Invoke(this, new EndTurnEventArgs(BoardState.GetInitiativeList(newState).ToList()));
+
+            return newState;
         }
 
         #region Gamestate Transforms
@@ -249,14 +229,15 @@ namespace HexWork.Gameplay
                     Entity = entity
                 });
 
-            TeleportEntityTo(state, entity, entity.Position);
+            TeleportEntityTo(newState, entity.Id, entity.Position);
 
-            return state;
+            return newState;
         }
 
-        public BoardState MoveEntity(BoardState state, HexGameObject entity, List<HexCoordinate> path)
+        public BoardState MoveEntity(BoardState state, Guid id, List<HexCoordinate> path)
         {
             var newState = state.Copy();
+            var entity = newState.Entities.First(ent => ent.Id == id);
 
             foreach (var coordinate in path)
             {
@@ -267,17 +248,23 @@ namespace HexWork.Gameplay
                     Destination = coordinate
                 });
 
-                ResolveTileEffects(newState, entity, coordinate);
-                ResolveTerrainEffects(newState, entity, coordinate);
+                newState = ResolveTileEffect(newState, coordinate);
+                newState = ResolveTerrainEffects(newState, coordinate);
             }
 
-            return state;
+            return newState;
         }
 
-        public BoardState TeleportEntityTo(BoardState state, HexGameObject gameObject, HexCoordinate position)
+        public BoardState TeleportEntityTo(BoardState state, Guid entityId, HexCoordinate position)
         {
-            ResolveTileEffects(state, gameObject, position);
-            ResolveTerrainEffects(state, gameObject, position);
+            var newState = state.Copy();
+            
+            var gameObject = newState.Entities.FirstOrDefault(ent => ent.Position == position);
+            if (gameObject == null)
+                return state;
+
+            newState = ResolveTileEffect(newState, position);
+            newState = ResolveTerrainEffects(newState, position);           
 
             gameObject.MoveTo(position);
             CharacterTeleportEvent?.Invoke(this,
@@ -287,58 +274,50 @@ namespace HexWork.Gameplay
                     Destination = position
                 });
 
-            return state;
+            return newState;
         }
 
-        public void ResolveTileEffects(BoardState state, HexGameObject entity, HexCoordinate position)
+        public BoardState ResolveTileEffect(BoardState state, HexCoordinate position)
         {
-            var tileEffect = BoardState.TileEffects.FirstOrDefault(data => data.Position == position);
-
-            ResolveTileEffect(state, tileEffect, entity);
-        }
-
-        public void ResolveTileEffect(BoardState state, TileEffect tileEffect, HexGameObject entity = null)
-        {
+            var newState = state.Copy();
+            var tileEffect = newState.TileEffects.FirstOrDefault(data => data.Position == position);
             if (tileEffect == null)
-                return;
+                return state;
 
-            if (!(entity is Character))
-                return;
+            newState = tileEffect.TriggerEffect(newState, this).Result;
+            newState = RemoveTileEffect(newState, tileEffect.Id);
 
-            tileEffect.TriggerEffect(state, this, (Character)entity);
-            RemoveTileEffect(state, tileEffect);
+            return newState;
         }
 
-        public void RemoveTileEffect(BoardState state, TileEffect effect)
+        public BoardState RemoveTileEffect(BoardState state, Guid id)
         {
-            if (!BoardState.Entities.Contains(effect)) return;
+            var te = state.TileEffects.FirstOrDefault(data => data.Id == id);
+            if (te == null)
+                return state;
 
-            BoardState.Entities.Remove(effect);
-            RemoveEntityEvent?.Invoke(this, new EntityEventArgs() { Entity = effect });
+            var newState = state.Copy();
+            newState.Entities.Remove(te);
+            RemoveEntityEvent?.Invoke(this, new EntityEventArgs() { Entity = te });
+            return newState;
         }
 
         //when a character moves into a tile check to see if there're any terrain effects for moving into that tile.
-        private void ResolveTerrainEffects(BoardState state, HexGameObject entity, HexCoordinate destination)
+        private BoardState ResolveTerrainEffects(BoardState state, HexCoordinate position)
         {
-            //don't count terrain effects from a tile you're standing. We don't punish players for leaving lava.
-            ResolveTerrainEnterEffect(state, entity, BoardState[destination]);
-        }
+            var newState = state.Copy();
+            var character = newState.Characters.FirstOrDefault(ch => ch.Position == position);
+            if (character == null)
+                return state;
 
-        private void ResolveTerrainEnterEffect(BoardState state, HexGameObject entity, Tile tile)
-        {
-            if (!(entity is Character))
-                return;
-
-            var character = (Character) entity;
-
-            switch (tile.TerrainType)
+            switch (state[position].TerrainType)
             {
                 case TerrainType.Ground:
                     break;
                 case TerrainType.Water:
                     break;
                 case TerrainType.Lava:
-                    ApplyStatus(state, character,
+                    newState = ApplyStatus(newState, character.Id,
                         new DotEffect
                         {
                             Damage = 5,
@@ -362,25 +341,33 @@ namespace HexWork.Gameplay
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            return newState;
         }
 
-        public int ApplyDamage(BoardState state, HexGameObject entity, int damage, string message = null)
+        public BoardState ApplyDamage(BoardState state, Guid entityId, int damage)
         {
+            var newState = state.Copy();
+
+            var entity = newState.Entities.First(ent => ent.Id == entityId);
+
             entity.Health -= damage;
 
-            if (!string.IsNullOrWhiteSpace(message))
-                SendMessage(message, entity);
-
             TakeDamageEvent?.Invoke(this,
-                new DamageTakenEventArgs { DamageTaken = damage, TargetCharacterId = entity.Id });
+                new DamageTakenEventArgs { DamageTaken = damage, TargetCharacterId = entityId });
 
-            CheckDied(state, entity);
+            CheckDied(state, entityId);
 
-            return damage;
+            return newState;
         }
 
-        public void ApplyHealing(BoardState state, Character character, int healing)
+        public BoardState ApplyHealing(BoardState state, Guid id, int healing)
         {
+            var newState = state.Copy();
+            var character = newState.Characters.FirstOrDefault(data => data.Id == id);
+            if (character == null)
+                return state;
+
             character.Health += healing;
             if (character.Health >= character.MaxHealth)
                 character.Health = character.MaxHealth;
@@ -390,29 +377,45 @@ namespace HexWork.Gameplay
                 DamageTaken = -healing,
                 TargetCharacterId = character.Id
             });
+
+            return newState;
         }
 
-        public void CheckDied(BoardState state, HexGameObject character)
+        public BoardState CheckDied(BoardState state, Guid id)
         {
+            var newState = state.Copy();
+            var character = newState.Characters.FirstOrDefault(data => data.Id == id);
+            if (character == null)
+                return state;
+
             //check to see if they died.
-            if (character.Health <= 0 && BoardState.Entities.Contains(character))
+            if (character.Health <= 0 && state.Entities.Contains(character))
             {
-                BoardState.Entities.Remove(character);
+                state.Entities.Remove(character);
                 RemoveEntityEvent?.Invoke(this, new EntityEventArgs() { Entity = character });
             }
+
+            return state;
         }
 
-        public void ApplyStatus(BoardState state, HexGameObject entity, StatusEffect effect)
+        public BoardState ApplyStatus(BoardState state, Guid entityId, StatusEffect effect)
         {
             //todo - apply status effects based on status damage
             //for now we just always apply any relevant status effects
-            if (effect == null) return;
+            if (effect == null) return state;
+
+            var newState = state.Copy();
+
+            var entity = newState.GetEntityById(entityId);
+            if (entity == null)
+                return state;
 
             var effectToApply = effect.Copy();
             effectToApply.Reset();
             entity.StatusEffects.Add(effectToApply);
 
             StatusAppliedEvent?.Invoke(this, new StatusEventArgs(entity.Id, effectToApply));
+            return newState;
         }
 
         /// <summary>
@@ -421,121 +424,139 @@ namespace HexWork.Gameplay
         /// </summary>
         /// <param name="targetCharacter"></param>
         /// <param name="combo"></param>
-        public int ApplyCombo(BoardState state, HexGameObject targetEntity, DamageComboAction combo)
+        public BoardState ApplyCombo(BoardState state, Guid targetEntid, DamageComboAction combo, out int damage)
         {
-            if (!targetEntity.HasStatus)
-                return 0;
+            damage = 0;
 
-            ComboEvent?.Invoke(this, new ComboEventArgs(targetEntity.Id, combo));
+            var newState = state.Copy();
+            var entity = newState.Characters.FirstOrDefault(data => data.Id == targetEntid);
+            if (entity == null)
+                return state;
+
+            if (!entity.HasStatus)
+                return state;
+
+            ComboEvent?.Invoke(this, new ComboEventArgs(targetEntid, combo));
 
             //if the player scores a combo they gain potential.
-            if (BoardState.ActiveCharacter.IsHero)
-                GainPotential(state, 2);
+            if (newState.ActiveCharacter.IsHero)
+                GainPotential(newState, 2);
             
-            var status = targetEntity.StatusEffects.First();
+            var status = entity.StatusEffects.First();
 
-            var count = targetEntity.StatusEffects.Count(e => e.StatusEffectType == status.StatusEffectType);
+            damage = entity.StatusEffects.Count(e => e.StatusEffectType == status.StatusEffectType);
 
-            foreach (var statusEffect in targetEntity.StatusEffects.Where(s =>
+            foreach (var statusEffect in entity.StatusEffects.Where(s =>
                 s.StatusEffectType == status.StatusEffectType).ToList())
             {
-                targetEntity.StatusEffects.Remove(statusEffect);
-
-                StatusRemovedEvent?.Invoke(this, new StatusEventArgs(targetEntity.Id, statusEffect));
+                entity.StatusEffects.Remove(statusEffect);
+                StatusRemovedEvent?.Invoke(this, new StatusEventArgs(targetEntid, statusEffect));
             }
 
-            return count;
+            return newState;
         }
 
-        public void ApplyPush(BoardState state, HexGameObject targetEntity, HexCoordinate direction, int distance = 0)
+        public BoardState ApplyPush(BoardState state, Guid targetEntId, HexCoordinate direction, int distance = 0)
         {
-            //don't push dead characters
-            if (!BoardState.Entities.Contains(targetEntity))
-                return;
+            var newState = state.Copy();
+            var targetEntity = newState.Entities.FirstOrDefault(data => data.Id == targetEntId);
+            if (targetEntity == null)
+                return state;
 
             var targetCharacterPos = targetEntity.Position;
             var destinationPos = targetCharacterPos + direction;
             while (distance > 0)
             {
-                if (!BoardState.ContainsKey(destinationPos))
+                if (!newState.ContainsKey(destinationPos))
                 {
-                    ApplyDamage(state, targetEntity, distance * 15, "IMPACT");
+                    newState = ApplyDamage(newState, targetEntity.Id, distance * 15);
                     distance = 0;
                 }
-                else if (BoardState.IsHexPassable(state, destinationPos))
+                else if (BoardState.IsHexPassable(newState, destinationPos))
                 {
-                    MoveEntity(state, targetEntity, new List<HexCoordinate> { destinationPos });
+                    newState = MoveEntity(newState, targetEntity.Id, new List<HexCoordinate> { destinationPos });
 
-                    var tile = BoardState[destinationPos];
+                    var tile = newState[destinationPos];
 
                     if (tile.TerrainType != TerrainType.Ice && tile.TerrainType != TerrainType.ThinIce)
                         distance--;
 
                     destinationPos = destinationPos + direction;
                 }
-                else if (!BoardState.IsTileEmpty(state, destinationPos))
+                else if (!BoardState.IsTileEmpty(newState, destinationPos))
                 {
-                    var objectCharacter = BoardState.GetEntityAtCoordinate(state, destinationPos);
-                    ApplyDamage(state, targetEntity, distance * CollisionDamage, "Collision");
-                    ApplyDamage(state, objectCharacter, distance * CollisionDamage, "Collision");
+                    var objectCharacter = BoardState.GetEntityAtCoordinate(newState, destinationPos);
+                    newState = ApplyDamage(newState, targetEntity.Id, distance * CollisionDamage);
+                    newState = ApplyDamage(newState, objectCharacter.Id, distance * CollisionDamage);
                     distance = 0;
                 }
                 else
                 {
-                    ApplyDamage(state, targetEntity, distance * ImpactDamage, "IMPACT");
+                    newState = ApplyDamage(newState, targetEntity.Id, distance * ImpactDamage);
                     distance = 0;
                 }
             }
+
+            return newState;
         }
 
-        public void GainPotential(BoardState state, int potential = 1)
+        public BoardState GainPotential(BoardState state, int potential = 1)
         {
-            if (BoardState.Potential + potential <= BoardState.MaxPotential)
+            if (state.Potential + potential <= state.MaxPotential)
             {
-                BoardState.Potential += potential;
+                state.Potential += potential;
             }
 
             PotentialChangeEvent?.Invoke(this, new PotentialEventArgs(potential));
+            return state;
         }
 
-        public void LosePotential(BoardState state, int potential = 1)
+        public BoardState LosePotential(BoardState state, int potential = 1)
         {
-            if (BoardState.Potential >= potential)
+            if (state.Potential >= potential)
             {
-                BoardState.Potential -= potential;
+                state.Potential -= potential;
             }
 
             PotentialChangeEvent?.Invoke(this, new PotentialEventArgs(-potential));
+            return state;
         }
 
         public BoardState CreateTileEffect(BoardState state, TileEffect effect, HexCoordinate location)
         {
             if (!BoardState.IsHexInMap(location))
-                return null;
+                return state;
 
             //don't create a tile effect on unpassable tiles, occupied tiles or tiles that already have effects
             if (!BoardState.IsHexWalkable(state, location) || !BoardState.IsTileEmpty(state, location) || state.TileEffects.Any(te => te.Position == location))
-                return null;
+                return state;
 
             var newState = state.Copy();
 
             var tileEffect = new TileEffect(effect);
             tileEffect.Position = location;
-            BoardState.Entities.Add(tileEffect);
+            newState.Entities.Add(tileEffect);
 
             SpawnEntityEvent?.Invoke(this, new EntityEventArgs
             {
                 Entity = tileEffect
             });
 
-            return state;
+            return newState;
         }
 
-        public void CompleteAction(Character ch, HexAction action)
+        public BoardState CompleteAction(BoardState state, Guid id, HexAction action)
         {
+            var newState = state.Copy();
+            var ch = newState.Characters.FirstOrDefault(data => data.Id == id);
+            if (ch == null)
+                return state;
+
             ch.HasActed = true;
             ch.CanAttack = false;
             ActionEvent?.Invoke(this, new ActionEventArgs { Action = action });
+
+            return newState;
         }
 
         #endregion
@@ -559,11 +580,6 @@ namespace HexWork.Gameplay
         private bool IsInEnemySpawnArea(HexCoordinate coord)
         {
             return coord.Z <= 0 && coord.Z >= -3 && coord.X >= -4 && coord.X <= 4;
-        }
-
-        private Character FindCharacterById(Guid characterId)
-        {
-            return BoardState.Characters.FirstOrDefault(cha => cha.Id == characterId);
         }
 
         #endregion

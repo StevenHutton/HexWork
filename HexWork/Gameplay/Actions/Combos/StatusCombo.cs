@@ -1,5 +1,5 @@
-﻿using System.Threading.Tasks;
-using HexWork.Gameplay.GameObject.Characters;
+﻿using System;
+using System.Threading.Tasks;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
 
@@ -14,23 +14,30 @@ namespace HexWork.Gameplay.Actions
             Name = "Status Combo";
         }
 
-        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {
+            var newState = state.Copy();
+            var character = newState.GetCharacterById(characterId);
+            if (character == null)
+                return state;
+
             var targetPosition = await input.GetTargetAsync(this);
 
             if (targetPosition == null)
-                return;
+                return state;
 
-            var targetCharacter = BoardState.GetEntityAtCoordinate(state, targetPosition);
+            var targetCharacter = BoardState.GetEntityAtCoordinate(newState, targetPosition);
             if (targetCharacter == null)
-                return;
+                return state;
 
             if (!targetCharacter.HasStatus)
-                return;
+                return state;
 
-            var powerBonus = gameState.ApplyCombo(state, targetCharacter, this);
-            gameState.ApplyStatus(state, targetCharacter, Effect);
-            gameState.ApplyDamage(state, targetCharacter, (Power + powerBonus) * character.Power);
+            int powerBonus = 0;
+            newState = gameState.ApplyCombo(newState, targetCharacter.Id, this, out powerBonus);
+            newState = gameState.ApplyStatus(newState, targetCharacter.Id, Effect);
+            newState = gameState.ApplyDamage(newState, targetCharacter.Id, (Power + powerBonus) * character.Power);
+            return newState;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
@@ -20,25 +21,30 @@ namespace HexWork.Gameplay.Actions
 
         }
 
-        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {
+            var newState = state.Copy();
+            var character = newState.GetEntityById(characterId) as Character;
+            if (character == null)
+                return state;
+
             var targetPosition = await input.GetTargetAsync(this);
 
             if (targetPosition == null || character.Position == targetPosition)
-                return;
+                return state;
 
             var position = character.Position;
 
             //check validity
-            if (!gameState.IsValidTarget(state, character, targetPosition, character.RangeModifier + Range, TargetType))
-                return;
+            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+                return state;
 
-            gameState.MoveEntity(state, character, new List<HexCoordinate>{ targetPosition });
+            newState = gameState.MoveEntity(newState, characterId, new List<HexCoordinate>{ targetPosition });
 
             if (TileEffect != null)
-                gameState.CreateTileEffect(state, TileEffect, position);
+                newState = gameState.CreateTileEffect(newState, TileEffect, position);
 
-            character.CanMove = false;
+            return newState;
         }        
 	}
 }

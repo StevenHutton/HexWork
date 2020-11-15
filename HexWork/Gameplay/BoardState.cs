@@ -191,6 +191,20 @@ namespace HexWork.Gameplay
             return bs;
         }
 
+        /// <summary>
+        /// Returns null if no entity can be found.
+        /// </summary>
+        /// <returns>HexGameObject or null</returns>
+        public HexGameObject GetEntityById(Guid id)
+        {
+            return Entities.FirstOrDefault(ent => ent.Id == id);
+        }
+
+        public Character GetCharacterById(Guid id)
+        {
+            return Characters.FirstOrDefault(ent => ent.Id == id);
+        }
+
         #region Static Query Functions
 
         public static HexGameObject GetEntityAtCoordinate(BoardState state, HexCoordinate coordinate)

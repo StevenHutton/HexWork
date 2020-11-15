@@ -1,4 +1,6 @@
 ﻿using HexWork.Gameplay.Interfaces;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HexWork.Gameplay.GameObject
 {
@@ -8,16 +10,21 @@ namespace HexWork.Gameplay.GameObject
         public StatusEffect Effect;
         public float MovementModifier = 0.1f;
 
-	    public virtual async void TriggerEffect(BoardState state, IRulesProvider gameState, HexGameObject entity)
-        {
+	    public virtual async Task<BoardState> TriggerEffect(BoardState state, IRulesProvider gameState)
+        {            
+            //see if there's anything in my space
+            var entity = state.Entities.FirstOrDefault(ent => ent != this && ent.Position == Position);
             if (entity == null)
-                return;
+                return state;
 
-            if(Damage > 0)
-                gameState.ApplyDamage(state, entity, Damage);
+            var newState = state.Copy();
+
+            newState = gameState.ApplyDamage(newState, entity.Id, Damage);
             
             if(Effect != null)
-                gameState.ApplyStatus(state, entity, Effect);
+                newState = gameState.ApplyStatus(newState, entity.Id, Effect);
+
+            return newState;
 	    }
 
         public TileEffect() : base()

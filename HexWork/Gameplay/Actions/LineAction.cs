@@ -2,6 +2,7 @@
 using HexWork.UI.Interfaces;
 using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
+using System;
 
 namespace HexWork.Gameplay.Actions
 {
@@ -19,16 +20,21 @@ namespace HexWork.Gameplay.Actions
             CanRotateTargetting = false;
         }
 
-        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {
+            var newState = state.Copy();
+            var character = newState.GetEntityById(characterId) as Character;
+            if (character == null)
+                return state;
+
             var targetPosition = await input.GetTargetAsync(this);
 
             if (targetPosition == null)
-                return;
+                return state;
 
             //check validity
-            if (!gameState.IsValidTarget(state, character, targetPosition, character.RangeModifier + Range, TargetType))
-                return;
+            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+                return state;
 
             var nearestNeighbor = BoardState.GetNearestNeighbor(character.Position, targetPosition);
 
@@ -40,13 +46,12 @@ namespace HexWork.Gameplay.Actions
 
             foreach (var targetTile in targetTiles)
             {
-                ApplyToTile(state, targetTile, gameState, character);
+                newState = await ApplyToTile(newState, targetTile, gameState, characterId);
             }
 
-            if (PotentialCost != 0)
-                gameState.LosePotential(state, PotentialCost);
+            newState = gameState.LosePotential(state, PotentialCost);
 
-            gameState.CompleteAction(character, this);
+            return gameState.CompleteAction(newState, characterId, this);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
@@ -26,12 +27,17 @@ namespace HexWork.Gameplay.Actions
         /// <summary>
         /// immediately gains one potential and ends turn.
         /// </summary>
-        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {
-            if(character.CanAttack && character.IsHero)
-                gameState.GainPotential(state);
+            var newState = state.Copy();
+            var character = newState.GetEntityById(characterId) as Character;
+            if (character == null)
+                return state;
+
+            if (character.CanAttack && character.IsHero)
+                newState = gameState.GainPotential(newState);
             
-            gameState.NextTurn(state, character);
+            return gameState.NextTurn(newState, characterId);
         }
     }
 }

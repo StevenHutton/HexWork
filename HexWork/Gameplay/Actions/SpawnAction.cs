@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
@@ -8,21 +9,26 @@ namespace HexWork.Gameplay.Actions
 {
     public class SpawnAction : HexAction
     {
-        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {
+            var newState = state.Copy();
+            var character = newState.GetCharacterById(characterId);
+            if (character == null)
+                return state;
+
             //spawn zombie
             var zombie = CharacterFactory.CreateZombie();
 
             var tile = BoardState.GetNeighbours(character.Position)
-                .FirstOrDefault(d => BoardState.IsHexPassable(gameState.BoardState, d));
+                .FirstOrDefault(d => BoardState.IsHexPassable(newState, d));
 
             if (tile != null)
             {
                 zombie.SpawnAt(tile);
-                gameState.AddEntity(gameState.BoardState, zombie);
+                newState = gameState.AddEntity(newState, zombie);
             }
 
-            gameState.CompleteAction(character, this);
+            return gameState.CompleteAction(newState, characterId, this);
         }
     }
 }

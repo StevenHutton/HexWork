@@ -53,6 +53,7 @@ namespace HexWork.UI
         private HexAction SelectedHexAction = null;
 
         private RulesProvider GameState;
+        private BoardState BoardState;
 
         #region Rendering Attributes
 
@@ -135,7 +136,9 @@ namespace HexWork.UI
             _hexScaleV = new Vector2(_hexScale);
 
             GameState = new RulesProvider();
-            
+            BoardState = new BoardState();
+            BoardState.GenerateMap();
+
             GameState.CharacterMoveEvent += OnCharacterMove;
             GameState.CharacterTeleportEvent += OnCharacterTeleport;
             GameState.EndTurnEvent += OnEndTurn;
@@ -150,7 +153,7 @@ namespace HexWork.UI
             GameState.MessageEvent += OnMessage;
             GameState.GameOverEvent += OnGameOver;
 
-            GameState.CreateCharacters(difficulty);
+            GameState.CreateCharacters(BoardState, difficulty);
         }
 
         public override void LoadContent(Game game)
@@ -170,8 +173,8 @@ namespace HexWork.UI
 
             _spriteBatch = new SpriteBatch(game.GraphicsDevice);
 	        _gameStateProxy = new PreviewRulesProvider(_hexGame);
-
-            GameState.StartGame();
+            
+            BoardState = GameState.StartGame(BoardState);
         }
 
         #region Private Load Content Methods
@@ -202,7 +205,7 @@ namespace HexWork.UI
 
         public void Initialise()
         {
-            UpdateInitiative(GameState.BoardState.Characters);
+            UpdateInitiative(BoardState.Characters);
         }
 
         #endregion
@@ -212,7 +215,7 @@ namespace HexWork.UI
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-            GameState.Update();
+            BoardState = GameState.Update(BoardState);
             foreach (var character in _gameObjectDictionary.Values)
             {
                 character.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
@@ -299,11 +302,11 @@ namespace HexWork.UI
 			//Draw Preview
 	        if (_cursorPosition != null)
 	        {
-		        _gameStateProxy.gameState = GameState;
+		        _gameStateProxy.rulesProvider = GameState;
 
 				_gameStateProxy.SpriteBatchBegin();
 
-		        SelectedHexAction?.TriggerAsync(GameState.BoardState, _selectedCharacter,
+		        SelectedHexAction?.TriggerAsync(BoardState, _selectedCharacter.Id,
 			        new DummyInputProvider(_cursorPosition), _gameStateProxy);
 					
 		        _gameStateProxy.SpriteBatchEnd();
@@ -317,11 +320,11 @@ namespace HexWork.UI
             var gameState = GameState;
 
             List<string> rightSideStrings = new List<string>();
-            if (gameState.BoardState.ActiveCharacter != null)
+            if (BoardState.ActiveCharacter != null)
             {
-                rightSideStrings.Add("Active Character : " + gameState.BoardState.ActiveCharacter.Name);
+                rightSideStrings.Add("Active Character : " + BoardState.ActiveCharacter.Name);
             }
-            rightSideStrings.Add($"Current Potential : {gameState.BoardState.Potential}");
+            rightSideStrings.Add($"Current Potential : {BoardState.Potential}");
             if (_selectedCharacter != null)
             {
                 rightSideStrings.Add($"Selected Character : {_selectedCharacter.Name}");
@@ -340,14 +343,14 @@ namespace HexWork.UI
 			        new Vector2(ScreenEdgeMargin, ScreenEdgeMargin), Color.Black);
 			}
 
-			var startPositionX = _screenCenter.X - ((float)gameState.BoardState.MaxPotential / 2 * 65);
+			var startPositionX = _screenCenter.X - ((float)BoardState.MaxPotential / 2 * 65);
             var potentialPosY = 100 * _hexScreenScale;
 
             var screenPosition = new Vector2(startPositionX, potentialPosY);
 
-            for (int i = 0; i < gameState.BoardState.MaxPotential; i++)
+            for (int i = 0; i < BoardState.MaxPotential; i++)
             {
-                var color = gameState.BoardState.Potential <= i ? Color.LightPink : Color.Red;
+                var color = BoardState.Potential <= i ? Color.LightPink : Color.Red;
 
                 _spriteBatch.Draw(_blankTexture, screenPosition, null, color, 0.0f, Vector2.Zero, new Vector2(30.0f, 2.0f),
                     SpriteEffects.None, 0.0f);
@@ -435,9 +438,8 @@ namespace HexWork.UI
 
         private void DrawMap()
         {
-            var gameState = GameState.BoardState;
             _spriteBatch.Begin();
-            foreach (var kvp in gameState)
+            foreach (var kvp in BoardState)
             {
                 var coordinate = kvp.Key;
                 var tile = kvp.Value;
@@ -457,10 +459,9 @@ namespace HexWork.UI
 
         private void DrawHighlightedMap(List<HexCoordinate> highlightedTiles)
         {
-            var gameState = GameState.BoardState;
             _spriteBatch.Begin();
 
-            foreach (var kvp in gameState)
+            foreach (var kvp in BoardState)
             {
                 var coordinate = kvp.Key;
                 var tile = kvp.Value;
@@ -538,7 +539,6 @@ namespace HexWork.UI
 
         private void DrawEntities()
         {
-            var gameState = GameState.BoardState;
             //draw highlighted elements
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend,
                 null, null,
@@ -664,7 +664,6 @@ namespace HexWork.UI
         /// <param name="clickPosition">The position of the click in screen space.</param>
         private void MouseUp(Point clickPosition)
         {
-            var gameState = GameState.BoardState;
             //get mouse position in hex space
             var mouseOffsetX = clickPosition.X - (_screenWidth / 2);
             var mouseOffsetY = clickPosition.Y - (_screenHeight / 2);
@@ -769,15 +768,15 @@ namespace HexWork.UI
                 AddButton(name,
                     async (input) =>
                     {
-                        await action.TriggerAsync(GameState.BoardState, _selectedCharacter, input, GameState);
+                        await action.TriggerAsync(BoardState, _selectedCharacter.Id, input, GameState);
                         var followUpAction = action.FollowUpAction;
                         while (followUpAction != null)
                         {
-                            await followUpAction.TriggerAsync(GameState.BoardState, _selectedCharacter, input,
+                            BoardState = await followUpAction.TriggerAsync(BoardState, _selectedCharacter.Id, input,
                                 GameState);
                             followUpAction = followUpAction.FollowUpAction;
                         }
-                    }, action.IsAvailable(_selectedCharacter, GameState.BoardState));
+                    }, action.IsAvailable(_selectedCharacter, BoardState));
             }
             UpdateButtonPositions();
         }
@@ -825,18 +824,17 @@ namespace HexWork.UI
             if (SelectedHexAction == null)
                 return null;
 
-            return BoardState.GetValidTargets(_gameStateProxy.BoardState, _selectedCharacter, _selectedCharacter.RangeModifier + SelectedHexAction.Range, SelectedHexAction.TargetType);
+            return BoardState.GetValidTargets(BoardState, _selectedCharacter, _selectedCharacter.RangeModifier + SelectedHexAction.Range, SelectedHexAction.TargetType);
 		}
 
 		private HexCoordinate GetHexCoordinate(float posX, float posY)
         {
-            var gameState = GameState.BoardState;
             var x = (_sqrt3 / 3 * posX - 1.0f / 3 * posY) / (_hexHalfSize * _hexScale);
 		    var z = 2.0f / 3 * posY / (_hexHalfSize * _hexScale);
 		    var y = -(x + z);
 
 		    var result = GetNearestCoord(x, y, z);
-		    return gameState.ContainsKey(result) ? result : null;
+		    return BoardState.ContainsKey(result) ? result : null;
 	    }
 
 	    private HexCoordinate GetNearestCoord(float x, float y, float z)

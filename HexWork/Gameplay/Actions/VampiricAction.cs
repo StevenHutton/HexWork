@@ -22,16 +22,21 @@ namespace HexWork.Gameplay.Actions
             combo, targetPattern)
         { }
 
-        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {
+            var newState = state.Copy();
+            var character = newState.GetCharacterById(characterId);
+            if (character == null)
+                return state;
+
             //get user input
             var targetPosition = await input.GetTargetAsync(this);
             if (targetPosition == null)
-                return;
+                return state;
 
             //check validity
-            if (!gameState.IsValidTarget(state, character, targetPosition, character.RangeModifier + Range, TargetType))
-                return;
+            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+                return state;
 
             int amountToHeal = 0;
 
@@ -39,7 +44,7 @@ namespace HexWork.Gameplay.Actions
             var targetTiles = GetTargetTiles(targetPosition);
             foreach (var targetTile in targetTiles)
             {
-                var targetCharacter = BoardState.GetEntityAtCoordinate(state, targetTile);
+                var targetCharacter = BoardState.GetEntityAtCoordinate(newState, targetTile);
 
                 //if no one is there, next tile
                 if (targetCharacter == null)
@@ -48,19 +53,18 @@ namespace HexWork.Gameplay.Actions
                 if (AllySafe && targetCharacter.IsHero == character.IsHero)
                     continue;
 
-
                 if (Combo != null)
-                    await Combo.TriggerAsync(state, character, new DummyInputProvider(targetTile), gameState);
-                amountToHeal += gameState.ApplyDamage(state, targetCharacter, Power * character.Power);
-                gameState.ApplyStatus(state, targetCharacter, StatusEffect);
+                    newState = await Combo.TriggerAsync(newState, characterId, new DummyInputProvider(targetTile), gameState);
+
+                newState = gameState.ApplyDamage(newState, targetCharacter.Id, Power * character.Power);
+                newState = gameState.ApplyStatus(newState, targetCharacter.Id, StatusEffect);
+                amountToHeal += Power * character.Power;
             }
 
-            gameState.ApplyHealing(state, character, amountToHeal);
+            newState = gameState.ApplyHealing(newState, character.Id, amountToHeal);
+            newState = gameState.LosePotential(newState, PotentialCost);
 
-            if (PotentialCost != 0)
-                gameState.LosePotential(state, PotentialCost);
-
-            gameState.CompleteAction(character, this);
+            return gameState.CompleteAction(newState, character.Id, this);
         }
     }
 }

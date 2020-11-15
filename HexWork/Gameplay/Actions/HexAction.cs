@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
@@ -84,19 +85,24 @@ namespace HexWork.Gameplay.Actions
                 Pattern.RotateClockwise();
         }
 
-        public virtual async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        public virtual async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {
-			//get user input
-	        var targetPosition = await input.GetTargetAsync(this);
+            var newState = state.Copy();
+            var character = newState.GetEntityById(characterId) as Character;
+            if (character == null)
+                return state;
+
+            //get user input
+            var targetPosition = await input.GetTargetAsync(this);
 	        if (targetPosition == null)
-		        return;
+		        return state;
 
             //check validity
-            if (!gameState.IsValidTarget(state, character, targetPosition, character.RangeModifier + Range, TargetType))
-                return;
+            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+                return state;
 
             if (PotentialCost != 0)
-                gameState.LosePotential(state, PotentialCost);
+                newState = gameState.LosePotential(newState, PotentialCost);
 
 			//loop through the affected tiles.
             var targetTiles = GetTargetTiles(targetPosition);
@@ -106,36 +112,43 @@ namespace HexWork.Gameplay.Actions
                     BoardState.GetPushDirection(character.Position, targetTile) :
                     BoardState.GetPushDirection(targetPosition, targetTile);
 
-                ApplyToTile(state, targetTile, gameState, character, direction);
+                newState = await ApplyToTile(newState, targetTile, gameState, characterId, direction);
             }
 
-            gameState.CompleteAction(character, this);
+            return gameState.CompleteAction(state, character.Id, this);
         }
 
-        public virtual async void ApplyToTile(BoardState state, HexCoordinate targetTile, IRulesProvider gameState, Character character, HexCoordinate direction = null)
+        public virtual async Task<BoardState> ApplyToTile(BoardState state, HexCoordinate targetTile, IRulesProvider gameState, Guid characterId, HexCoordinate direction = null)
         {
-            var targetCharacter = BoardState.GetEntityAtCoordinate(state, targetTile);
+            var newState = state.Copy();
+            var character = newState.GetEntityById(characterId) as Character;
+            if (character == null)
+                return state;
+
+            var targetCharacter = BoardState.GetEntityAtCoordinate(newState, targetTile);
                                     
             if (Combo != null)
-                await Combo.TriggerAsync(state, character, new DummyInputProvider(targetTile), gameState);
+                newState = await Combo.TriggerAsync(newState, characterId, new DummyInputProvider(targetTile), gameState);
 
             //if no one is there, next tile
             if (targetCharacter != null)
             {
                 //only apply damage and status effects to legal targets
                 if (!AllySafe || targetCharacter.IsHero != character.IsHero)
-                { 
-                    gameState.ApplyDamage(state, targetCharacter, Power * character.Power);
-                    gameState.ApplyStatus(state, targetCharacter, StatusEffect);
+                {
+                    newState = gameState.ApplyDamage(newState, targetCharacter.Id, Power * character.Power);
+                    newState = gameState.ApplyStatus(newState, targetCharacter.Id, StatusEffect);
                 }
 
                 //everyone gets pushed
                 if (direction != null)
-                    gameState.ApplyPush(state, targetCharacter, direction, PushForce);
+                    newState = gameState.ApplyPush(newState, targetCharacter.Id, direction, PushForce);
             }
 
             if (TileEffect != null)
-                gameState.CreateTileEffect(state, TileEffect, targetTile);
+                newState = gameState.CreateTileEffect(newState, TileEffect, targetTile);
+
+            return newState;
         }
         
         #endregion

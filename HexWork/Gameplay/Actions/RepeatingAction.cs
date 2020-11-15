@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
@@ -34,16 +35,20 @@ namespace HexWork.Gameplay.Actions
                 combo, targetPattern)
         { }
         
-        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {
-            var targetPosition = await input.GetTargetAsync(this);
+            var newState = state.Copy();
+            var character = newState.GetCharacterById(characterId);
+            if (character == null)
+                return state;
 
+            var targetPosition = await input.GetTargetAsync(this);
             if (targetPosition == null)
-                return;
+                return state;
 
             //check validity
-            if (!gameState.IsValidTarget(state, character, targetPosition, character.RangeModifier + Range, TargetType))
-                return;
+            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+                return state;
 
             var targetTiles = GetTargetTiles(targetPosition);
 
@@ -61,16 +66,15 @@ namespace HexWork.Gameplay.Actions
                         continue;
 
                     if (Combo != null)
-                        await Combo.TriggerAsync(state, character, new DummyInputProvider(targetPosition), gameState);
-                    gameState.ApplyDamage(state, targetCharacter, Power * character.Power);
-                    gameState.ApplyStatus(state, targetCharacter, StatusEffect);
+                        newState = await Combo.TriggerAsync(newState, characterId, new DummyInputProvider(targetPosition), gameState);
+                    newState = gameState.ApplyDamage(newState, targetCharacter.Id, Power * character.Power);
+                    newState = gameState.ApplyStatus(newState, targetCharacter.Id, StatusEffect);
                 }
             }
 
-            if (PotentialCost != 0)
-                gameState.LosePotential(state, PotentialCost);
+            newState = gameState.LosePotential(state, PotentialCost);
             
-            gameState.CompleteAction(character, this);
+            return gameState.CompleteAction(newState, characterId, this);
         }
 
         #endregion

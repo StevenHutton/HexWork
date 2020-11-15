@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
@@ -36,43 +37,41 @@ namespace HexWork.Gameplay.Interfaces
 
 	public interface IRulesProvider
     {
-		BoardState BoardState { get; }
-
         #region Transforms
 
-        BoardState MoveEntity(BoardState state, HexGameObject entity, List<HexCoordinate> path);
+        BoardState MoveEntity(BoardState state, Guid entityId, List<HexCoordinate> path);
 
-		BoardState TeleportEntityTo(BoardState state, HexGameObject entity, HexCoordinate position);
+		BoardState TeleportEntityTo(BoardState state, Guid entityId, HexCoordinate position);
 
-        int ApplyDamage(BoardState state, HexGameObject entity, int power, string message = null);
+        BoardState ApplyDamage(BoardState state, Guid entityId, int power);
 
-        void ApplyStatus(BoardState state, HexGameObject entity, StatusEffect effect);
+        BoardState ApplyStatus(BoardState state, Guid entityId, StatusEffect effect);
 
-        int ApplyCombo(BoardState state, HexGameObject entity, DamageComboAction combo);
+        BoardState ApplyCombo(BoardState state, Guid entityId, DamageComboAction combo, out int comboPower);
 
-        void ApplyPush(BoardState state, HexGameObject entity, HexCoordinate direction, int pushForce);
+        BoardState ApplyPush(BoardState state, Guid entityId, HexCoordinate direction, int pushForce);
 
-        void ApplyHealing(BoardState state, Character character, int healingAmount);
+        BoardState ApplyHealing(BoardState state, Guid entityId, int healingAmount);
 
-        void GainPotential(BoardState state, int potentialGain = 1);
+        BoardState GainPotential(BoardState state, int potentialGain = 1);
 
-        void LosePotential(BoardState state, int potentialCost);
+        BoardState LosePotential(BoardState state, int potentialCost);
 
-		void NextTurn(BoardState state, Character activeCharacter);
+        BoardState NextTurn(BoardState state, Guid entityId);
 
-        void CheckDied(BoardState state, HexGameObject entity);
+        BoardState CheckDied(BoardState state, Guid entityId);
 
-        void ResolveTileEffect(BoardState state, TileEffect tileEffect, HexGameObject entity = null);
+        BoardState ResolveTileEffect(BoardState state, HexCoordinate location);
 
         BoardState CreateTileEffect(BoardState state, TileEffect effect, HexCoordinate location);
 
-        void RemoveTileEffect(BoardState state, TileEffect effect);
+        BoardState RemoveTileEffect(BoardState state, Guid entityId);
 
         BoardState AddEntity(BoardState state, HexGameObject entity);
 
-        void CompleteAction(Character ch, HexAction action);
+        BoardState CompleteAction(BoardState state, Guid characterId, HexAction action);
 
-        bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType);
+        bool IsValidTarget(BoardState state, Character subjectCharacter, HexCoordinate targetPosition, int range, TargetType targetType);
 
         #endregion
     }

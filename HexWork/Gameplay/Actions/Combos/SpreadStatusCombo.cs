@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
+using System;
 
 namespace HexWork.Gameplay.Actions
 {
@@ -21,11 +22,16 @@ namespace HexWork.Gameplay.Actions
             Power = 1;
         }
 
-        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {
+            var newState = state.Copy();
+            var character = newState.GetCharacterById(characterId);
+            if (character == null)
+                return state;
+
             var targetPosition = await input.GetTargetAsync(this);
             if (targetPosition == null)
-                return;
+                return state;
 
             var nearestNeighbor = BoardState.GetNearestNeighbor(character.Position, targetPosition);
             var direction = targetPosition - nearestNeighbor;
@@ -35,12 +41,13 @@ namespace HexWork.Gameplay.Actions
                 Pattern.RotateClockwise();
             }
 
-            var targetCharacter = BoardState.GetEntityAtCoordinate(state, targetPosition);
+            var targetCharacter = BoardState.GetEntityAtCoordinate(newState, targetPosition);
             var statusEffect = targetCharacter?.StatusEffects.FirstOrDefault();
             if (statusEffect != null)
             {
                 //the more status effects we detonate the more damage we add
-                var powerBonus = gameState.ApplyCombo(state, targetCharacter, this);
+                int powerBonus = 0;
+                newState = gameState.ApplyCombo(newState, targetCharacter.Id, this, out powerBonus);
 
                 foreach (var targetTile in GetTargetTiles(targetPosition))
                 {
@@ -50,7 +57,7 @@ namespace HexWork.Gameplay.Actions
                     if (newTargetCharacter == null)
                     {
                         if (statusEffect.TileEffect != null)
-                            gameState.CreateTileEffect(state, statusEffect.TileEffect, targetTile);
+                            gameState.CreateTileEffect(newState, statusEffect.TileEffect, targetTile);
 
                         continue;
                     }
@@ -58,37 +65,38 @@ namespace HexWork.Gameplay.Actions
                     if (AllySafe && newTargetCharacter.IsHero == character.IsHero)
                         continue;
 
-                    gameState.ApplyStatus(state, newTargetCharacter, statusEffect);
-                    gameState.ApplyDamage(state, newTargetCharacter, Power * character.Power);
+                    gameState.ApplyStatus(newState, newTargetCharacter.Id, statusEffect);
+                    gameState.ApplyDamage(newState, newTargetCharacter.Id, Power * character.Power);
 
                     var dir = PushFromCaster ?
                         BoardState.GetPushDirection(character.Position, targetTile) :
                         BoardState.GetPushDirection(targetPosition, targetTile);
-                    gameState.ApplyPush(state, newTargetCharacter, dir, PushForce);
+                    newState = gameState.ApplyPush(newState, newTargetCharacter.Id, dir, PushForce);
                 }
-                gameState.ApplyDamage(state, targetCharacter, (powerBonus + Power) * character.Power);
+                newState = gameState.ApplyDamage(newState, targetCharacter.Id, (powerBonus + Power) * character.Power);
             }
 
-            var tileEffect = BoardState.GetTileEffectAtCoordinate(state, targetPosition);
+            var tileEffect = BoardState.GetTileEffectAtCoordinate(newState, targetPosition);
             if (tileEffect == null)
-                return;
+                return newState;
             
             foreach (var targetTile in GetTargetTiles(targetPosition))
             {
-                var newTargetCharacter = BoardState.GetEntityAtCoordinate(state, targetTile);
+                var newTargetCharacter = BoardState.GetEntityAtCoordinate(newState, targetTile);
                 if (newTargetCharacter != null)
                 {
                     if (AllySafe && newTargetCharacter.IsHero == character.IsHero)
                         continue;
 
-                    tileEffect.TriggerEffect(state, gameState, newTargetCharacter);
+                    newState = await tileEffect.TriggerEffect(newState, gameState);
                 }
                 else
-                    gameState.CreateTileEffect(state, tileEffect, targetTile);
+                    newState = gameState.CreateTileEffect(newState, tileEffect, targetTile);
             }
 
-            gameState.ResolveTileEffect(state, tileEffect);
-            gameState.RemoveTileEffect(state, tileEffect);
+            newState = gameState.ResolveTileEffect(newState, targetPosition);
+            newState = gameState.RemoveTileEffect(newState, tileEffect.Id);
+            return newState;
         }
     }
 }

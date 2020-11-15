@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.UI.Interfaces;
+using System;
 using System.Linq;
 
 namespace HexWork.Gameplay.Actions
@@ -20,19 +21,24 @@ namespace HexWork.Gameplay.Actions
         {
         }
 
-        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {
+            var newState = state.Copy();
+            var character = newState.GetEntityById(characterId) as Character;
+            if (character == null)
+                return state;
+
             var targetPosition = await input.GetTargetAsync(this);
 
             if (targetPosition == null || character.Position == targetPosition)
-                return;
+                return state;
 
             //check validity
-            if (!gameState.IsValidTarget(state, character, targetPosition, character.RangeModifier + Range, TargetType))
-                return;
+            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+                return state;
 
             if (PotentialCost != 0)
-                gameState.LosePotential(state, PotentialCost);
+                newState = gameState.LosePotential(newState, PotentialCost);
 
             var position = character.Position;
             var direction = BoardState.GetPushDirection(position, targetPosition);
@@ -43,14 +49,15 @@ namespace HexWork.Gameplay.Actions
             {
                 position += direction;
                 path.Add(position);
-            }            
-            gameState.MoveEntity(state, character, path);
+            }
+            newState = gameState.MoveEntity(newState, characterId, path);
             
             var strikePosition = targetPosition + direction;
 
-            ApplyToTile(state, strikePosition, gameState, character, direction);
+            newState = await ApplyToTile(newState, strikePosition, gameState, characterId, direction);
 
-            gameState.CompleteAction(character, this);
+            newState = gameState.CompleteAction(newState, characterId, this);
+            return newState;
         }
     }
 }

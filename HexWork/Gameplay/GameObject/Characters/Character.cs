@@ -45,7 +45,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         private static Random _rand;
 
-        public Action<IRulesProvider, Character> DoTurn { get; set; }
+        public Func<BoardState, IRulesProvider, Character, BoardState> DoTurn { get; set; }
 
         #endregion
         

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Threading.Tasks;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
@@ -27,24 +26,31 @@ namespace HexWork.Gameplay.Actions
 
 		}
 
-        public override async Task TriggerAsync(BoardState state, Character character, IInputProvider input, IRulesProvider gameState)
+        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {
+            var newState = state.Copy();
+            var character = newState.GetEntityById(characterId) as Character;
+            if (character == null)
+                return state;
+
             var targetPosition = await input.GetTargetAsync(this);
 
             if (targetPosition == null || character.Position == targetPosition)
-                return;
+                return state;
 
             var position = character.Position;
 
-            if (BoardState.IsValidDestination(state, character, targetPosition))
+            if (BoardState.IsValidDestination(newState, character, targetPosition))
             {
-                var path = BoardState.FindShortestPath(state, position, targetPosition, state.Potential, character.MovementType, character.MovementSpeed);
-                gameState.LosePotential(state, BoardState.GetPathLengthToTile(state, character, targetPosition, path));
-                gameState.MoveEntity(state, character, path);
+                var path = BoardState.FindShortestPath(newState, position, targetPosition, newState.Potential, character.MovementType, character.MovementSpeed);
+                newState = gameState.LosePotential(newState, BoardState.GetPathLengthToTile(newState, character, targetPosition, path));
+                newState = gameState.MoveEntity(newState, characterId, path);
             }
 
             if (TileEffect != null)
-                gameState.CreateTileEffect(state, TileEffect, position);
+                return gameState.CreateTileEffect(newState, TileEffect, position);
+
+            return newState;
         }
 	}
 }
