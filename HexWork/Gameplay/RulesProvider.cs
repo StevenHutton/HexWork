@@ -165,6 +165,7 @@ namespace HexWork.Gameplay
             {
                 newState = ResolveTileEffect(newState, activeCharacter.Position);
                 newState = ResolveTerrainEffects(newState, activeCharacter.Position);
+                activeCharacter = newState.Characters.FirstOrDefault(data => data.Id == id);
                 activeCharacter.EndTurn();
 
                 var deltaTime = activeCharacter.TurnTimer;
@@ -237,10 +238,10 @@ namespace HexWork.Gameplay
         public BoardState MoveEntity(BoardState state, Guid id, List<HexCoordinate> path)
         {
             var newState = state.Copy();
-            var entity = newState.Entities.First(ent => ent.Id == id);
-
+            
             foreach (var coordinate in path)
             {
+                var entity = newState.Entities.First(ent => ent.Id == id);
                 entity.MoveTo(coordinate);
                 CharacterMoveEvent?.Invoke(this, new MoveEventArgs
                 {

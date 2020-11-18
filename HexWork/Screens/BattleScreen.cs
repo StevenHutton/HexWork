@@ -42,9 +42,9 @@ namespace HexWork.UI
         private readonly List<InitiativeTrackButton> _initiativeTrack = new List<InitiativeTrackButton>();
 
         private List<UiAction> _uiActions = new List<UiAction>();
-	    private PreviewRulesProvider _gameStateProxy;
+	    private PreviewRulesProvider _RulesProviderProxy;
 
-        private Character _selectedCharacter;
+        public Character SelectedCharacter => BoardState.ActiveCharacter;
         private HexCoordinate _focusedTile = null;
         private HexCoordinate _cursorPosition;
 
@@ -52,7 +52,7 @@ namespace HexWork.UI
 
         private HexAction SelectedHexAction = null;
 
-        private RulesProvider GameState;
+        private RulesProvider RulesProvider;
         private BoardState BoardState;
 
         #region Rendering Attributes
@@ -135,25 +135,25 @@ namespace HexWork.UI
             _hexScale = 0.4f * _screenWidth / 1920;
             _hexScaleV = new Vector2(_hexScale);
 
-            GameState = new RulesProvider();
+            RulesProvider = new RulesProvider();
             BoardState = new BoardState();
             BoardState.GenerateMap();
 
-            GameState.CharacterMoveEvent += OnCharacterMove;
-            GameState.CharacterTeleportEvent += OnCharacterTeleport;
-            GameState.EndTurnEvent += OnEndTurn;
-            GameState.SpawnEntityEvent += OnEntitySpawn;
-            GameState.RemoveEntityEvent += OnEntityDied;
-            GameState.TakeDamageEvent += OnTakeDamage;
-            GameState.ActionEvent += OnActionTrigger;
-            GameState.ComboEvent += OnComboTrigger;
-            GameState.StatusAppliedEvent += OnStatusEffectApplied;
-            GameState.StatusRemovedEvent += OnStatusEffectRemoved;
-            GameState.PotentialChangeEvent += OnPotentialChange;
-            GameState.MessageEvent += OnMessage;
-            GameState.GameOverEvent += OnGameOver;
+            RulesProvider.CharacterMoveEvent += OnCharacterMove;
+            RulesProvider.CharacterTeleportEvent += OnCharacterTeleport;
+            RulesProvider.EndTurnEvent += OnEndTurn;
+            RulesProvider.SpawnEntityEvent += OnEntitySpawn;
+            RulesProvider.RemoveEntityEvent += OnEntityDied;
+            RulesProvider.TakeDamageEvent += OnTakeDamage;
+            RulesProvider.ActionEvent += OnActionTrigger;
+            RulesProvider.ComboEvent += OnComboTrigger;
+            RulesProvider.StatusAppliedEvent += OnStatusEffectApplied;
+            RulesProvider.StatusRemovedEvent += OnStatusEffectRemoved;
+            RulesProvider.PotentialChangeEvent += OnPotentialChange;
+            RulesProvider.MessageEvent += OnMessage;
+            RulesProvider.GameOverEvent += OnGameOver;
 
-            GameState.CreateCharacters(BoardState, difficulty);
+            BoardState = RulesProvider.CreateCharacters(BoardState, difficulty);
         }
 
         public override void LoadContent(Game game)
@@ -172,9 +172,9 @@ namespace HexWork.UI
             _effectFont = game.Content.Load<SpriteFont>("MenuFont");
 
             _spriteBatch = new SpriteBatch(game.GraphicsDevice);
-	        _gameStateProxy = new PreviewRulesProvider(_hexGame);
+	        _RulesProviderProxy = new PreviewRulesProvider(_hexGame);
             
-            BoardState = GameState.StartGame(BoardState);
+            BoardState = RulesProvider.StartGame(BoardState);
         }
 
         #region Private Load Content Methods
@@ -215,7 +215,7 @@ namespace HexWork.UI
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-            BoardState = GameState.Update(BoardState);
+            BoardState = RulesProvider.Update(BoardState);
             foreach (var character in _gameObjectDictionary.Values)
             {
                 character.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
@@ -302,14 +302,14 @@ namespace HexWork.UI
 			//Draw Preview
 	        if (_cursorPosition != null)
 	        {
-		        _gameStateProxy.rulesProvider = GameState;
+		        _RulesProviderProxy.rulesProvider = RulesProvider;
 
-				_gameStateProxy.SpriteBatchBegin();
+				_RulesProviderProxy.SpriteBatchBegin();
 
-		        SelectedHexAction?.TriggerAsync(BoardState, _selectedCharacter.Id,
-			        new DummyInputProvider(_cursorPosition), _gameStateProxy);
+		        SelectedHexAction?.TriggerAsync(BoardState, SelectedCharacter.Id,
+			        new DummyInputProvider(_cursorPosition), _RulesProviderProxy);
 					
-		        _gameStateProxy.SpriteBatchEnd();
+		        _RulesProviderProxy.SpriteBatchEnd();
 			}
         }
         
@@ -317,20 +317,18 @@ namespace HexWork.UI
 
         private void DrawHud()
         {
-            var gameState = GameState;
-
             List<string> rightSideStrings = new List<string>();
             if (BoardState.ActiveCharacter != null)
             {
                 rightSideStrings.Add("Active Character : " + BoardState.ActiveCharacter.Name);
             }
             rightSideStrings.Add($"Current Potential : {BoardState.Potential}");
-            if (_selectedCharacter != null)
+            if (SelectedCharacter != null)
             {
-                rightSideStrings.Add($"Selected Character : {_selectedCharacter.Name}");
-                rightSideStrings.Add($"Power : {_selectedCharacter.Power}");
-                rightSideStrings.Add($"Position : {_selectedCharacter.Position}");
-                rightSideStrings.Add($"Health : {_selectedCharacter.Health}/{_selectedCharacter?.MaxHealth}");
+                rightSideStrings.Add($"Selected Character : {SelectedCharacter.Name}");
+                rightSideStrings.Add($"Power : {SelectedCharacter.Power}");
+                rightSideStrings.Add($"Position : {SelectedCharacter.Position}");
+                rightSideStrings.Add($"Health : {SelectedCharacter.Health}/{SelectedCharacter?.MaxHealth}");
             }
             
             DrawRightSideText(rightSideStrings);
@@ -418,7 +416,7 @@ namespace HexWork.UI
                 if (texture == null)
                     continue;
 
-                if (id == _selectedCharacter?.Id)
+                if (id == SelectedCharacter?.Id)
                 {
                     _outlineColour.SetValue(Color.Red.ToVector4());
 
@@ -552,7 +550,7 @@ namespace HexWork.UI
             {
                 var sprite = kvp.Value;
 
-				if (kvp.Key == _selectedCharacter?.Id)
+				if (kvp.Key == SelectedCharacter?.Id)
                 {
                     _outlineColour.SetValue(Color.Red.ToVector4());
 
@@ -750,17 +748,17 @@ namespace HexWork.UI
         private void UpdateButtons()
         {
             _actionBarButtons.Clear();
-            if (_selectedCharacter == null)
+            if (SelectedCharacter == null)
                 return;
 
-            var actions = _selectedCharacter.Actions;
+            var actions = SelectedCharacter.Actions;
             
             foreach (var action in actions)
             {
                 var name = action.Name;
                 if(action is PotentialGainAction)
                 {
-                    name = _selectedCharacter.CanAttack ? name : "End Turn";
+                    name = SelectedCharacter.CanAttack ? name : "End Turn";
                 }
 
                 name = action.PotentialCost > 0 ? $"{name} {action.PotentialCost}" : name;
@@ -768,15 +766,16 @@ namespace HexWork.UI
                 AddButton(name,
                     async (input) =>
                     {
-                        await action.TriggerAsync(BoardState, _selectedCharacter.Id, input, GameState);
+                        BoardState = await action.TriggerAsync(BoardState, SelectedCharacter.Id, input, RulesProvider);
                         var followUpAction = action.FollowUpAction;
                         while (followUpAction != null)
                         {
-                            BoardState = await followUpAction.TriggerAsync(BoardState, _selectedCharacter.Id, input,
-                                GameState);
+                            BoardState = await followUpAction.TriggerAsync(BoardState, SelectedCharacter.Id, input,
+                                RulesProvider);
                             followUpAction = followUpAction.FollowUpAction;
                         }
-                    }, action.IsAvailable(_selectedCharacter, BoardState));
+                        UpdateButtons();
+                    }, action.IsAvailable(SelectedCharacter, BoardState));
             }
             UpdateButtonPositions();
         }
@@ -824,7 +823,9 @@ namespace HexWork.UI
             if (SelectedHexAction == null)
                 return null;
 
-            return BoardState.GetValidTargets(BoardState, _selectedCharacter, _selectedCharacter.RangeModifier + SelectedHexAction.Range, SelectedHexAction.TargetType);
+            var selectedCharacter = BoardState.ActiveCharacter;
+
+            return BoardState.GetValidTargets(BoardState, selectedCharacter, selectedCharacter.RangeModifier + SelectedHexAction.Range, SelectedHexAction.TargetType);
 		}
 
 		private HexCoordinate GetHexCoordinate(float posX, float posY)
@@ -870,11 +871,6 @@ namespace HexWork.UI
 		private void EndTurn(EndTurnEventArgs e)
 		{
 			UpdateInitiative(e.InitativeOrder);
-            var firstCharacter = e.InitativeOrder.FirstOrDefault();
-
-            if (firstCharacter.IsHero)
-                _selectedCharacter = firstCharacter;
-
             UpdateButtons();
 		}
 
@@ -912,16 +908,12 @@ namespace HexWork.UI
 				Animation = new MovementAnimation(GetHexScreenPosition(e.Destination))
 	        };
             _uiActions.Add(action);
-
-            UpdateButtons();
         }
 
         private void OnCharacterTeleport(object sender, MoveEventArgs e)
         {
             var sprite = _gameObjectDictionary[e.CharacterId];
             sprite.Position = GetHexScreenPosition(e.Destination);
-
-            UpdateButtons();
         }
         
         private void OnEntitySpawn(object sender, EntityEventArgs e)
@@ -988,12 +980,8 @@ namespace HexWork.UI
         private void OnEndTurn(object sender, EndTurnEventArgs e)
         {
             var action = new UiAction();
-
             action.ActionCompleteCallback += () => { EndTurn(e); };
-
             _uiActions.Add(action);
-
-            UpdateButtons();
         }
 
         private void OnActionTrigger(object sender, ActionEventArgs e)
@@ -1006,8 +994,6 @@ namespace HexWork.UI
             };
 
             _uiActions.Add(showActionNameUiAction);
-
-            UpdateButtons();
         }
 
         private void OnComboTrigger(object sender, ComboEventArgs e)

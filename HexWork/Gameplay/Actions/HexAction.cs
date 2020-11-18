@@ -115,7 +115,7 @@ namespace HexWork.Gameplay.Actions
                 newState = await ApplyToTile(newState, targetTile, gameState, characterId, direction);
             }
 
-            return gameState.CompleteAction(state, character.Id, this);
+            return gameState.CompleteAction(newState, character.Id, this);
         }
 
         public virtual async Task<BoardState> ApplyToTile(BoardState state, HexCoordinate targetTile, IRulesProvider gameState, Guid characterId, HexCoordinate direction = null)

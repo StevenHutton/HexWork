@@ -187,6 +187,10 @@ namespace HexWork.Gameplay
             {
                 bs.Entities.Add(ent.Copy());
             }
+            if(this.ActiveCharacter != null)
+                bs.ActiveCharacter = bs.GetCharacterById(this.ActiveCharacter.Id);
+            
+            bs.Potential = this.Potential;
 
             return bs;
         }
@@ -377,7 +381,7 @@ namespace HexWork.Gameplay
         {
             var targets = new List<HexCoordinate>() { position };
 
-            GetVisibleTilesRecursive(state, targets, position, state.ActiveCharacter.Position, range);
+            GetVisibleTilesRecursive(state, targets, position, position, range);
 
             return targets;
         }
