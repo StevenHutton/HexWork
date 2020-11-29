@@ -39,7 +39,7 @@ namespace HexWork.Gameplay.GameObject
             Position = pos;
         }
         
-        //copy constructor
+        //copy constructor - use this for creating a new tile effect with the exact same parameters
         public TileEffect(TileEffect effectToCopy)
         {
             Position = effectToCopy.Position;
@@ -52,9 +52,12 @@ namespace HexWork.Gameplay.GameObject
             BlocksMovement = effectToCopy.BlocksMovement;
         }
 
+        //use this to create a copy of the exact same tile effect (used for updating board state)
         public override HexGameObject Copy()
         {
-            return new TileEffect(this);
+            var te = new TileEffect(this);
+            te.Id = Id;
+            return te;
         }
     }
 }

@@ -81,7 +81,8 @@ namespace HexWork.Gameplay.GameObject.Characters
                 Range = 3,
                 StatusEffect = _fireStatus,
                 PushForce = 1,
-                PushFromCaster = true
+                PushFromCaster = true,
+                TileEffect = _fireEffect
             };
 
             var exBurningBoltAction = new HexAction("Fire Wall!",

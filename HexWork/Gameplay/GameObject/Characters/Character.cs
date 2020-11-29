@@ -70,6 +70,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         //copy constructor
         public Character(Character ch): base(ch)
         {
+            Id = ch.Id;
             Power = ch.Power;
             Actions = ch.Actions;
 

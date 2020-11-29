@@ -49,7 +49,7 @@ namespace HexWork.Gameplay.Actions
                 newState = await ApplyToTile(newState, targetTile, gameState, characterId);
             }
 
-            newState = gameState.LosePotential(state, PotentialCost);
+            newState = gameState.LosePotential(newState, PotentialCost);
 
             return gameState.CompleteAction(newState, characterId, this);
         }

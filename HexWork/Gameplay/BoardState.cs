@@ -825,7 +825,7 @@ namespace HexWork.Gameplay
 
         public static bool IsHexInMap(HexCoordinate coord)
         {
-            var coord2D = Get2DCoords(coord);
+            var coord2D = CubeToOddRight(coord);
 
             if (Math.Abs((int)coord2D.X) > MapWidth || Math.Abs((int)coord2D.Y) > MapHeight)
                 return false;

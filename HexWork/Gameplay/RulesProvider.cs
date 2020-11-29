@@ -260,20 +260,21 @@ namespace HexWork.Gameplay
         {
             var newState = state.Copy();
             
-            var gameObject = newState.Entities.FirstOrDefault(ent => ent.Position == position);
+            var gameObject = newState.Entities.FirstOrDefault(ent => ent.Id == entityId);
             if (gameObject == null)
                 return state;
 
-            newState = ResolveTileEffect(newState, position);
-            newState = ResolveTerrainEffects(newState, position);           
-
             gameObject.MoveTo(position);
+         
             CharacterTeleportEvent?.Invoke(this,
                 new MoveEventArgs
                 {
                     CharacterId = gameObject.Id,
                     Destination = position
                 });
+            
+            newState = ResolveTileEffect(newState, position);
+            newState = ResolveTerrainEffects(newState, position);  
 
             return newState;
         }
@@ -357,7 +358,7 @@ namespace HexWork.Gameplay
             TakeDamageEvent?.Invoke(this,
                 new DamageTakenEventArgs { DamageTaken = damage, TargetCharacterId = entityId });
 
-            CheckDied(state, entityId);
+            newState = CheckDied(newState, entityId);
 
             return newState;
         }
@@ -390,10 +391,11 @@ namespace HexWork.Gameplay
                 return state;
 
             //check to see if they died.
-            if (character.Health <= 0 && state.Entities.Contains(character))
+            if (character.Health <= 0)
             {
-                state.Entities.Remove(character);
+                newState.Entities.Remove(character);
                 RemoveEntityEvent?.Invoke(this, new EntityEventArgs() { Entity = character });
+                return newState;
             }
 
             return state;

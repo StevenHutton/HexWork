@@ -203,6 +203,8 @@ namespace HexWork.UI
         public BoardState ApplyDamage(BoardState state, Guid entityId, int power)
         {
             var entity = state.GetEntityById(entityId);
+            if (entity == null)
+                return state;
 
 	        var position = GetHexScreenPosition(entity.Position);
             _spriteBatch.Draw(_damageTexture, position, null, Color.Red, 0.0f, new Vector2(128), _hexScaleV, SpriteEffects.None, 0.0f );
@@ -297,6 +299,8 @@ namespace HexWork.UI
         public BoardState ApplyPush(BoardState state, Guid entityId, HexCoordinate direction, int pushForce = 0)
         {
             var entity = state.GetEntityById(entityId);
+            if (entity == null)
+                return state;
 
 	        var characterPos = entity.Position;
 	        var destinationPos = characterPos + direction;
