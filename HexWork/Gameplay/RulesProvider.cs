@@ -5,6 +5,7 @@ using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
+using HexWork.Gameplay.StatusEffects;
 using HexWork.GameplayEvents;
 
 namespace HexWork.Gameplay
@@ -155,17 +156,17 @@ namespace HexWork.Gameplay
             return newState;
         }
 
-        public BoardState NextTurn(BoardState state, Guid id)
+        public BoardState NextTurn(BoardState state, Guid activeCharacterId)
         {
             var newState = state.Copy();
-            var activeCharacter = newState.Characters.FirstOrDefault(data => data.Id == id);
+            var activeCharacter = newState.Characters.FirstOrDefault(data => data.Id == activeCharacterId);
 
             //if we have an active character then update all the initiative values
             if (activeCharacter != null)
             {
                 newState = ResolveTileEffect(newState, activeCharacter.Position);
                 newState = ResolveTerrainEffects(newState, activeCharacter.Position);
-                activeCharacter = newState.Characters.FirstOrDefault(data => data.Id == id);
+                activeCharacter = newState.Characters.FirstOrDefault(data => data.Id == activeCharacterId);
                 activeCharacter.EndTurn();
 
                 var deltaTime = activeCharacter.TurnTimer;
@@ -175,41 +176,18 @@ namespace HexWork.Gameplay
                 }
 
                 activeCharacter.TurnTimer += activeCharacter.TurnCooldown;
-
-                //also apply any status effects for the active character that trigger at the end of the turn.
-                foreach (var statusEffect in activeCharacter.StatusEffects.ToList())
-                {
-                    statusEffect.EndTurn(activeCharacter, this);
-
-                    //if the effect is expired remove it
-                    if (statusEffect.IsExpired && activeCharacter.StatusEffects.Contains(statusEffect))
-                    {
-                        activeCharacter.StatusEffects.Remove(statusEffect);
-
-                        StatusRemovedEvent?.Invoke(this, new StatusEventArgs(activeCharacter.Id, statusEffect));
-                    }
-                }
             }
 
             //get the new active character
             newState.ActiveCharacter = BoardState.GetCharacterAtInitiative(newState, 0);
             activeCharacter = newState.ActiveCharacter;
-
+            activeCharacterId = activeCharacter.Id;
             activeCharacter.StartTurn();
 
             //apply any status effects for the new active character that trigger at the start of thier turn.
-            foreach (var statusEffect in activeCharacter.StatusEffects)
+            foreach (var statusEffect in activeCharacter.StatusEffects.ToList())
             {
-                statusEffect.StartTurn(newState, activeCharacter, this);
-            }
-
-            //apply any status effects for characters that apply whenever initiative moves.
-            foreach (var character in newState.Characters)
-            {
-                foreach (var statusEffect in character.StatusEffects)
-                {
-                    statusEffect.Tick(character, this);
-                }
+                newState = statusEffect.StartTurn(newState, activeCharacterId, this);
             }
 
             EndTurnEvent?.Invoke(this, new EndTurnEventArgs(BoardState.GetInitiativeList(newState).ToList()));
@@ -294,11 +272,11 @@ namespace HexWork.Gameplay
 
         public BoardState RemoveTileEffect(BoardState state, Guid id)
         {
-            var te = state.TileEffects.FirstOrDefault(data => data.Id == id);
+            var newState = state.Copy();
+            var te = newState.TileEffects.FirstOrDefault(data => data.Id == id);
             if (te == null)
                 return state;
 
-            var newState = state.Copy();
             newState.Entities.Remove(te);
             RemoveEntityEvent?.Invoke(this, new EntityEventArgs() { Entity = te });
             return newState;
@@ -323,8 +301,7 @@ namespace HexWork.Gameplay
                         new DotEffect
                         {
                             Damage = 5,
-                            Duration = 3,
-                            Name = "Burning",
+                            Name = "Fire",
                             StatusEffectType = StatusEffectType.Burning
                         });
                     break;
@@ -386,9 +363,7 @@ namespace HexWork.Gameplay
         public BoardState CheckDied(BoardState state, Guid id)
         {
             var newState = state.Copy();
-            var character = newState.Characters.FirstOrDefault(data => data.Id == id);
-            if (character == null)
-                return state;
+            var character = newState.Entities.FirstOrDefault(data => data.Id == id);
 
             //check to see if they died.
             if (character.Health <= 0)
@@ -414,7 +389,6 @@ namespace HexWork.Gameplay
                 return state;
 
             var effectToApply = effect.Copy();
-            effectToApply.Reset();
             entity.StatusEffects.Add(effectToApply);
 
             StatusAppliedEvent?.Invoke(this, new StatusEventArgs(entity.Id, effectToApply));

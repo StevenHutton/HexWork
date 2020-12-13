@@ -9,6 +9,7 @@ namespace HexWork.Gameplay.GameObject
         public int Damage = 5;
         public StatusEffect Effect;
         public float MovementModifier = 0.1f;
+        public int Potential = 0;
 
 	    public virtual async Task<BoardState> TriggerEffect(BoardState state, IRulesProvider gameState)
         {            
@@ -23,6 +24,8 @@ namespace HexWork.Gameplay.GameObject
             
             if(Effect != null)
                 newState = gameState.ApplyStatus(newState, entity.Id, Effect);
+
+            newState = gameState.GainPotential(newState, Potential);
 
             return newState;
 	    }
@@ -50,6 +53,7 @@ namespace HexWork.Gameplay.GameObject
             MaxHealth = effectToCopy.MaxHealth;
             MovementModifier = effectToCopy.MovementModifier;
             BlocksMovement = effectToCopy.BlocksMovement;
+            Potential = effectToCopy.Potential;
         }
 
         //use this to create a copy of the exact same tile effect (used for updating board state)

@@ -22,9 +22,7 @@ namespace HexWork.Gameplay.Actions
 				targetType,
 				statusEffect,
 				combo, targetPattern)
-		{
-
-		}
+		{ }
 
         public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
         {

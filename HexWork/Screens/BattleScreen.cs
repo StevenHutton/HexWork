@@ -1042,7 +1042,10 @@ namespace HexWork.UI
 		        case StatusEffectType.Bleeding:
 			        statusTexture = _hexGame.Content.Load<Texture2D>("Blood");
 					break;
-		        default:
+                case StatusEffectType.Electrified:
+                    statusTexture = _hexGame.Content.Load<Texture2D>("LightningIcon");
+                    break;
+                default:
 			        throw new ArgumentOutOfRangeException();
 	        }
 			var status = new UiStatusEffect(statusTexture, statusEffect.Id);

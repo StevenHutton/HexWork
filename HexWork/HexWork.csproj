@@ -67,7 +67,11 @@
     <Compile Include="Gameplay\GamplayEvents.cs" />
     <Compile Include="Gameplay\HexCoordinate.cs" />
     <Compile Include="Gameplay\Interfaces\IRulesProvider.cs" />
-    <Compile Include="Gameplay\StatusEffect.cs" />
+    <Compile Include="Gameplay\StatusEffects\ChargedEffect.cs" />
+    <Compile Include="Gameplay\StatusEffects\DotEffect.cs" />
+    <Compile Include="Gameplay\StatusEffects\FreezeEffect.cs" />
+    <Compile Include="Gameplay\StatusEffects\RootEffect.cs" />
+    <Compile Include="Gameplay\StatusEffects\StatusEffect.cs" />
     <Compile Include="Gameplay\TargetPattern.cs" />
     <Compile Include="Gameplay\Tile.cs" />
     <Compile Include="Gameplay\GameObject\TileEffect.cs" />

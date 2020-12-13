@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Interfaces;
+using HexWork.Gameplay.StatusEffects;
 using HexWork.UI;
 
 namespace HexWork.Gameplay.GameObject.Characters
@@ -51,6 +52,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         private static TileEffect _fireEffect;
         private static TileEffect _iceEffect;
         private static TileEffect _windEffect;
+        private static TileEffect _electricityEffect;
 
         #endregion
 
@@ -59,6 +61,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         private static DotEffect _fireStatus;
         private static DotEffect _bleedingStatus;
         private static FreezeEffect _freezeEffect;
+        private static ChargedEffect _electricStatusEffect;
         
         #endregion
 
@@ -109,7 +112,9 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 Range = 3,
                 Power = 2,
-                PotentialCost = 0
+                PotentialCost = 0,
+                TileEffect = _electricityEffect,
+                StatusEffect = _electricStatusEffect
             };
 
             //create majin hero            
@@ -377,6 +382,17 @@ namespace HexWork.Gameplay.GameObject.Characters
                 BlocksMovement = false,
             };
 
+            _electricityEffect = new TileEffect
+            {
+                Damage = 0,
+                Name = "Electricity",
+                MovementModifier = 0,
+                Health = 5,
+                MaxHealth = 5,
+                Potential = 1,
+                BlocksMovement = false,
+            };
+
             _windEffect = new TileEffect
             {
                 Damage = 0,
@@ -393,20 +409,27 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 Name = "Bleeding",
                 Damage = 5,
-                Duration = 1,
                 StatusEffectType = StatusEffectType.Bleeding
             };
 
             _freezeEffect = new FreezeEffect
             {
                 Name = "Freeze",
-                Duration = 1,
                 StatusEffectType = StatusEffectType.Frozen
+            };
+
+            _electricStatusEffect = new ChargedEffect
+            {
+                Name = "Electified",
+                StatusEffectType = StatusEffectType.Electrified,
+
             };
 
             _fireEffect.Effect = _fireStatus;
             _fireStatus.TileEffect = _fireEffect;
             _iceEffect.Effect = _freezeEffect;
+            _electricityEffect.Effect = _electricStatusEffect;
+            _electricStatusEffect.TileEffect = _electricityEffect;
         }
 
         private static Character CreateZombieKing()
@@ -470,7 +493,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             foreach (var action in character.Actions)
             {
                 //if we can hit the hero, hit them now and end turn. - don't move.
-                if (gameState.IsValidTarget(state, character, closestHero.Position, action.Range, action.TargetType)
+                if (gameState.IsValidTarget(newState, character, closestHero.Position, action.Range, action.TargetType)
                     && action.IsDetonator == closestHero.HasStatus
                     && action.IsDetonator == closestHero.HasStatus)
                 {
@@ -485,7 +508,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             if (!character.CanMove) return newState;
 
             //get all the tiles to which the zombie COULD move
-            var tilesInRange = BoardState.GetWalkableAdjacentTiles(state, character.Position, character.MovementType);
+            var tilesInRange = BoardState.GetWalkableAdjacentTiles(newState, character.Position, character.MovementType);
             float shortestDistance = 100;
             HexCoordinate destination = null;
             //look at all the possible destinations and get the one which is closest to a hero
@@ -502,12 +525,12 @@ namespace HexWork.Gameplay.GameObject.Characters
             if (destination != null)
                 newState = gameState.MoveEntity(newState, character.Id, new List<HexCoordinate> { destination });
             foreach (var action in character.Actions.Where(action =>
-                gameState.IsValidTarget(state, character, closestHero.Position, action.Range, action.TargetType)
+                gameState.IsValidTarget(newState, character, closestHero.Position, action.Range, action.TargetType)
                 && action.IsDetonator == closestHero.HasStatus))
             {
-                newState = gameState.ApplyDamage(state, closestHero.Id, action.Power * character.Power);
-                newState = gameState.ApplyStatus(state, closestHero.Id, action.StatusEffect);
-                newState = action.Combo?.TriggerAsync(state, character.Id, new DummyInputProvider(closestHero.Position), gameState).Result;
+                newState = gameState.ApplyDamage(newState, closestHero.Id, action.Power * character.Power);
+                newState = gameState.ApplyStatus(newState, closestHero.Id, action.StatusEffect);
+                newState = action.Combo?.TriggerAsync(newState, character.Id, new DummyInputProvider(closestHero.Position), gameState).Result;
                 return newState;
             }
 
@@ -543,7 +566,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 if (shortestPathLength <= 3)
                 {
                     //get all the tiles to which the zombie COULD move
-                    var tilesInRange = BoardState.GetWalkableAdjacentTiles(state, character.Position, character.MovementType);
+                    var tilesInRange = BoardState.GetWalkableAdjacentTiles(newState, character.Position, character.MovementType);
 
                     float greatestDistance = 0;
                     HexCoordinate destination = null;
@@ -559,7 +582,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                         }
                     }
                     if (destination != null)
-                        newState = gameState.MoveEntity(state, character.Id, new List<HexCoordinate> { destination });
+                        newState = gameState.MoveEntity(newState, character.Id, new List<HexCoordinate> { destination });
                 }
             }
             var zombies = newState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie && c.IsAlive).ToList();
