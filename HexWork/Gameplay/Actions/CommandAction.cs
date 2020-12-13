@@ -16,20 +16,16 @@ namespace HexWork.Gameplay.Actions
             if (character == null)
                 return state;
 
-            var zombies = newState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie && c.IsAlive).ToList();
+            var zombies = newState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie).ToList();
             var rand = new Random(DateTime.Now.Millisecond);
             
-            if (zombies.Count == 0) return state;
-            var zombie = zombies[rand.Next(0, zombies.Count)];
-            var zombie2 = zombies[rand.Next(0, zombies.Count)];
-            zombie.StartTurn();
+            if (zombies.Count() == 0) return state;
+            var zombie = zombies[rand.Next(0, zombies.Count())];
+            var zombie2 = zombies[rand.Next(0, zombies.Count())];
             newState = zombie.DoTurn(newState, gameState, zombie);
-            zombie.EndTurn();
-            zombie2.StartTurn();
             newState = zombie2.DoTurn(newState, gameState, zombie2);
-            zombie2.EndTurn();
 
-            character.HasActed = true;
+            newState.ActiveCharacterHasAttacked = true;
 
             return gameState.CompleteAction(newState, characterId, this);
         }

@@ -34,7 +34,7 @@ namespace HexWork.Gameplay.Actions
             if (character == null)
                 return state;
 
-            if (character.CanAttack && character.IsHero)
+            if (!newState.ActiveCharacterHasAttacked && character.IsHero)
                 newState = gameState.GainPotential(newState);
             
             return gameState.NextTurn(newState, characterId);

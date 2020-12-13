@@ -758,7 +758,7 @@ namespace HexWork.UI
                 var name = action.Name;
                 if(action is PotentialGainAction)
                 {
-                    name = SelectedCharacter.CanAttack ? name : "End Turn";
+                    name = !BoardState.ActiveCharacterHasAttacked ? name : "End Turn";
                 }
 
                 name = action.PotentialCost > 0 ? $"{name} {action.PotentialCost}" : name;

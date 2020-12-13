@@ -34,12 +34,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         public MovementType MovementType = MovementType.NormalMove;
         public MovementSpeed MovementSpeed = MovementSpeed.Normal;
 
-        public bool IsAlive = true;
-        public bool CanAttack = false;
         public int RangeModifier = 0;
-        public bool HasActed = false;
-        public bool IsActive = false;
-
         public int TurnCooldown;
 	    public int TurnTimer;
 
@@ -79,37 +74,16 @@ namespace HexWork.Gameplay.GameObject.Characters
             MovementType = ch.MovementType;
             MovementSpeed = ch.MovementSpeed;
 
-            IsAlive = ch.IsAlive;
-            CanAttack = ch.CanAttack;
             RangeModifier = ch.RangeModifier;
-            HasActed = ch.HasActed;
-            IsActive = ch.IsActive;
 
             TurnCooldown = ch.TurnCooldown;
             TurnTimer = ch.TurnTimer;
             DoTurn = ch.DoTurn;
         }
         
-        public void StartTurn()
-        {
-            CanMove = true;
-            HasActed = false;
-            IsActive = true;
-            CanAttack = true;
-        }
-
-        public void EndTurn()
-        {
-            CanMove = false;
-            HasActed = true;
-            IsActive = false;
-            CanAttack = false;
-        }
-
         public void SpawnAt(HexCoordinate position)
         {
             Position = position;
-            IsAlive = true;
         }
 
         public void AddAction(HexAction action)

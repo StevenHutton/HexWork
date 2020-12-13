@@ -44,7 +44,7 @@ namespace HexWork.Gameplay.Actions
 
         public virtual bool IsAvailable(Character character, BoardState gameState)
         {
-            return character.CanAttack && gameState.Potential >= PotentialCost;
+            return !gameState.ActiveCharacterHasAttacked && gameState.Potential >= PotentialCost;
         }
         
         #endregion

@@ -505,7 +505,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             }
 
             //if we couldn't reach the closest hero move towards them.
-            if (!character.CanMove) return newState;
+            if (newState.ActiveCharacterHasMoved) return newState;
 
             //get all the tiles to which the zombie COULD move
             var tilesInRange = BoardState.GetWalkableAdjacentTiles(newState, character.Position, character.MovementType);
@@ -560,7 +560,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 closestHero = hero;
             }
 
-            if (closestHero != null && character.CanMove)
+            if (closestHero != null && newState.ActiveCharacterHasMoved)
             {
                 //if the closest hero is close then move away.
                 if (shortestPathLength <= 3)
@@ -585,10 +585,10 @@ namespace HexWork.Gameplay.GameObject.Characters
                         newState = gameState.MoveEntity(newState, character.Id, new List<HexCoordinate> { destination });
                 }
             }
-            var zombies = newState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie && c.IsAlive).ToList();
+            var zombies = newState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie).ToList();
             var rand = new Random(DateTime.Now.Millisecond);
             
-            if (rand.Next(0, 10) >= zombies.Count)
+            if (rand.Next(0, 10) >= zombies.Count())
             {
                 newState = character.Actions.FirstOrDefault(data => data.Name == "Summon Zombie")?
                     .TriggerAsync(state, character.Id, null, gameState).Result;

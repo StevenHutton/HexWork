@@ -9,7 +9,6 @@ namespace HexWork.Gameplay.GameObject
         public string Name;
         public HexCoordinate Position;
         public bool BlocksMovement = true;
-        public bool CanMove = false;
         public int Health;
         public int MaxHealth;
         public bool IsHero = false;
@@ -27,7 +26,6 @@ namespace HexWork.Gameplay.GameObject
             Name = toCopy.Name;
             Position = toCopy.Position;
             BlocksMovement = toCopy.BlocksMovement;
-            CanMove = toCopy.CanMove;
             Health = toCopy.Health;
             MaxHealth = toCopy.MaxHealth;
             IsHero = toCopy.IsHero;
@@ -45,7 +43,6 @@ namespace HexWork.Gameplay.GameObject
 
         public void MoveTo(HexCoordinate position)
         {
-            CanMove = false;
             Position = position;
         }
 

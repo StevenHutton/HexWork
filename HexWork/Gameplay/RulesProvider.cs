@@ -134,25 +134,19 @@ namespace HexWork.Gameplay
             var newState = state.Copy();
             if (newState.ActiveCharacter == null)
                 return newState;
-
-            if (!newState.ActiveCharacter.IsAlive)
-            {
-                newState = NextTurn(newState, newState.ActiveCharacter.Id);
-                return newState;
-            }
             
             if (newState.ActiveCharacter.IsHero)
                 return newState;
 
             //if they can't act, end turn
-            if (!newState.ActiveCharacter.CanAttack)
+            if (newState.ActiveCharacterHasAttacked)
             {
                 newState = NextTurn(newState, newState.ActiveCharacter.Id);
                 return newState;
             }
 
             newState = newState.ActiveCharacter.DoTurn(newState, this, newState.ActiveCharacter);
-            newState.ActiveCharacter.CanAttack = false;
+            newState.ActiveCharacterHasAttacked = true;
             return newState;
         }
 
@@ -167,7 +161,6 @@ namespace HexWork.Gameplay
                 newState = ResolveTileEffect(newState, activeCharacter.Position);
                 newState = ResolveTerrainEffects(newState, activeCharacter.Position);
                 activeCharacter = newState.Characters.FirstOrDefault(data => data.Id == activeCharacterId);
-                activeCharacter.EndTurn();
 
                 var deltaTime = activeCharacter.TurnTimer;
                 foreach (var character in newState.Characters)
@@ -182,7 +175,9 @@ namespace HexWork.Gameplay
             newState.ActiveCharacter = BoardState.GetCharacterAtInitiative(newState, 0);
             activeCharacter = newState.ActiveCharacter;
             activeCharacterId = activeCharacter.Id;
-            activeCharacter.StartTurn();
+            newState.ActiveCharacterId = activeCharacter.Id;
+            newState.ActiveCharacterHasAttacked = false;
+            newState.ActiveCharacterHasMoved = false;
 
             //apply any status effects for the new active character that trigger at the start of thier turn.
             foreach (var statusEffect in activeCharacter.StatusEffects.ToList())
@@ -528,10 +523,10 @@ namespace HexWork.Gameplay
             var ch = newState.Characters.FirstOrDefault(data => data.Id == id);
             if (ch == null)
                 return state;
-
-            ch.HasActed = true;
-            ch.CanAttack = false;
+            
             ActionEvent?.Invoke(this, new ActionEventArgs { Action = action });
+
+            newState.ActiveCharacterHasAttacked = true;
 
             return newState;
         }

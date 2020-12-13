@@ -29,7 +29,7 @@ namespace HexWork.Gameplay.StatusEffects
             if (character == null)
                 return state;
 
-            character.CanMove = false;
+            newState.ActiveCharacterHasMoved = true;
             return newState;
         }
 

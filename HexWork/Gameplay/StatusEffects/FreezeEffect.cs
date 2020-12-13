@@ -28,10 +28,8 @@ namespace HexWork.Gameplay.StatusEffects
             if (character == null)
                 return state;
 
-            character.HasActed = true;
-            character.CanAttack = false;
-            character.CanMove = false;
-
+            newState.ActiveCharacterHasMoved = true;
+            newState.ActiveCharacterHasAttacked = true;
             newState = base.StartTurn(newState, characterId, ruleProvider);
             return newState;
         }

@@ -10,7 +10,7 @@ namespace HexWork.Gameplay.Actions
     {
         public override bool IsAvailable(Character character, BoardState gameState)
         {
-            return character.CanMove;
+            return !gameState.ActiveCharacterHasMoved;
         }
 
         public MoveAction(string name,
@@ -47,6 +47,8 @@ namespace HexWork.Gameplay.Actions
 
             if (TileEffect != null)
                 return gameState.CreateTileEffect(newState, TileEffect, position);
+
+            newState.ActiveCharacterHasMoved = true;
 
             return newState;
         }

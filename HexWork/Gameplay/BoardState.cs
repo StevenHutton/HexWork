@@ -14,6 +14,11 @@ namespace HexWork.Gameplay
 
         public Character ActiveCharacter;
 
+        public Guid ActiveCharacterId;
+
+        public bool ActiveCharacterHasAttacked;
+        public bool ActiveCharacterHasMoved;
+
         //list of all characters in the current match ordered by initiative count
         public List<HexGameObject> Entities = new List<HexGameObject>();
         public int MaxPotential = 9;
@@ -40,9 +45,8 @@ namespace HexWork.Gameplay
 
         public IEnumerable<Character> Characters => Entities.OfType<Character>();
         public IEnumerable<TileEffect> TileEffects => Entities.OfType<TileEffect>();
-        public IEnumerable<Character> Heroes => LivingCharacters.Where(character => character.IsHero);
-        public IEnumerable<Character> LivingCharacters => Characters.Where(c => c.IsAlive);
-        public IEnumerable<Character> Enemies => LivingCharacters.Where(character => !character.IsHero);
+        public IEnumerable<Character> Heroes => Characters.Where(character => character.IsHero);
+        public IEnumerable<Character> Enemies => Characters.Where(character => !character.IsHero);
 
         #endregion
 
@@ -191,6 +195,10 @@ namespace HexWork.Gameplay
                 bs.ActiveCharacter = bs.GetCharacterById(this.ActiveCharacter.Id);
             
             bs.Potential = this.Potential;
+
+            bs.ActiveCharacterHasAttacked = this.ActiveCharacterHasAttacked;
+            bs.ActiveCharacterHasMoved = this.ActiveCharacterHasMoved;
+            bs.ActiveCharacterId = this.ActiveCharacterId;
 
             return bs;
         }
@@ -789,7 +797,7 @@ namespace HexWork.Gameplay
             //tile validation goes here.
             if (!IsHexWalkable(state, coordinate)) return false;
 
-            var character = state.LivingCharacters.FirstOrDefault(c => c.Position == coordinate);
+            var character = state.Characters.FirstOrDefault(c => c.Position == coordinate);
             if (character == null)
                 return true;
 
