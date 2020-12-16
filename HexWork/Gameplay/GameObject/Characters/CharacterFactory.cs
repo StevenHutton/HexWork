@@ -464,75 +464,91 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         #region TurnFunctions
 
-        public static BoardState ZombieTurn(BoardState state, IRulesProvider gameState, Character character)
+        public static BoardState ZombieAttack(BoardState state, IRulesProvider ruleProvider, Character character, out bool attacked)
         {
+            attacked = false;
             var newState = state.Copy();
-
             var position = character.Position;
-            int shortestPathLength = int.MaxValue;
             Character closestHero = null;
             var heroes = newState.Heroes;
 
-            //find the closest hero
+            //look for an adjacent hero
             foreach (var hero in heroes)
             {
-                var nearestNeighbour = GetNearestPassableTileAdjacentToDestination(newState, position, hero.Position, gameState);
-                if (nearestNeighbour == null)
-                    continue;
-
-                var path = BoardState.FindShortestPath(newState, position, nearestNeighbour, 200);
-                if (path == null) continue;
-                if (path.Count >= shortestPathLength) continue;
-                shortestPathLength = path.Count;
-                closestHero = hero;
-            }
-            if (closestHero == null)
-                return newState;
-
-            //loop through available actions
-            foreach (var action in character.Actions)
-            {
-                //if we can hit the hero, hit them now and end turn. - don't move.
-                if (gameState.IsValidTarget(newState, character, closestHero.Position, action.Range, action.TargetType)
-                    && action.IsDetonator == closestHero.HasStatus
-                    && action.IsDetonator == closestHero.HasStatus)
+                if (BoardState.DistanceBetweenPoints(hero.Position, position) == 1)
                 {
-                    newState = gameState.ApplyDamage(newState, closestHero.Id, action.Power * character.Power);
-                    newState = gameState.ApplyStatus(newState, closestHero.Id, action.StatusEffect);
-                    newState = action.Combo?.TriggerAsync(newState, character.Id, new DummyInputProvider(closestHero.Position), gameState).Result;
-                    return newState;
+                    closestHero = hero;
+                    break;
                 }
             }
 
-            //if we couldn't reach the closest hero move towards them.
+            //if we found an adjacent hero, try to use any available actions
+            if (closestHero != null)
+            {               
+                foreach (var action in character.Actions)
+                {
+                    //if we can hit the hero, hit them now and end turn. - don't move.
+                    if (ruleProvider.IsValidTarget(newState, character, closestHero.Position, action.Range, action.TargetType)
+                        && action.IsDetonator == closestHero.HasStatus)
+                    {
+                        newState = ruleProvider.ApplyDamage(newState, closestHero.Id, action.Power * character.Power);
+                        newState = ruleProvider.ApplyStatus(newState, closestHero.Id, action.StatusEffect);
+                        if(action.Combo != null)
+                            newState = action.Combo.TriggerAsync(newState, character.Id, new DummyInputProvider(closestHero.Position), ruleProvider).Result;
+                        attacked = true;
+                        break;
+                    }
+                }                
+            }
+
+            return newState;
+        }
+
+        public static BoardState ZombieTurn(BoardState state, IRulesProvider gameState, Character character)
+        {
+            var newState = state.Copy();
+            var position = character.Position;
+
+            bool attacked;
+            newState = ZombieAttack(newState, gameState, character, out attacked);
+            if (attacked)
+                return newState;
+
+
+            //if we can't move at this point, just give up and end turn
             if (newState.ActiveCharacterHasMoved) return newState;
+            List<HexCoordinate> postentialDestinations = new List<HexCoordinate>();
+            int shortestPathLength = int.MaxValue;
+            List<HexCoordinate> shortestPath = null;
 
-            //get all the tiles to which the zombie COULD move
-            var tilesInRange = BoardState.GetWalkableAdjacentTiles(newState, character.Position, character.MovementType);
-            float shortestDistance = 100;
-            HexCoordinate destination = null;
-            //look at all the possible destinations and get the one which is closest to a hero
-            foreach (var tile in tilesInRange)
+            //get the list of all possible destination tiles.
+            foreach (var hero in newState.Heroes)
             {
-                var distanceToHeroes = heroes.Select(data => BoardState.DistanceBetweenPoints(tile, data.Position));
-                var distance = (float)distanceToHeroes.Sum() / (float)heroes.Count();
-                if (distance < shortestDistance)
+                var walkableNeighbours = BoardState.GetWalkableAdjacentTiles(newState, hero.Position, character.MovementType);
+                postentialDestinations.AddRange(walkableNeighbours);
+            }
+
+            foreach (var potentialDestination in postentialDestinations)
+            {
+                var path = BoardState.FindShortestPath(newState, position, potentialDestination, 200, MovementType.NormalMove, MovementSpeed.Fast);
+                if (path == null) continue;
+
+                if( path.Count() <= shortestPathLength)
                 {
-                    shortestDistance = distance;
-                    destination = tile;
+                    shortestPath = path;
+                    shortestPathLength = path.Count();
                 }
             }
-            if (destination != null)
-                newState = gameState.MoveEntity(newState, character.Id, new List<HexCoordinate> { destination });
-            foreach (var action in character.Actions.Where(action =>
-                gameState.IsValidTarget(newState, character, closestHero.Position, action.Range, action.TargetType)
-                && action.IsDetonator == closestHero.HasStatus))
-            {
-                newState = gameState.ApplyDamage(newState, closestHero.Id, action.Power * character.Power);
-                newState = gameState.ApplyStatus(newState, closestHero.Id, action.StatusEffect);
-                newState = action.Combo?.TriggerAsync(newState, character.Id, new DummyInputProvider(closestHero.Position), gameState).Result;
+
+            //if we can't find a path, give up
+            if (shortestPath == null)
                 return newState;
-            }
+
+            HexCoordinate destination = shortestPath[0];
+
+            newState = gameState.MoveEntity(newState, character.Id, new List<HexCoordinate> { destination });
+
+            newState = ZombieAttack(newState, gameState, character, attacked: out _);
 
             return newState;
         }
@@ -546,45 +562,6 @@ namespace HexWork.Gameplay.GameObject.Characters
             Character closestHero = null;
             var heroes = newState.Heroes;
 
-            //find the closest hero
-            foreach (var hero in heroes)
-            {
-                var nearestNeighbour = GetNearestPassableTileAdjacentToDestination(newState, position, hero.Position, gameState);
-                if (nearestNeighbour == null)
-                    continue;
-                var path = BoardState.FindShortestPath(newState, position, nearestNeighbour, 200);
-                
-                if (path == null) continue;
-                if (path.Count >= shortestPathLength) continue;
-                shortestPathLength = path.Count;
-                closestHero = hero;
-            }
-
-            if (closestHero != null && newState.ActiveCharacterHasMoved)
-            {
-                //if the closest hero is close then move away.
-                if (shortestPathLength <= 3)
-                {
-                    //get all the tiles to which the zombie COULD move
-                    var tilesInRange = BoardState.GetWalkableAdjacentTiles(newState, character.Position, character.MovementType);
-
-                    float greatestDistance = 0;
-                    HexCoordinate destination = null;
-                    //look at all the possible destinations and get the one which is the furthest average distance away from heroes
-                    foreach (var tile in tilesInRange)
-                    {
-                        var distanceToHeroes = heroes.Select(data => BoardState.DistanceBetweenPoints(tile, data.Position));
-                        var distance = (float)distanceToHeroes.Sum() / (float)heroes.Count();
-                        if (distance > greatestDistance)
-                        {
-                            greatestDistance = distance;
-                            destination = tile;
-                        }
-                    }
-                    if (destination != null)
-                        newState = gameState.MoveEntity(newState, character.Id, new List<HexCoordinate> { destination });
-                }
-            }
             var zombies = newState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie).ToList();
             var rand = new Random(DateTime.Now.Millisecond);
             
@@ -601,51 +578,6 @@ namespace HexWork.Gameplay.GameObject.Characters
 
             return newState;
         }
-
-        #region Turn Helper
-
-        private static HexCoordinate GetNearestPassableTileAdjacentToDestination(BoardState state, HexCoordinate start, HexCoordinate end, IRulesProvider gameState)
-        {
-            var neighbours = BoardState.GetNeighbours(end);
-
-            //if the start tile is adjacent then there isn't a nearer tile.
-            if (neighbours.Contains(start))
-                return start;
-
-            int distance = 1000;
-            HexCoordinate nearest = null;
-            HexCoordinate result = null;
-            bool found = false;
-            while (!found)
-            {
-                foreach (var neighbor in neighbours)
-                {
-                    var delta = BoardState.DistanceBetweenPoints(start, neighbor);
-                    if (delta <= distance)
-                    {
-                        nearest = neighbor;
-                        distance = delta;
-
-                        if (BoardState.IsHexPassable(state, neighbor))
-                        { 
-                            found = true;
-                            result = neighbor;
-                        }
-                    }
-                }
-
-                neighbours = BoardState.GetNeighbours(nearest);
-                if (neighbours.Contains(end))
-                    neighbours.Remove(end);
-
-                if (neighbours.Contains(start))
-                    neighbours.Remove(start);
-            }
-
-            return result;
-        }
-
-        #endregion
 
         #endregion
     }

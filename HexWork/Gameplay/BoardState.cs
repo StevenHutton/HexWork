@@ -721,7 +721,7 @@ namespace HexWork.Gameplay
 
             foreach (var coordinate in neighbours)
             {
-                if (!BoardState.IsTileEmpty(state, coordinate)) continue;
+                if (!IsTilePassable(state, movementType, coordinate)) continue;
 
                 walkableNeighbours.Add(coordinate);
             }
