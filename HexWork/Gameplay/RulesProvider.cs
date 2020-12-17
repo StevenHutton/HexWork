@@ -29,9 +29,9 @@ namespace HexWork.Gameplay
         public event EventHandler<EntityEventArgs> SpawnEntityEvent;
 
         public event EventHandler<EntityEventArgs> RemoveEntityEvent;
-        
+
         public event EventHandler<DamageTakenEventArgs> TakeDamageEvent;
-        
+
         public event EventHandler<EndTurnEventArgs> EndTurnEvent;
 
         public event EventHandler<ActionEventArgs> ActionEvent;
@@ -53,7 +53,7 @@ namespace HexWork.Gameplay
         #region Methods
 
         #region Initialisation 
-        
+
         public RulesProvider()
         {
         }
@@ -69,7 +69,7 @@ namespace HexWork.Gameplay
         #endregion
 
         #region Game Start
-        
+
         public BoardState StartGame(BoardState state)
         {
             var newState = state.Copy();
@@ -134,7 +134,7 @@ namespace HexWork.Gameplay
             var newState = state.Copy();
             if (newState.ActiveCharacter == null)
                 return NextTurn(newState, new Guid());
-            
+
             if (newState.ActiveCharacter.IsHero)
                 return newState;
 
@@ -196,7 +196,7 @@ namespace HexWork.Gameplay
         {
             var newState = state.Copy();
             newState.Entities.Add(entity);
-            
+
             SpawnEntityEvent?.Invoke(this,
                 new EntityEventArgs()
                 {
@@ -211,7 +211,7 @@ namespace HexWork.Gameplay
         public BoardState MoveEntity(BoardState state, Guid id, List<HexCoordinate> path)
         {
             var newState = state.Copy();
-            
+
             foreach (var coordinate in path)
             {
                 var entity = newState.Entities.First(ent => ent.Id == id);
@@ -232,22 +232,22 @@ namespace HexWork.Gameplay
         public BoardState TeleportEntityTo(BoardState state, Guid entityId, HexCoordinate position)
         {
             var newState = state.Copy();
-            
+
             var gameObject = newState.Entities.FirstOrDefault(ent => ent.Id == entityId);
             if (gameObject == null)
                 return state;
 
             gameObject.MoveTo(position);
-         
+
             CharacterTeleportEvent?.Invoke(this,
                 new MoveEventArgs
                 {
                     CharacterId = gameObject.Id,
                     Destination = position
                 });
-            
+
             newState = ResolveTileEffect(newState, position);
-            newState = ResolveTerrainEffects(newState, position);  
+            newState = ResolveTerrainEffects(newState, position);
 
             return newState;
         }
@@ -415,7 +415,7 @@ namespace HexWork.Gameplay
             //if the player scores a combo they gain potential.
             if (newState.ActiveCharacter.IsHero)
                 GainPotential(newState, 2);
-            
+
             var status = entity.StatusEffects.First();
 
             damage = entity.StatusEffects.Count(e => e.StatusEffectType == status.StatusEffectType);
@@ -525,7 +525,7 @@ namespace HexWork.Gameplay
             var ch = newState.Characters.FirstOrDefault(data => data.Id == id);
             if (ch == null)
                 return state;
-            
+
             ActionEvent?.Invoke(this, new ActionEventArgs { Action = action });
 
             newState.ActiveCharacterHasAttacked = true;
@@ -583,6 +583,21 @@ namespace HexWork.Gameplay
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        public static readonly int[] AttackRangeCostNormal = { 0, 0, 1, 0, 1, 0, 1 };
+
+        public static int GetRangeCost(int distance)
+        {
+            if (distance >= 7)
+                return 10;
+
+            int cost = 0;
+            for(int i=0;i<distance; i++)
+            {
+                cost += AttackRangeCostNormal[distance];
+            }
+            return cost;
         }
 
         #endregion
