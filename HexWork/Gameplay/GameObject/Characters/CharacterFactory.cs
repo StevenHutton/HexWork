@@ -238,7 +238,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 PushForce = 2
             };
 
-            var charge = new ChargeAction("Charge", TargetType.AxisAlignedIgnoreUnits) { Range = 2, Power = 2, PotentialCost = 1, PushForce = 1 };
+            var charge = new ChargeAction("Charge", TargetType.AxisAlignedFixedMove) { Range = 2, Power = 2, PotentialCost = 1, PushForce = 1 };
 
             var stomp = new HexAction("Stomp", TargetType.Free, new ImmobalisedEffect(), null,
                 _whirlWindTargetPattern)
@@ -524,13 +524,13 @@ namespace HexWork.Gameplay.GameObject.Characters
             //get the list of all possible destination tiles.
             foreach (var hero in newState.Heroes)
             {
-                var walkableNeighbours = BoardState.GetWalkableAdjacentTiles(newState, hero.Position, character.MovementType);
+                var walkableNeighbours = BoardState.GetWalkableAdjacentTiles(newState, hero.Position);
                 postentialDestinations.AddRange(walkableNeighbours);
             }
 
             foreach (var potentialDestination in postentialDestinations)
             {
-                var path = BoardState.FindShortestPath(newState, position, potentialDestination, 200, MovementType.NormalMove, MovementSpeed.Fast);
+                var path = BoardState.FindShortestPath(newState, position, potentialDestination, 50, MovementType.NormalMove);
                 if (path == null) continue;
 
                 if( path.Count() <= shortestPathLength)

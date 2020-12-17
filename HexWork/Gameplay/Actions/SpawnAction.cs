@@ -20,7 +20,7 @@ namespace HexWork.Gameplay.Actions
             var zombie = CharacterFactory.CreateZombie();
 
             var tile = BoardState.GetNeighbours(character.Position)
-                .FirstOrDefault(d => BoardState.IsHexPassable(newState, d));
+                .FirstOrDefault(d => BoardState.IsWalkableAndEmpty(newState, d));
 
             if (tile != null)
             {

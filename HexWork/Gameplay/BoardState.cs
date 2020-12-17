@@ -236,7 +236,7 @@ namespace HexWork.Gameplay
         /// Checks to see if a specific tile is walkable and unoccupied.
         /// </summary>
         /// <returns>true/false</returns>
-        public static bool IsHexPassable(BoardState state, HexCoordinate coordinate)
+        public static bool IsWalkableAndEmpty(BoardState state, HexCoordinate coordinate)
         {
             return BoardState.IsHexWalkable(state, coordinate)
                    && BoardState.IsTileEmpty(state, coordinate);
@@ -321,10 +321,6 @@ namespace HexWork.Gameplay
                         break;
 
                     targets.Add(hexToCheck);
-
-                    //if there's a unit in this tile then we can't see past them.
-                    if (!IsTileEmpty(state, hexToCheck))
-                        break;
                 }
             }
 
@@ -474,7 +470,7 @@ namespace HexWork.Gameplay
         /// </summary>
         public static bool IsValidDestination(BoardState state, Character objectCharacter, HexCoordinate targetPosition)
         {
-            var destinations = GetValidDestinations(state, objectCharacter.Position, objectCharacter.MovementType, objectCharacter.MovementSpeed);
+            var destinations = GetValidDestinations(state, objectCharacter.Position, objectCharacter);
 
             if (!destinations.Keys.Contains(targetPosition))
                 return false;
@@ -485,8 +481,10 @@ namespace HexWork.Gameplay
             return true;
         }
 
-        public static Dictionary<HexCoordinate, int> GetValidDestinations(BoardState state, HexCoordinate position, MovementType mType, MovementSpeed mSpeed)
+        public static Dictionary<HexCoordinate, int> GetValidDestinations(BoardState state, HexCoordinate position, Character oCharacter)
         {
+            MovementType mType = oCharacter.MovementType;
+            MovementSpeed mSpeed = oCharacter.MovementSpeed;
             Dictionary<HexCoordinate, int> pathValues = new Dictionary<HexCoordinate, int> { { position, 0 } };
 
             GetWalkableNeighboursRecursive(state, pathValues, position, mType, mSpeed, 0, 0, state.Potential);
@@ -577,9 +575,11 @@ namespace HexWork.Gameplay
                 case TargetType.AxisAlignedIgnoreLos:
                     return GetAxisTilesInRange(state, position, range);
                 case TargetType.Move:
-                    return GetValidDestinations(state, position, objectCharacter.MovementType, objectCharacter.MovementSpeed).Keys.ToList();
+                    return GetValidDestinations(state, position, objectCharacter).Keys.ToList();
                 case TargetType.FixedMove:
-                    return GetWalkableAdjacentTiles(state, position, objectCharacter.MovementType);
+                    return GetWalkableAdjacentTiles(state, position);
+                case TargetType.AxisAlignedFixedMove:
+                    return GetWalkableAxisTiles(state, position, objectCharacter, range);
                 default:
                     return null;
             }
@@ -713,20 +713,45 @@ namespace HexWork.Gameplay
             }
         }
 
-        public static List<HexCoordinate> GetWalkableAdjacentTiles(BoardState state, HexCoordinate position, MovementType movementType)
+        public static List<HexCoordinate> GetWalkableAdjacentTiles(BoardState state, HexCoordinate position)
         {
             var walkableNeighbours = new List<HexCoordinate>();
 
-            var neighbours = BoardState.GetNeighbours(position);
+            var neighbours = GetNeighbours(position);
 
             foreach (var coordinate in neighbours)
             {
-                if (!IsTilePassable(state, movementType, coordinate)) continue;
+                if (!IsWalkableAndEmpty(state, coordinate)) continue;
 
                 walkableNeighbours.Add(coordinate);
             }
 
             return walkableNeighbours;
+        }
+
+        public static List<HexCoordinate> GetWalkableAxisTiles(BoardState state, HexCoordinate position, Character oChar, int range)
+        {
+            var targets = new List<HexCoordinate>();
+
+            foreach (var direction in Directions)
+            {
+                for (var i = 0; i < range; i++)
+                {
+                    var hexToCheck = position + (direction * (i + 1));
+
+                    //if we've wandered off the map, don't keep going, obviously
+                    if (!state.ContainsKey(hexToCheck))
+                        break;
+
+                    //if we can't get through this tile, ok, give up
+                    if (!IsTilePassable(state, oChar.MovementType, hexToCheck)) break;
+
+                    if (IsWalkableAndEmpty(state, hexToCheck))
+                        targets.Add(hexToCheck);
+                }
+            }
+
+            return targets;
         }
 
         public static HexCoordinate GetNearestEmptyNeighbourRecursive(BoardState state, HexCoordinate position, int maxSearchDepth, int searchDepth = 0)
@@ -738,7 +763,7 @@ namespace HexWork.Gameplay
 
             foreach (var coord in adjacentTiles)
             {
-                if (IsHexPassable(state, coord))
+                if (IsWalkableAndEmpty(state, coord))
                     return coord;
             }
 

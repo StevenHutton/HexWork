@@ -320,7 +320,7 @@ namespace HexWork.UI
                     pushForce = 0;
                     break;
                 }
-                if (BoardState.IsHexPassable(state, destinationPos))
+                if (BoardState.IsWalkableAndEmpty(state, destinationPos))
                 {
                     _spriteBatch.Draw(_arrowTexture, drawPosition, null, Color.White, rotation, new Vector2(64, 64), _hexScale, SpriteEffects.None, 0.0f);
                 }

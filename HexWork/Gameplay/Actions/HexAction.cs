@@ -144,10 +144,11 @@ namespace HexWork.Gameplay.Actions
                 if (direction != null)
                     newState = gameState.ApplyPush(newState, targetCharacter.Id, direction, PushForce);
             }
-
-            if (TileEffect != null)
-                newState = gameState.CreateTileEffect(newState, TileEffect, targetTile);
-
+            else
+            {
+                if (TileEffect != null)
+                    newState = gameState.CreateTileEffect(newState, TileEffect, targetTile);
+            }
             return newState;
         }
         

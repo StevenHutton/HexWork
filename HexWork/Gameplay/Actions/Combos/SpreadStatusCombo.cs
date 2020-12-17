@@ -5,6 +5,7 @@ using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
 using System;
+using HexWork.Gameplay.GameObject;
 
 namespace HexWork.Gameplay.Actions
 {
@@ -57,7 +58,7 @@ namespace HexWork.Gameplay.Actions
                     if (newTargetCharacter == null)
                     {
                         if (statusEffect.TileEffect != null)
-                            gameState.CreateTileEffect(newState, statusEffect.TileEffect, targetTile);
+                            newState = gameState.CreateTileEffect(newState, statusEffect.TileEffect, targetTile);
 
                         continue;
                     }
@@ -65,8 +66,8 @@ namespace HexWork.Gameplay.Actions
                     if (AllySafe && newTargetCharacter.IsHero == character.IsHero)
                         continue;
 
-                    gameState.ApplyStatus(newState, newTargetCharacter.Id, statusEffect);
-                    gameState.ApplyDamage(newState, newTargetCharacter.Id, Power * character.Power);
+                    newState = gameState.ApplyStatus(newState, newTargetCharacter.Id, statusEffect);
+                    newState = gameState.ApplyDamage(newState, newTargetCharacter.Id, Power * character.Power);
 
                     var dir = PushFromCaster ?
                         BoardState.GetPushDirection(character.Position, targetTile) :
@@ -74,6 +75,7 @@ namespace HexWork.Gameplay.Actions
                     newState = gameState.ApplyPush(newState, newTargetCharacter.Id, dir, PushForce);
                 }
                 newState = gameState.ApplyDamage(newState, targetCharacter.Id, (powerBonus + Power) * character.Power);
+                return newState;
             }
 
             var tileEffect = BoardState.GetTileEffectAtCoordinate(newState, targetPosition);
@@ -88,14 +90,21 @@ namespace HexWork.Gameplay.Actions
                     if (AllySafe && newTargetCharacter.IsHero == character.IsHero)
                         continue;
 
-                    newState = await tileEffect.TriggerEffect(newState, gameState);
+                    newState = gameState.ApplyCombo(newState, targetCharacter.Id, this, out _);
+                    newState = gameState.ApplyStatus(newState, newTargetCharacter.Id, tileEffect.Effect);
+                    newState = gameState.ApplyDamage(newState, newTargetCharacter.Id, Power * character.Power);
+                    
+                    var dir = PushFromCaster ?
+                        BoardState.GetPushDirection(character.Position, targetTile) :
+                        BoardState.GetPushDirection(targetPosition, targetTile);
+
+                    newState = gameState.ApplyPush(newState, newTargetCharacter.Id, dir, PushForce);
                 }
                 else
                     newState = gameState.CreateTileEffect(newState, tileEffect, targetTile);
             }
 
-            newState = gameState.ResolveTileEffect(newState, targetPosition);
-            newState = gameState.RemoveTileEffect(newState, tileEffect.Id);
+            newState = gameState.ApplyDamage(newState, targetCharacter.Id, Power * character.Power);
             return newState;
         }
     }

@@ -21,7 +21,7 @@ namespace HexWork.Gameplay.Actions
         {
         }
 
-        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider gameState)
+        public override async Task<BoardState> TriggerAsync(BoardState state, Guid characterId, IInputProvider input, IRulesProvider rules)
         {
             var newState = state.Copy();
             var character = newState.GetEntityById(characterId) as Character;
@@ -34,11 +34,11 @@ namespace HexWork.Gameplay.Actions
                 return state;
 
             //check validity
-            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+            if (!rules.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
                 return state;
 
             if (PotentialCost != 0)
-                newState = gameState.LosePotential(newState, PotentialCost);
+                newState = rules.LosePotential(newState, PotentialCost);
 
             var position = character.Position;
             var direction = BoardState.GetPushDirection(position, targetPosition);
@@ -50,13 +50,13 @@ namespace HexWork.Gameplay.Actions
                 position += direction;
                 path.Add(position);
             }
-            newState = gameState.MoveEntity(newState, characterId, path);
+            newState = rules.MoveEntity(newState, characterId, path);
             
             var strikePosition = targetPosition + direction;
 
-            newState = await ApplyToTile(newState, strikePosition, gameState, characterId, direction);
+            newState = await ApplyToTile(newState, strikePosition, rules, characterId, direction);
 
-            newState = gameState.CompleteAction(newState, characterId, this);
+            newState = rules.CompleteAction(newState, characterId, this);
             return newState;
         }
     }

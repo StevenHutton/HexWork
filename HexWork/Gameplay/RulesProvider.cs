@@ -99,14 +99,14 @@ namespace HexWork.Gameplay
             foreach (var character in newState.Heroes)
             {
                 var position = spawnPoint;
-                var validTile = BoardState.IsHexPassable(newState, position);
+                var validTile = BoardState.IsWalkableAndEmpty(newState, position);
 
                 while (!validTile)
                 {
                     position = BoardState.GetNearestEmptyNeighbourRecursive(newState, position, 9);
                     //tiles are only valid so long as they're walkable and have at least one passable neighbor.
-                    validTile = BoardState.IsHexPassable(newState, position) &&
-                                BoardState.GetNeighbours(position).Any(d => BoardState.IsHexPassable(newState, d));
+                    validTile = BoardState.IsWalkableAndEmpty(newState, position) &&
+                                BoardState.GetNeighbours(position).Any(d => BoardState.IsWalkableAndEmpty(newState, d));
                 }
 
                 character.SpawnAt(position);
@@ -133,7 +133,7 @@ namespace HexWork.Gameplay
         {
             var newState = state.Copy();
             if (newState.ActiveCharacter == null)
-                return newState;
+                return NextTurn(newState, new Guid());
             
             if (newState.ActiveCharacter.IsHero)
                 return newState;
@@ -323,7 +323,9 @@ namespace HexWork.Gameplay
         {
             var newState = state.Copy();
 
-            var entity = newState.Entities.First(ent => ent.Id == entityId);
+            var entity = newState.Entities.FirstOrDefault(ent => ent.Id == entityId);
+            if (entity == null)
+                return state;
 
             entity.Health -= damage;
 
@@ -444,7 +446,7 @@ namespace HexWork.Gameplay
                     newState = ApplyDamage(newState, targetEntity.Id, distance * 15);
                     distance = 0;
                 }
-                else if (BoardState.IsHexPassable(newState, destinationPos))
+                else if (BoardState.IsWalkableAndEmpty(newState, destinationPos))
                 {
                     newState = MoveEntity(newState, targetEntity.Id, new List<HexCoordinate> { destinationPos });
 
@@ -563,6 +565,7 @@ namespace HexWork.Gameplay
         public static readonly int[] MovementSpeedSlow = { 0, 1, 2, 2, 3, 3, 3 };
         public static readonly int[] MovementSpeedNormal = { 0, 1, 1, 2, 3, 3, 3 };
         public static readonly int[] MovementSpeedFast = { 0, 0, 1, 2, 2, 3, 3 };
+
 
         public static int GetMoveSpeedCost(MovementSpeed ms, int distance)
         {

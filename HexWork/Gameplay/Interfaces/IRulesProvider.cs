@@ -25,7 +25,8 @@ namespace HexWork.Gameplay.Interfaces
         AxisAlignedIgnoreUnits,
         AxisAlignedIgnoreLos,
         Move,
-        FixedMove
+        FixedMove,
+        AxisAlignedFixedMove
     }
 
     public enum MovementSpeed
