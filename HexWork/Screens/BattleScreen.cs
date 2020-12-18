@@ -818,7 +818,7 @@ namespace HexWork.UI
 		/// Return a list of highlighted co-ordinates. If none exist returns null.
 		/// </summary>
 		/// <returns></returns>
-		private List<HexCoordinate> GetHighlightedCoordinates()
+		private Dictionary<HexCoordinate, int> GetHighlightedCoordinates()
 		{
             if (SelectedHexAction == null)
                 return null;

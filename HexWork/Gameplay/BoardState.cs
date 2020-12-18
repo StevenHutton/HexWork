@@ -307,9 +307,9 @@ namespace HexWork.Gameplay
         /// <summary>
         /// Get all the tiles within range of a target position along each of our three coordinate system axes.
         /// </summary>
-        public static List<HexCoordinate> GetAxisTilesInRange(BoardState state, HexCoordinate position, int range)
+        public static Dictionary<HexCoordinate, int> GetAxisTilesInRange(BoardState state, HexCoordinate position, int range)
         {
-            var targets = new List<HexCoordinate>();
+            var targets = new Dictionary<HexCoordinate, int>();
 
             foreach (var direction in Directions)
             {
@@ -320,7 +320,7 @@ namespace HexWork.Gameplay
                     if (!state.ContainsKey(hexToCheck))
                         break;
 
-                    targets.Add(hexToCheck);
+                    targets.Add(hexToCheck, RulesProvider.GetRangeCost(i));
                 }
             }
 
@@ -356,9 +356,9 @@ namespace HexWork.Gameplay
             return targets;
         }
 
-        public static List<HexCoordinate> GetVisibleAxisTilesInRangeIgnoreUnits(BoardState state, HexCoordinate position, int range)
+        public static Dictionary<HexCoordinate, int> GetVisibleAxisTilesInRangeIgnoreUnits(BoardState state, HexCoordinate position, int range)
         {
-            var targets = new List<HexCoordinate>();
+            var targets = new Dictionary<HexCoordinate, int>();
             foreach (var direction in Directions)
             {
                 for (var i = 0; i < range; i++)
@@ -371,7 +371,7 @@ namespace HexWork.Gameplay
                     if (IsHexOpaque(state, hexToCheck))
                         break;
 
-                    targets.Add(hexToCheck);
+                    targets.Add(hexToCheck, RulesProvider.GetRangeCost(i));
                 }
             }
 
@@ -560,29 +560,29 @@ namespace HexWork.Gameplay
 
         public static bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType)
         {
-            return GetValidTargets(state, objectCharacter, range, targetType).Contains(targetPosition);
+            return GetValidTargets(state, objectCharacter, range, targetType).Keys.Contains(targetPosition);
         }
 
-        public static List<HexCoordinate> GetValidTargets(BoardState state, Character objectCharacter, int range, TargetType targetType)
+        public static Dictionary<HexCoordinate, int> GetValidTargets(BoardState state, Character objectCharacter, int range, TargetType targetType)
         {
             var position = objectCharacter.Position;
 
             switch (targetType)
             {
                 case TargetType.Free:
-                    return GetVisibleTilesInRange(state, position, range).Keys.ToList();
+                    return GetVisibleTilesInRange(state, position, range);
                 case TargetType.FreeIgnoreUnits:
-                    return GetVisibleTilesInRangeIgnoreUnits(state, position, range).Keys.ToList();
+                    return GetVisibleTilesInRangeIgnoreUnits(state, position, range);
                 case TargetType.FreeIgnoreLos:
-                    return GetTilesInRange(state, position, range).Keys.ToList();
+                    return GetTilesInRange(state, position, range);
                 case TargetType.AxisAligned:
-                    return GetVisibleAxisTilesInRange(state, position, range).Keys.ToList();
+                    return GetVisibleAxisTilesInRange(state, position, range);
                 case TargetType.AxisAlignedIgnoreUnits:
                     return GetVisibleAxisTilesInRangeIgnoreUnits(state, position, range);
                 case TargetType.AxisAlignedIgnoreLos:
                     return GetAxisTilesInRange(state, position, range);
                 case TargetType.Move:
-                    return GetValidDestinations(state, position, objectCharacter).Keys.ToList();
+                    return GetValidDestinations(state, position, objectCharacter);
                 case TargetType.FixedMove:
                     return GetWalkableAdjacentTiles(state, position);
                 case TargetType.AxisAlignedFixedMove:
@@ -720,9 +720,9 @@ namespace HexWork.Gameplay
             }
         }
 
-        public static List<HexCoordinate> GetWalkableAdjacentTiles(BoardState state, HexCoordinate position)
+        public static Dictionary<HexCoordinate, int> GetWalkableAdjacentTiles(BoardState state, HexCoordinate position)
         {
-            var walkableNeighbours = new List<HexCoordinate>();
+            var walkableNeighbours = new Dictionary<HexCoordinate, int>();
 
             var neighbours = GetNeighbours(position);
 
@@ -730,18 +730,19 @@ namespace HexWork.Gameplay
             {
                 if (!IsWalkableAndEmpty(state, coordinate)) continue;
 
-                walkableNeighbours.Add(coordinate);
+                walkableNeighbours.Add(coordinate, 0);
             }
 
             return walkableNeighbours;
         }
 
-        public static List<HexCoordinate> GetWalkableAxisTiles(BoardState state, HexCoordinate position, Character oChar, int range)
+        public static Dictionary<HexCoordinate, int> GetWalkableAxisTiles(BoardState state, HexCoordinate position, Character oChar, int range)
         {
-            var targets = new List<HexCoordinate>();
+            var targets = new Dictionary<HexCoordinate, int>();
 
             foreach (var direction in Directions)
             {
+                int moveCost = 0;
                 for (var i = 0; i < range; i++)
                 {
                     var hexToCheck = position + (direction * (i + 1));
@@ -753,8 +754,10 @@ namespace HexWork.Gameplay
                     //if we can't get through this tile, ok, give up
                     if (!IsTilePassable(state, oChar.MovementType, hexToCheck)) break;
 
+                    moveCost += (int)GetTileTotalMovementCost(state, hexToCheck) + RulesProvider.GetMoveSpeedCost(oChar.MovementSpeed, i);
+
                     if (IsWalkableAndEmpty(state, hexToCheck))
-                        targets.Add(hexToCheck);
+                        targets.Add(hexToCheck, moveCost);
                 }
             }
 
