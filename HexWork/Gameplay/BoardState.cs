@@ -238,8 +238,8 @@ namespace HexWork.Gameplay
         /// <returns>true/false</returns>
         public static bool IsWalkableAndEmpty(BoardState state, HexCoordinate coordinate)
         {
-            return BoardState.IsHexWalkable(state, coordinate)
-                   && BoardState.IsTileEmpty(state, coordinate);
+            return IsHexWalkable(state, coordinate)
+                   && IsTileEmpty(state, coordinate);
         }
 
         public static bool IsHexWalkable(BoardState state, HexCoordinate co)
@@ -330,9 +330,9 @@ namespace HexWork.Gameplay
         /// <summary>
         /// Get all the visible tiles within range of a target position along each of our three coordinate system axes.
         /// </summary>
-        public static List<HexCoordinate> GetVisibleAxisTilesInRange(BoardState state, HexCoordinate position, int range)
+        public static Dictionary<HexCoordinate, int> GetVisibleAxisTilesInRange(BoardState state, HexCoordinate position, int range)
         {
-            var targets = new List<HexCoordinate>();
+            var targets = new Dictionary<HexCoordinate, int>();
             foreach (var direction in Directions)
             {
                 for (var i = 0; i < range; i++)
@@ -345,7 +345,7 @@ namespace HexWork.Gameplay
                     if (IsHexOpaque(state, hexToCheck))
                         break;
 
-                    targets.Add(hexToCheck);
+                    targets.Add(hexToCheck, RulesProvider.GetRangeCost(i));
 
                     //if there's a unit in this tile then we can't see past them.
                     if (!IsTileEmpty(state, hexToCheck))
@@ -576,7 +576,7 @@ namespace HexWork.Gameplay
                 case TargetType.FreeIgnoreLos:
                     return GetTilesInRange(state, position, range).Keys.ToList();
                 case TargetType.AxisAligned:
-                    return GetVisibleAxisTilesInRange(state, position, range);
+                    return GetVisibleAxisTilesInRange(state, position, range).Keys.ToList();
                 case TargetType.AxisAlignedIgnoreUnits:
                     return GetVisibleAxisTilesInRangeIgnoreUnits(state, position, range);
                 case TargetType.AxisAlignedIgnoreLos:
