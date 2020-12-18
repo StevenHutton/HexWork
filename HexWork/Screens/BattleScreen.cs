@@ -455,7 +455,7 @@ namespace HexWork.UI
             _spriteBatch.End();
         }
 
-        private void DrawHighlightedMap(List<HexCoordinate> highlightedTiles)
+        private void DrawHighlightedMap(Dictionary<HexCoordinate, int> highlightedTiles)
         {
             _spriteBatch.Begin();
 
@@ -468,15 +468,15 @@ namespace HexWork.UI
 
                 var color = tile.Color;
 
-                if (!highlightedTiles.Contains(coordinate))
+                if (!highlightedTiles.Keys.Contains(coordinate))
                 {
-                    color = new Color(color.ToVector3() / 6);
+                    color = new Color(color.ToVector3() / 6);                    
                 }
 
                 _spriteBatch.Draw(_hexagonTexture, renderPosition, null, color, 0.0f,
-                    _hexCenter, _hexScaleV, SpriteEffects.None, 0.0f);
+                        _hexCenter, _hexScaleV, SpriteEffects.None, 0.0f);
             }
-            
+
             _spriteBatch.End();
         }
 
@@ -600,6 +600,22 @@ namespace HexWork.UI
                     }
 				}
 			}
+
+            _spriteBatch.End();
+
+
+            _spriteBatch.Begin();
+
+            var highlightedCoords = GetHighlightedCoordinates();
+            if (highlightedCoords != null)
+                foreach (var kvp in highlightedCoords)
+                {
+                    var coordinate = kvp.Key;
+                    var tile = kvp.Value;
+                    var renderPosition = GetHexScreenPosition(coordinate);
+
+                    _spriteBatch.DrawString(_damageFont, kvp.Value.ToString(), renderPosition, Color.White);
+                }
 
             _spriteBatch.End();
         }
@@ -761,8 +777,6 @@ namespace HexWork.UI
                     name = !BoardState.ActiveCharacterHasAttacked ? name : "End Turn";
                 }
 
-                name = action.PotentialCost > 0 ? $"{name} {action.PotentialCost}" : name;
-
                 AddButton(name,
                     async (input) =>
                     {
@@ -825,7 +839,7 @@ namespace HexWork.UI
 
             var selectedCharacter = BoardState.ActiveCharacter;
 
-            return BoardState.GetValidTargets(BoardState, selectedCharacter, selectedCharacter.RangeModifier + SelectedHexAction.Range, SelectedHexAction.TargetType);
+            return BoardState.GetValidTargets(BoardState, selectedCharacter, SelectedHexAction, SelectedHexAction.TargetType);
 		}
 
 		private HexCoordinate GetHexCoordinate(float posX, float posY)

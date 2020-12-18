@@ -537,10 +537,10 @@ namespace HexWork.Gameplay
 
         #region Public Accessor Methods
 
-        public bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType)
-        {
-            return BoardState.IsValidTarget(state, objectCharacter, targetPosition, range, targetType);
-        }
+        //public bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType)
+        //{
+        //    return BoardState.IsValidTarget(state, objectCharacter, targetPosition, range, targetType);
+        //}
 
         #endregion
 
@@ -593,9 +593,9 @@ namespace HexWork.Gameplay
                 return 10;
 
             int cost = 0;
-            for(int i=0;i<distance; i++)
+            for(int i = 0; i<=distance; i++)
             {
-                cost += AttackRangeCostNormal[distance];
+                cost += AttackRangeCostNormal[i];
             }
             return cost;
         }

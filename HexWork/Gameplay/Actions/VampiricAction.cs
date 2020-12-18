@@ -34,9 +34,14 @@ namespace HexWork.Gameplay.Actions
             if (targetPosition == null)
                 return state;
 
-            //check validity
-            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+            var validTargets = BoardState.GetValidTargets(newState, character, this, TargetType);
+            if (!validTargets.ContainsKey(targetPosition))
                 return state;
+
+            var potentialCost = validTargets[targetPosition];
+            if (newState.Potential < potentialCost)
+                return state;
+            newState = gameState.LosePotential(newState, potentialCost);
 
             int amountToHeal = 0;
 
@@ -62,7 +67,6 @@ namespace HexWork.Gameplay.Actions
             }
 
             newState = gameState.ApplyHealing(newState, character.Id, amountToHeal);
-            newState = gameState.LosePotential(newState, PotentialCost);
 
             return gameState.CompleteAction(newState, character.Id, this);
         }

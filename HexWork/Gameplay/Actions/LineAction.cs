@@ -33,23 +33,27 @@ namespace HexWork.Gameplay.Actions
                 return state;
 
             //check validity
-            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+            //check validity
+            var validTargets = BoardState.GetValidTargets(newState, character, this, TargetType);
+            if (!validTargets.ContainsKey(targetPosition))
                 return state;
 
+            var potentialCost = validTargets[targetPosition];
+            if (newState.Potential < potentialCost)
+                return state;
+
+
+            newState = gameState.LosePotential(newState, PotentialCost);
+
             var nearestNeighbor = BoardState.GetNearestNeighbor(character.Position, targetPosition);
-
             var direction = targetPosition - nearestNeighbor;
-
 	        Pattern.RotatePatternTo(direction);
 
             var targetTiles = GetTargetTiles(targetPosition);
-
             foreach (var targetTile in targetTiles)
             {
                 newState = await ApplyToTile(newState, targetTile, gameState, characterId);
             }
-
-            newState = gameState.LosePotential(newState, PotentialCost);
 
             return gameState.CompleteAction(newState, characterId, this);
         }

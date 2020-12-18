@@ -72,7 +72,7 @@ namespace HexWork.Gameplay.Interfaces
 
         BoardState CompleteAction(BoardState state, Guid characterId, HexAction action);
 
-        bool IsValidTarget(BoardState state, Character subjectCharacter, HexCoordinate targetPosition, int range, TargetType targetType);
+        //bool IsValidTarget(BoardState state, Character subjectCharacter, HexCoordinate targetPosition, int range, TargetType targetType);
 
         #endregion
     }

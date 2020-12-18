@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
@@ -307,7 +308,7 @@ namespace HexWork.Gameplay
         /// <summary>
         /// Get all the tiles within range of a target position along each of our three coordinate system axes.
         /// </summary>
-        public static Dictionary<HexCoordinate, int> GetAxisTilesInRange(BoardState state, HexCoordinate position, int range)
+        public static Dictionary<HexCoordinate, int> GetAxisTilesInRange(BoardState state, HexCoordinate position, int range, int basePotentialCost)
         {
             var targets = new Dictionary<HexCoordinate, int>();
 
@@ -320,7 +321,9 @@ namespace HexWork.Gameplay
                     if (!state.ContainsKey(hexToCheck))
                         break;
 
-                    targets.Add(hexToCheck, RulesProvider.GetRangeCost(i));
+                    var cost = RulesProvider.GetRangeCost(i) + basePotentialCost;
+                    if (cost <= state.Potential)
+                        targets.Add(hexToCheck, cost);
                 }
             }
 
@@ -330,7 +333,7 @@ namespace HexWork.Gameplay
         /// <summary>
         /// Get all the visible tiles within range of a target position along each of our three coordinate system axes.
         /// </summary>
-        public static Dictionary<HexCoordinate, int> GetVisibleAxisTilesInRange(BoardState state, HexCoordinate position, int range)
+        public static Dictionary<HexCoordinate, int> GetVisibleAxisTilesInRange(BoardState state, HexCoordinate position, int range, int basePotentialCost)
         {
             var targets = new Dictionary<HexCoordinate, int>();
             foreach (var direction in Directions)
@@ -345,7 +348,9 @@ namespace HexWork.Gameplay
                     if (IsHexOpaque(state, hexToCheck))
                         break;
 
-                    targets.Add(hexToCheck, RulesProvider.GetRangeCost(i));
+                    var cost = RulesProvider.GetRangeCost(i) + basePotentialCost;
+                    if (cost <= state.Potential)
+                        targets.Add(hexToCheck, cost);
 
                     //if there's a unit in this tile then we can't see past them.
                     if (!IsTileEmpty(state, hexToCheck))
@@ -356,7 +361,7 @@ namespace HexWork.Gameplay
             return targets;
         }
 
-        public static Dictionary<HexCoordinate, int> GetVisibleAxisTilesInRangeIgnoreUnits(BoardState state, HexCoordinate position, int range)
+        public static Dictionary<HexCoordinate, int> GetVisibleAxisTilesInRangeIgnoreUnits(BoardState state, HexCoordinate position, int range, int basePotentialCost)
         {
             var targets = new Dictionary<HexCoordinate, int>();
             foreach (var direction in Directions)
@@ -371,7 +376,9 @@ namespace HexWork.Gameplay
                     if (IsHexOpaque(state, hexToCheck))
                         break;
 
-                    targets.Add(hexToCheck, RulesProvider.GetRangeCost(i));
+                    var cost = RulesProvider.GetRangeCost(i) + basePotentialCost;
+                    if (cost <= state.Potential)
+                        targets.Add(hexToCheck, cost);
                 }
             }
 
@@ -381,11 +388,11 @@ namespace HexWork.Gameplay
         /// <summary>
         /// Get all the visible tiles within range of a target position
         /// </summary>
-        public static Dictionary<HexCoordinate, int> GetVisibleTilesInRange(BoardState state, HexCoordinate position, int range)
+        public static Dictionary<HexCoordinate, int> GetVisibleTilesInRange(BoardState state, HexCoordinate position, int range, int basePotentialCost = 0)
         {
             var targets = new Dictionary<HexCoordinate, int> { {position, 0} };
 
-            GetVisibleTilesRecursive(state, targets, position, position, range);
+            GetVisibleTilesRecursive(state, targets, position, position, range, 0, false, basePotentialCost);
 
             return targets;
         }
@@ -393,11 +400,11 @@ namespace HexWork.Gameplay
         /// <summary>
         /// Get all the visible tiles within range of a target position
         /// </summary>
-        public static Dictionary<HexCoordinate, int> GetVisibleTilesInRangeIgnoreUnits(BoardState state, HexCoordinate position, int range)
+        public static Dictionary<HexCoordinate, int> GetVisibleTilesInRangeIgnoreUnits(BoardState state, HexCoordinate position, int range, int basePotentialCost = 0)
         {
             var targets = new Dictionary<HexCoordinate, int> { { position, 0} };
 
-            GetVisibleTilesRecursive(state, targets, position, position, range, 0, true);
+            GetVisibleTilesRecursive(state, targets, position, position, range, 0, true, basePotentialCost);
 
             return targets;
         }
@@ -405,16 +412,22 @@ namespace HexWork.Gameplay
         /// <summary>
         /// Get all the tiles within range of a target position
         /// </summary>
-        public static Dictionary<HexCoordinate, int> GetTilesInRange(BoardState state, HexCoordinate position, int range)
+        public static Dictionary<HexCoordinate, int> GetTilesInRange(BoardState state, HexCoordinate position, int range, int basePotentialCost)
         {
             var result = new Dictionary<HexCoordinate, int> { { position, 0 } };
 
-            GetTilesInRangeRecursive(state, result, position, position, range);
+            GetTilesInRangeRecursive(state, result, position, position, range, 0, basePotentialCost);
 
             return result;
         }
 
-        private static void GetTilesInRangeRecursive(BoardState state, Dictionary<HexCoordinate, int> tilesInRange, HexCoordinate position, HexCoordinate startPosition, int range, int searchDepth = 0)
+        private static void GetTilesInRangeRecursive(BoardState state, 
+            Dictionary<HexCoordinate, int> tilesInRange, 
+            HexCoordinate position, 
+            HexCoordinate startPosition, 
+            int range, 
+            int searchDepth,
+            int basePotentialCost)
         {
             if (searchDepth >= range)
                 return;
@@ -431,16 +444,18 @@ namespace HexWork.Gameplay
 
                 if (!tilesInRange.ContainsKey(coord))
                 {
-                    tilesInRange.Add(coord, RulesProvider.GetRangeCost(searchDepth));
+                    var cost = RulesProvider.GetRangeCost(searchDepth) + basePotentialCost;
+                    if(cost <= state.Potential)
+                        tilesInRange.Add(coord, cost);
                 }
 
-                GetTilesInRangeRecursive(state, tilesInRange, coord, startPosition, range, searchDepth + 1);
+                GetTilesInRangeRecursive(state, tilesInRange, coord, startPosition, range, searchDepth + 1, basePotentialCost);
             }
         }
 
         private static void GetVisibleTilesRecursive(BoardState state,
             Dictionary<HexCoordinate, int> results, HexCoordinate position,
-            HexCoordinate startPosition, int maxSearchDepth, int searchDepth = 0, bool ignoreUnits = false)
+            HexCoordinate startPosition, int maxSearchDepth, int searchDepth, bool ignoreUnits, int basePotentialCost)
         {
             if (searchDepth >= maxSearchDepth)
                 return;
@@ -461,13 +476,15 @@ namespace HexWork.Gameplay
 
                 if (!results.ContainsKey(coord) && searchDepth + 1 <= maxSearchDepth)
                 {
-                    results.Add(coord, RulesProvider.GetRangeCost(searchDepth));
+                    var cost = RulesProvider.GetRangeCost(searchDepth) + basePotentialCost;
+                    if (cost <= state.Potential)
+                        results.Add(coord, cost);
                 }
 
                 if (!IsTileEmpty(state, coord) && !ignoreUnits)
                     continue;
 
-                GetVisibleTilesRecursive(state, results, coord, startPosition, maxSearchDepth, searchDepth + 1);
+                GetVisibleTilesRecursive(state, results, coord, startPosition, maxSearchDepth, searchDepth + 1, ignoreUnits, basePotentialCost);
             }
         }
 
@@ -475,9 +492,9 @@ namespace HexWork.Gameplay
         /// Returns a boolean indicating if the selected tile is reachable from the start position in
         /// a number of steps =< range.
         /// </summary>
-        public static bool IsValidDestination(BoardState state, Character objectCharacter, HexCoordinate targetPosition)
+        public static bool IsValidDestination(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int basePotentialCost)
         {
-            var destinations = GetValidDestinations(state, objectCharacter.Position, objectCharacter);
+            var destinations = GetValidDestinations(state, objectCharacter.Position, objectCharacter, basePotentialCost);
 
             if (!destinations.Keys.Contains(targetPosition))
                 return false;
@@ -488,13 +505,13 @@ namespace HexWork.Gameplay
             return true;
         }
 
-        public static Dictionary<HexCoordinate, int> GetValidDestinations(BoardState state, HexCoordinate position, Character oCharacter)
+        public static Dictionary<HexCoordinate, int> GetValidDestinations(BoardState state, HexCoordinate position, Character oCharacter, int basePotentialCost)
         {
             MovementType mType = oCharacter.MovementType;
             MovementSpeed mSpeed = oCharacter.MovementSpeed;
             Dictionary<HexCoordinate, int> pathValues = new Dictionary<HexCoordinate, int> { { position, 0 } };
 
-            GetWalkableNeighboursRecursive(state, pathValues, position, mType, mSpeed, 0, 0, state.Potential);
+            GetWalkableNeighboursRecursive(state, pathValues, position, mType, mSpeed, 0, 0, state.Potential, basePotentialCost);
             return pathValues;
         }
 
@@ -506,7 +523,7 @@ namespace HexWork.Gameplay
         /// <param name="searchDepth"></param>
         private static void GetWalkableNeighboursRecursive(BoardState state,
             Dictionary<HexCoordinate, int> pathLengthsToTiles, HexCoordinate position, MovementType movementType, MovementSpeed movementSpeed,
-            int movementCost, int searchDepth, int availableMovement = 5)
+            int movementCost, int searchDepth, int availableMovement, int basePotentialCost)
         {
             var adjacentTiles = BoardState.GetNeighbours(position);
             var tilesToSearch = new List<HexCoordinate>();
@@ -520,24 +537,26 @@ namespace HexWork.Gameplay
                 int movementCostModifier = (int)GetTileTotalMovementCost(state, coord);
                 var movementCostToCoord = RulesProvider.GetMoveSpeedCost(movementSpeed, searchDepth) + movementCostModifier;
 
+                var totalMovementCostToCurrent = movementCostToCoord + movementCost + basePotentialCost;
+
                 //if we don't have enough potential to reach this tile skip it.
-                if (movementCostToCoord + movementCost > availableMovement) continue;
+                if (totalMovementCostToCurrent > availableMovement) continue;
 
                 if (!pathLengthsToTiles.ContainsKey(coord) || pathLengthsToTiles[coord] > movementCostToCoord)
                     tilesToSearch.Add(coord);
 
                 //valid destination check
-                if (!BoardState.IsTileEmpty(state, coord))
+                if (!IsTileEmpty(state, coord))
                     continue;
 
                 //if we've never looked at this tile or we found a shorter path to the tile add it to the list.
                 if (!pathLengthsToTiles.ContainsKey(coord))
                 {
-                    pathLengthsToTiles.Add(coord, movementCostToCoord + movementCost);//then add it to the list.
+                    pathLengthsToTiles.Add(coord, totalMovementCostToCurrent);//then add it to the list.
                 }
-                else if (pathLengthsToTiles[coord] > movementCostToCoord + movementCost)
+                else if (pathLengthsToTiles[coord] > totalMovementCostToCurrent)
                 {
-                    pathLengthsToTiles[coord] = movementCostToCoord + movementCost;//or adjust the cost
+                    pathLengthsToTiles[coord] = totalMovementCostToCurrent;//or adjust the cost
                 }
             }
 
@@ -554,39 +573,39 @@ namespace HexWork.Gameplay
 
                 GetWalkableNeighboursRecursive(state, pathLengthsToTiles, coord, movementType, movementSpeed,
                     movementCost + movementCostToCoord,
-                    searchDepth + 1, availableMovement);
+                    searchDepth + 1, availableMovement, basePotentialCost);
             }
         }
 
-        public static bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType)
+        public static bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, HexAction action, TargetType targetType)
         {
-            return GetValidTargets(state, objectCharacter, range, targetType).Keys.Contains(targetPosition);
+            return GetValidTargets(state, objectCharacter, action, targetType).Keys.Contains(targetPosition);
         }
 
-        public static Dictionary<HexCoordinate, int> GetValidTargets(BoardState state, Character objectCharacter, int range, TargetType targetType)
+        public static Dictionary<HexCoordinate, int> GetValidTargets(BoardState state, Character objectCharacter, HexAction action, TargetType targetType)
         {
             var position = objectCharacter.Position;
 
             switch (targetType)
             {
                 case TargetType.Free:
-                    return GetVisibleTilesInRange(state, position, range);
+                    return GetVisibleTilesInRange(state, position, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
                 case TargetType.FreeIgnoreUnits:
-                    return GetVisibleTilesInRangeIgnoreUnits(state, position, range);
+                    return GetVisibleTilesInRangeIgnoreUnits(state, position, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
                 case TargetType.FreeIgnoreLos:
-                    return GetTilesInRange(state, position, range);
+                    return GetTilesInRange(state, position, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
                 case TargetType.AxisAligned:
-                    return GetVisibleAxisTilesInRange(state, position, range);
+                    return GetVisibleAxisTilesInRange(state, position, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
                 case TargetType.AxisAlignedIgnoreUnits:
-                    return GetVisibleAxisTilesInRangeIgnoreUnits(state, position, range);
+                    return GetVisibleAxisTilesInRangeIgnoreUnits(state, position, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
                 case TargetType.AxisAlignedIgnoreLos:
-                    return GetAxisTilesInRange(state, position, range);
+                    return GetAxisTilesInRange(state, position, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
                 case TargetType.Move:
-                    return GetValidDestinations(state, position, objectCharacter);
+                    return GetValidDestinations(state, position, objectCharacter, action.PotentialCost);
                 case TargetType.FixedMove:
-                    return GetWalkableAdjacentTiles(state, position);
+                    return GetWalkableAdjacentTiles(state, position, action.PotentialCost);
                 case TargetType.AxisAlignedFixedMove:
-                    return GetWalkableAxisTiles(state, position, objectCharacter, range);
+                    return GetWalkableAxisTiles(state, position, objectCharacter, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
                 default:
                     return null;
             }
@@ -720,7 +739,7 @@ namespace HexWork.Gameplay
             }
         }
 
-        public static Dictionary<HexCoordinate, int> GetWalkableAdjacentTiles(BoardState state, HexCoordinate position)
+        public static Dictionary<HexCoordinate, int> GetWalkableAdjacentTiles(BoardState state, HexCoordinate position, int basePotentialCost)
         {
             var walkableNeighbours = new Dictionary<HexCoordinate, int>();
 
@@ -730,13 +749,13 @@ namespace HexWork.Gameplay
             {
                 if (!IsWalkableAndEmpty(state, coordinate)) continue;
 
-                walkableNeighbours.Add(coordinate, 0);
+                walkableNeighbours.Add(coordinate, basePotentialCost);
             }
 
             return walkableNeighbours;
         }
 
-        public static Dictionary<HexCoordinate, int> GetWalkableAxisTiles(BoardState state, HexCoordinate position, Character oChar, int range)
+        public static Dictionary<HexCoordinate, int> GetWalkableAxisTiles(BoardState state, HexCoordinate position, Character oChar, int range, int basePotentialCost)
         {
             var targets = new Dictionary<HexCoordinate, int>();
 
@@ -754,7 +773,7 @@ namespace HexWork.Gameplay
                     //if we can't get through this tile, ok, give up
                     if (!IsTilePassable(state, oChar.MovementType, hexToCheck)) break;
 
-                    moveCost += (int)GetTileTotalMovementCost(state, hexToCheck) + RulesProvider.GetMoveSpeedCost(oChar.MovementSpeed, i);
+                    moveCost += (int)GetTileTotalMovementCost(state, hexToCheck) + RulesProvider.GetMoveSpeedCost(oChar.MovementSpeed, i) + basePotentialCost;
 
                     if (IsWalkableAndEmpty(state, hexToCheck))
                         targets.Add(hexToCheck, moveCost);

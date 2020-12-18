@@ -82,20 +82,6 @@ namespace HexWork.UI
             _hexGame = (HexWork)game;
         }
 
-	    public bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType)
-	    {
-		    var isValid = rulesProvider.IsValidTarget(state, objectCharacter, targetPosition, range, targetType);
-
-		    if (!isValid)
-		    {
-			    var pos = GetHexScreenPosition(targetPosition);
-
-			    _spriteBatch.Draw(_invalidTexture, pos, null, Color.White, 0.0f, _hexCenter, _hexScaleV, SpriteEffects.None, 0.0f);
-		    }
-
-		    return isValid;
-	    }
-
         public BoardState CompleteAction(BoardState state, Guid characterId, HexAction action) { return state; }
 
         public BoardState AddEntity(BoardState state, HexGameObject entity) { return state; }

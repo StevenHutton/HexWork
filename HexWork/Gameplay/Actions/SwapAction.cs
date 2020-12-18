@@ -33,7 +33,12 @@ namespace HexWork.Gameplay.Actions
                 return state;
 
             //check validity
-            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+            var validTargets = BoardState.GetValidTargets(newState, character, this, TargetType);
+            if (!validTargets.ContainsKey(targetPosition))
+                return state;
+
+            var potentialCost = validTargets[targetPosition];
+            if (newState.Potential < potentialCost)
                 return state;
 
             var target = BoardState.GetEntityAtCoordinate(newState, targetPosition);

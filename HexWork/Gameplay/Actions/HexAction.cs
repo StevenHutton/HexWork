@@ -98,11 +98,15 @@ namespace HexWork.Gameplay.Actions
 		        return state;
 
             //check validity
-            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+            var validTargets = BoardState.GetValidTargets(newState, character, this, TargetType);
+            if (!validTargets.ContainsKey(targetPosition))
                 return state;
 
-            if (PotentialCost != 0)
-                newState = gameState.LosePotential(newState, PotentialCost);
+            var potentialCost = validTargets[targetPosition];
+            if (newState.Potential < potentialCost)
+                return state;
+
+            newState = gameState.LosePotential(newState, potentialCost);
 
 			//loop through the affected tiles.
             var targetTiles = GetTargetTiles(targetPosition);

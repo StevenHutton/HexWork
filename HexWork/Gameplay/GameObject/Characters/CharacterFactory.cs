@@ -488,7 +488,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 foreach (var action in character.Actions)
                 {
                     //if we can hit the hero, hit them now and end turn. - don't move.
-                    if (ruleProvider.IsValidTarget(newState, character, closestHero.Position, action.Range, action.TargetType)
+                    if (BoardState.IsValidTarget(newState, character, closestHero.Position, action, action.TargetType)
                         && action.IsDetonator == closestHero.HasStatus)
                     {
                         newState = ruleProvider.ApplyDamage(newState, closestHero.Id, action.Power * character.Power);
@@ -524,8 +524,8 @@ namespace HexWork.Gameplay.GameObject.Characters
             //get the list of all possible destination tiles.
             foreach (var hero in newState.Heroes)
             {
-                var walkableNeighbours = BoardState.GetWalkableAdjacentTiles(newState, hero.Position);
-                postentialDestinations.AddRange(walkableNeighbours);
+                var walkableNeighbours = BoardState.GetWalkableAdjacentTiles(newState, hero.Position, 0);
+                postentialDestinations.AddRange(walkableNeighbours.Keys.ToList());
             }
 
             foreach (var potentialDestination in postentialDestinations)

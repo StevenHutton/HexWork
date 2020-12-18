@@ -34,11 +34,15 @@ namespace HexWork.Gameplay.Actions
                 return state;
 
             //check validity
-            if (!rules.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+            var validTargets = BoardState.GetValidTargets(newState, character, this, TargetType);
+            if (!validTargets.ContainsKey(targetPosition))
                 return state;
 
-            if (PotentialCost != 0)
-                newState = rules.LosePotential(newState, PotentialCost);
+            var potentialCost = validTargets[targetPosition];
+            if (newState.Potential < potentialCost)
+                return state;
+
+            newState = rules.LosePotential(newState, potentialCost);
 
             var position = character.Position;
             var direction = BoardState.GetPushDirection(position, targetPosition);

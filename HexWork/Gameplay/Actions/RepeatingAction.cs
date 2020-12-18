@@ -46,9 +46,15 @@ namespace HexWork.Gameplay.Actions
             if (targetPosition == null)
                 return state;
 
-            //check validity
-            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+            var validTargets = BoardState.GetValidTargets(newState, character, this, TargetType);
+            if (!validTargets.ContainsKey(targetPosition))
                 return state;
+
+            var potentialCost = validTargets[targetPosition];
+            if (newState.Potential < potentialCost)
+                return state;
+
+            newState = gameState.LosePotential(newState, potentialCost);
 
             var targetTiles = GetTargetTiles(targetPosition);
 
@@ -71,9 +77,7 @@ namespace HexWork.Gameplay.Actions
                     newState = gameState.ApplyStatus(newState, targetCharacter.Id, StatusEffect);
                 }
             }
-
-            newState = gameState.LosePotential(state, PotentialCost);
-            
+                        
             return gameState.CompleteAction(newState, characterId, this);
         }
 

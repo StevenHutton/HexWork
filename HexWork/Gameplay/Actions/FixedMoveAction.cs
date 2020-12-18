@@ -36,7 +36,13 @@ namespace HexWork.Gameplay.Actions
             var position = character.Position;
 
             //check validity
-            if (!gameState.IsValidTarget(newState, character, targetPosition, character.RangeModifier + Range, TargetType))
+            //check validity
+            var validTargets = BoardState.GetValidTargets(newState, character, this, TargetType);
+            if (!validTargets.ContainsKey(targetPosition))
+                return state;
+
+            var potentialCost = validTargets[targetPosition];
+            if (newState.Potential < potentialCost)
                 return state;
 
             newState = gameState.MoveEntity(newState, characterId, new List<HexCoordinate>{ targetPosition });
