@@ -13,6 +13,7 @@ namespace HexWork.Gameplay.StatusEffects
 
         public FreezeEffect(FreezeEffect effect)
         {
+            this.Id = effect.Id;
             this.Name = effect.Name;
             this.StatusEffectType = effect.StatusEffectType;
             this.TileEffect = effect.TileEffect;
@@ -32,6 +33,13 @@ namespace HexWork.Gameplay.StatusEffects
             newState.ActiveCharacterHasAttacked = true;
             newState = base.StartTurn(newState, characterId, ruleProvider);
             return newState;
+        }
+
+        public override StatusEffect Clone()
+        {
+            var de = new FreezeEffect(this);
+            de.Id = Guid.NewGuid();
+            return de;
         }
 
         public override StatusEffect Copy()

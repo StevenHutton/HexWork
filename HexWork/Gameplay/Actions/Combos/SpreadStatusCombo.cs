@@ -59,13 +59,11 @@ namespace HexWork.Gameplay.Actions
                     {
                         if (statusEffect.TileEffect != null)
                             newState = gameState.CreateTileEffect(newState, statusEffect.TileEffect, targetTile);
-
                         continue;
                     }
 
                     if (AllySafe && newTargetCharacter.IsHero == character.IsHero)
                         continue;
-
                     newState = gameState.ApplyStatus(newState, newTargetCharacter.Id, statusEffect);
                     newState = gameState.ApplyDamage(newState, newTargetCharacter.Id, Power * character.Power);
 

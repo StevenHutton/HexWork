@@ -385,7 +385,7 @@ namespace HexWork.Gameplay
             if (entity == null)
                 return state;
 
-            var effectToApply = effect.Copy();
+            var effectToApply = effect.Clone();
             entity.StatusEffects.Add(effectToApply);
 
             StatusAppliedEvent?.Invoke(this, new StatusEventArgs(entity.Id, effectToApply));

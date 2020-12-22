@@ -420,7 +420,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
             _electricStatusEffect = new ChargedEffect
             {
-                Name = "Electified",
+                Name = "Electrified",
                 StatusEffectType = StatusEffectType.Electrified,
 
             };

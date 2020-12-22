@@ -19,6 +19,8 @@ namespace HexWork.Gameplay
 
         StatusEffect Copy();
 
+        StatusEffect Clone();
+
         BoardState StartTurn(BoardState state, Guid characterId, RulesProvider ruleProvider);
     }
 
@@ -39,6 +41,7 @@ namespace HexWork.Gameplay
 
         public StatusEffect(StatusEffect effect)
         {
+            this.Id = effect.Id;
             this.Name = effect.Name;
 	        this.StatusEffectType = effect.StatusEffectType;
             this.TileEffect = effect.TileEffect;
@@ -46,9 +49,27 @@ namespace HexWork.Gameplay
 		        Name = StatusEffectType.ToString();
         }
 
+        //creates an exact copy of this instance WITH IT'S OWN ID
+        public virtual StatusEffect Clone()
+        {
+            return new StatusEffect()
+            {
+                Name = this.Name,
+                StatusEffectType = this.StatusEffectType,
+                TileEffect = this.TileEffect
+            };
+        }
+
+        //creates an exact copy of this instance
         public virtual StatusEffect Copy()
         {
-            return new StatusEffect(this);
+            return new StatusEffect()
+            {
+                Id = this.Id,
+                Name = this.Name,
+                StatusEffectType = this.StatusEffectType,
+                TileEffect = this.TileEffect
+            };
         }
 
         public virtual BoardState StartTurn(BoardState state, Guid characterId, RulesProvider ruleProvider)

@@ -129,24 +129,24 @@ namespace HexWork.Gameplay.Actions
             if (character == null)
                 return state;
 
-            var targetCharacter = BoardState.GetEntityAtCoordinate(newState, targetTile);
-                                    
-            if (Combo != null)
-                newState = await Combo.TriggerAsync(newState, characterId, new DummyInputProvider(targetTile), gameState);
+            var targetEntity = BoardState.GetEntityAtCoordinate(newState, targetTile);
 
-            //if no one is there, next tile
-            if (targetCharacter != null)
+            //if no one is there
+            if (targetEntity != null)
             {
+                if (Combo != null)
+                    newState = await Combo.TriggerAsync(newState, characterId, new DummyInputProvider(targetTile), gameState);
+
                 //only apply damage and status effects to legal targets
-                if (!AllySafe || targetCharacter.IsHero != character.IsHero)
+                if (!AllySafe || targetEntity.IsHero != character.IsHero)
                 {
-                    newState = gameState.ApplyDamage(newState, targetCharacter.Id, Power * character.Power);
-                    newState = gameState.ApplyStatus(newState, targetCharacter.Id, StatusEffect);
+                    newState = gameState.ApplyDamage(newState, targetEntity.Id, Power * character.Power);
+                    newState = gameState.ApplyStatus(newState, targetEntity.Id, StatusEffect);
                 }
 
                 //everyone gets pushed
                 if (direction != null)
-                    newState = gameState.ApplyPush(newState, targetCharacter.Id, direction, PushForce);
+                    newState = gameState.ApplyPush(newState, targetEntity.Id, direction, PushForce);
             }
             else
             {

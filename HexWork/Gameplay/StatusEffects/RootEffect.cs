@@ -14,7 +14,7 @@ namespace HexWork.Gameplay.StatusEffects
         public ImmobalisedEffect(ImmobalisedEffect effect)
         {
             this.Name = effect.Name;
-
+            this.Id = effect.Id;
             this.StatusEffectType = effect.StatusEffectType;
             this.TileEffect = effect.TileEffect;
             if (string.IsNullOrWhiteSpace(Name))
@@ -30,7 +30,17 @@ namespace HexWork.Gameplay.StatusEffects
                 return state;
 
             newState.ActiveCharacterHasMoved = true;
+
+            character.StatusEffects.RemoveAll(d => d.Id == this.Id);
+
             return newState;
+        }
+
+        public override StatusEffect Clone()
+        {
+            var de = new ImmobalisedEffect(this);
+            de.Id = Guid.NewGuid();
+            return de;
         }
 
         public override StatusEffect Copy()

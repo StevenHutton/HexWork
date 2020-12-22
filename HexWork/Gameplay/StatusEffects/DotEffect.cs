@@ -14,6 +14,7 @@ namespace HexWork.Gameplay.StatusEffects
 
         public DotEffect(DotEffect effect)
         {
+            this.Id = effect.Id;
             this.Name = effect.Name;
             this.Damage = effect.Damage;
             this.StatusEffectType = effect.StatusEffectType;
@@ -32,6 +33,13 @@ namespace HexWork.Gameplay.StatusEffects
             newState = ruleProvider.ApplyDamage(newState, character.Id, Damage);
             newState = base.StartTurn(newState, characterId, ruleProvider);
             return newState;
+        }
+
+        public override StatusEffect Clone()
+        {
+            var de  = new DotEffect(this);
+            de.Id = Guid.NewGuid();
+            return de;
         }
 
         public override StatusEffect Copy()
