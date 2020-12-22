@@ -20,15 +20,10 @@ namespace HexWork.Screens
 
         #endregion
 
-		#region Properties
-		#endregion
-
-		#region Methods
-
 		#region Initialisation
 
-        public MenuScreen(IScreenManager _screenManager, PlayerIndex? _controllingPlayer)
-            : base(_screenManager, _controllingPlayer)
+        public MenuScreen(IScreenManager _screenManager)
+            : base(_screenManager)
         {
             fullscreen = false;
         }
@@ -79,21 +74,17 @@ namespace HexWork.Screens
                     selected = 0;
             }
 
-            PlayerIndex pIndex;
-
             //check for select
-            if(IsSelect(inputs, out pIndex))
+            if(IsSelect(inputs))
             {
-                menu[selected].OnSelect(pIndex);
+                menu[selected].OnSelect();
             }
         }
 
         private bool IsMenuUp(IInputManager inputs)
         {
-            PlayerIndex pIndex;
-
-            if (inputs.IsNewButtonPress(Buttons.DPadUp, controllingPlayer, out pIndex) ||
-                inputs.IsNewButtonPress(Buttons.LeftThumbstickUp, controllingPlayer, out pIndex) ||
+            if (inputs.IsNewButtonPress(Buttons.DPadUp) ||
+                inputs.IsNewButtonPress(Buttons.LeftThumbstickUp) ||
                 inputs.IsNewKeyPress(Keys.Up))
             {
                 return true;
@@ -104,10 +95,8 @@ namespace HexWork.Screens
 
         private bool IsMenuDown(IInputManager inputs)
         {
-            PlayerIndex pIndex;
-
-            if (inputs.IsNewButtonPress(Buttons.DPadDown, controllingPlayer, out pIndex) ||
-                inputs.IsNewButtonPress(Buttons.LeftThumbstickDown, controllingPlayer, out pIndex) ||
+            if (inputs.IsNewButtonPress(Buttons.DPadDown) ||
+                inputs.IsNewButtonPress(Buttons.LeftThumbstickDown) ||
                 inputs.IsNewKeyPress(Keys.Down))
             {
                 return true;
@@ -116,10 +105,10 @@ namespace HexWork.Screens
                 return false;
         }
 
-        private bool IsSelect(IInputManager inputs, out PlayerIndex pIndex)
+        private bool IsSelect(IInputManager inputs)
         {
-            if (inputs.IsNewButtonPress(Buttons.A, controllingPlayer, out pIndex)
-                || inputs.IsNewButtonPress(Buttons.Start, controllingPlayer, out pIndex)
+            if (inputs.IsNewButtonPress(Buttons.A)
+                || inputs.IsNewButtonPress(Buttons.Start)
                 || inputs.IsNewKeyPress(Keys.Enter))
             {
                 return true;
@@ -129,8 +118,6 @@ namespace HexWork.Screens
         }
 
 		#endregion
-
-		#region Drawing
 
         public override void Draw(GameTime gameTime)
         {
@@ -159,9 +146,5 @@ namespace HexWork.Screens
             }
             spriteBatch.End();
         }
-
-		#endregion
-
-		#endregion
     }
 }

@@ -9,7 +9,7 @@ namespace HexWork.Screens
 	{
 		private HexWork _hexGame;
 
-		public LevelUpScreen(IScreenManager _screenManager, Guid characterId, PlayerIndex? _controllingPlayer = null) : base(_screenManager, _controllingPlayer)
+		public LevelUpScreen(IScreenManager _screenManager, Guid characterId) : base(_screenManager)
 		{ 
 			_hexGame = (HexWork)_screenManager.Game;
             fullscreen = false;

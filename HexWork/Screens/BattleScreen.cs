@@ -35,23 +35,17 @@ namespace HexWork.UI
 
         #endregion
         
-        private readonly List<UiButton> _actionBarButtons = new List<UiButton>();
-        
+        private readonly List<UiButton> _actionBarButtons = new List<UiButton>();        
         private Dictionary<Guid, UiGameObject> _gameObjectDictionary = new Dictionary<Guid, UiGameObject>();
-
         private readonly List<InitiativeTrackButton> _initiativeTrack = new List<InitiativeTrackButton>();
-
         private List<UiAction> _uiActions = new List<UiAction>();
 	    private PreviewRulesProvider _RulesProviderProxy;
 
         public Character SelectedCharacter => BoardState.ActiveCharacter;
         private HexCoordinate _focusedTile = null;
         private HexCoordinate _cursorPosition;
-
         public event EventHandler<HexCoordinate> OnClickEvent;
-
         private HexAction SelectedHexAction = null;
-
         private RulesProvider RulesProvider;
         private BoardState BoardState;
 
@@ -86,7 +80,6 @@ namespace HexWork.UI
         //scaling of 
         private readonly float _hexScale;
         private readonly Vector2 _hexScaleV;
-
         private readonly float _hexScreenScale;
 
         //half-height of a hex-texture in pixels - todo should be set dynamically.
@@ -96,7 +89,6 @@ namespace HexWork.UI
         //distance between buttons in pixels
         private readonly int _buttonMargin = 2;
         private SpriteBatch _spriteBatch;
-        private int _difficulty;
 
         #endregion
 
@@ -121,8 +113,6 @@ namespace HexWork.UI
         public BattleScreen(IScreenManager _screenManager, int difficulty)
             : base(_screenManager)
         {
-            _difficulty = difficulty;
-
             var game = (HexWork)_screenManager.Game;
             _hexGame = game;
             
@@ -1119,7 +1109,7 @@ namespace HexWork.UI
             gameOver.ActionCompleteCallback += () =>
             {
                 Exit();
-                screenManager.AddScreen(new RewardsScreen(screenManager, _difficulty));
+                screenManager.AddScreen(new RewardsScreen(screenManager));
                 screenManager.RemoveScreen(this);
             };
 

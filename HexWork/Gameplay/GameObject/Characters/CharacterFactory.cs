@@ -558,8 +558,6 @@ namespace HexWork.Gameplay.GameObject.Characters
             var newState = state.Copy();
 
             var position = character.Position;
-            int shortestPathLength = int.MaxValue;
-            Character closestHero = null;
             var heroes = newState.Heroes;
 
             var zombies = newState.Enemies.Where(c => !c.IsHero && c.CharacterType == CharacterType.Zombie).ToList();

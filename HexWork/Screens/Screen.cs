@@ -33,8 +33,6 @@ namespace HexWork.Screens
         protected TimeSpan _deactiveTransitionTime = new TimeSpan(0, 0, 0, 0, 500);
         protected TimeSpan transitioningTime = TimeSpan.Zero;
 
-        protected PlayerIndex? controllingPlayer;
-
         protected Color screenColour = Color.White;
 
         #endregion
@@ -61,12 +59,6 @@ namespace HexWork.Screens
             get { return fullscreen; }            
         }
 
-        public PlayerIndex? ControllingPlayer
-        {
-            get { return controllingPlayer; }
-            set { controllingPlayer = value; }
-        }
-
 		#endregion
 
 		#region Methods
@@ -76,15 +68,6 @@ namespace HexWork.Screens
         public Screen(IScreenManager _screenManager)
         {
             this.screenManager = _screenManager;
-            screenSize = new Vector2(screenManager.GraphicsDevice.Viewport.Width,
-            screenManager.GraphicsDevice.Viewport.Height);
-            safeArea = screenManager.GraphicsDevice.Viewport.TitleSafeArea;
-        }
-
-        public Screen(IScreenManager _screenManager, PlayerIndex? _controllingPlayer)
-        {
-            this.screenManager = _screenManager;
-            controllingPlayer = _controllingPlayer;
             screenSize = new Vector2(screenManager.GraphicsDevice.Viewport.Width,
             screenManager.GraphicsDevice.Viewport.Height);
             safeArea = screenManager.GraphicsDevice.Viewport.TitleSafeArea;

@@ -12,7 +12,7 @@ namespace HexWork
 
         string name;
         
-        public event EventHandler<PlayerIndexEventArgs> selected;
+        public event EventHandler Selected;
 
         //Menu entries fade between their selected and deselected appearances
         //this float tracks the amount of fade
@@ -43,10 +43,10 @@ namespace HexWork
             name = text;
         }
 
-        public MenuEntry(string text, EventHandler<PlayerIndexEventArgs> onSelected)
+        public MenuEntry(string text, EventHandler onSelected)
         {
             name = text;
-            selected += onSelected;
+            Selected += onSelected;
         }
 
 		#endregion
@@ -67,9 +67,9 @@ namespace HexWork
 
         #region Public Methods
 
-        protected internal virtual void OnSelect(PlayerIndex pIndex)
+        protected internal virtual void OnSelect()
         {
-            selected?.Invoke(this, new PlayerIndexEventArgs(pIndex));
+            Selected?.Invoke(this, null);
         }
 
         #endregion

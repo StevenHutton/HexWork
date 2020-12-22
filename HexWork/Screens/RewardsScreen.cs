@@ -59,13 +59,6 @@ namespace HexWork.Screens
             rewardCount = numRewards;
         }
 
-        public RewardsScreen(IScreenManager _screenManager, PlayerIndex? _controllingPlayer, int numRewards = 1) : base(_screenManager, _controllingPlayer)
-        {
-            _hexGame = (HexWork)_screenManager.Game;
-            rewardCount = numRewards;
-            _rand = new Random(DateTime.Now.Millisecond);
-        }
-
         public override void LoadContent(Game game)
         {
             _spriteBatch = new SpriteBatch(game.GraphicsDevice);

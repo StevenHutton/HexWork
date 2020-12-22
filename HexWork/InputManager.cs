@@ -9,21 +9,11 @@ namespace HexWork
     {
 		#region Attributes
 
-        const int MAXINPUTS = 4;
-
-        int currentPlayers = 0;
-
-        bool[] isActive;
-
-        GamePadState[] currentPadStates;
-        GamePadState[] lastPadStates;
+        GamePadState currentPadState;
+        GamePadState lastPadState;
 
         KeyboardState currentKeyoardState;
         KeyboardState lastKeyboardState;
-
-		#endregion
-
-		#region Properties
 
 		#endregion
 
@@ -36,21 +26,14 @@ namespace HexWork
         {
             Game.Services.AddService(typeof(IInputManager), this);
             
-            isActive = new bool[MAXINPUTS];
-            currentPadStates = new GamePadState[MAXINPUTS];
-            lastPadStates = new GamePadState[MAXINPUTS];
+            currentPadState = new GamePadState();
+            lastPadState = new GamePadState();
             currentKeyoardState = new KeyboardState();
             lastKeyboardState = new KeyboardState();
         }
 
         public override void Initialize()
         {
-            for(int i = 0; i < 4; i++)
-            {
-                currentPadStates[i] = new GamePadState();
-                isActive[i] = false;
-            }
-            currentPlayers = 0;
             base.Initialize();
         }
 
@@ -60,21 +43,8 @@ namespace HexWork
 
         public override void Update(GameTime gameTime)
         {
-            for (int i = 0; i < MAXINPUTS ; i++)
-            {
-                //update all of the controllers
-                lastPadStates[i] = currentPadStates[i];
-                currentPadStates[i] = GamePad.GetState((PlayerIndex)i);
-
-                //check if pad was connected this frame
-                //if(isActive[i])
-                //{
-                //    if(currentPadStates[(int)players[i]].IsConnected && !lastPadStates[(int)players[i]].IsConnected)
-                //    {
-                //        throw new Exception("Active pad disconnected");
-                //    }
-                //}
-            }
+            lastPadState = currentPadState;
+            currentPadState = GamePad.GetState(0);
             lastKeyboardState = currentKeyoardState;
             currentKeyoardState = Keyboard.GetState();
         }
@@ -98,31 +68,15 @@ namespace HexWork
         /// <param name="pIndex">A return value indicating from which controller the input data was received.</param>
         /// <returns>Returns a bool. Returns true if the button is down this frame and was up in the last frame. Otherwise
         /// returns false.</returns>
-        public bool IsNewButtonPress(Buttons button, PlayerIndex? player, out PlayerIndex pIndex)
+        public bool IsNewButtonPress(Buttons button)
         {
-            if (player.HasValue)
+            if (currentPadState.IsButtonDown(button)
+                && lastPadState.IsButtonUp(button))
             {
-                pIndex = player.Value;
-
-                if (currentPadStates[(int)player.Value].IsButtonDown(button) &&
-                (lastPadStates[(int)player.Value].IsButtonUp(button)))
-                {
-                    return true;
-                }
-                else
-                    return false;
+                return true;
             }
             else
-            {
-                if ((IsNewButtonPress(button, PlayerIndex.One, out pIndex))
-                || (IsNewButtonPress(button, PlayerIndex.Two, out pIndex))
-                || (IsNewButtonPress(button, PlayerIndex.Three, out pIndex))
-                || (IsNewButtonPress(button, PlayerIndex.Four, out pIndex)))
-                {
-                    return true;
-                }
                 return false;
-            }
         }
 
         /// <summary>
@@ -142,48 +96,14 @@ namespace HexWork
                 return false;
         }
 
-        public bool IsButtonDown(Buttons button, PlayerIndex? player, out PlayerIndex pIndex)
+        public bool IsButtonDown(Buttons button)
         {
-            if (player.HasValue)
+            if (currentPadState.IsButtonDown(button))
             {
-                pIndex = player.Value;
-
-                if (currentPadStates[(int)pIndex].IsButtonDown(button))
-                {
-                    return true;
-                }
-                else
-                    return false;
+                return true;
             }
             else
-            {
-                if ((IsButtonDown(button, PlayerIndex.One, out pIndex))
-                || (IsButtonDown(button, PlayerIndex.Two,  out pIndex))
-                || (IsButtonDown(button, PlayerIndex.Three, out pIndex))
-                || (IsButtonDown(button, PlayerIndex.Four, out pIndex)))
-                {
-                    return true;
-                }
                 return false;
-            }
-        }
-
-        public int PlayerJoined(PlayerIndex index)
-        {
-            currentPlayers++;
-            if (currentPlayers >= MAXINPUTS)
-                currentPlayers = MAXINPUTS;
-            isActive[(int)index] = true;
-            return currentPlayers;
-        }
-
-        public int PlayerLeft(PlayerIndex index)
-        {
-            currentPlayers--;
-            if (currentPlayers <= 0)
-                currentPlayers = 0;
-            isActive[(int)index] = false;
-            return currentPlayers;
         }
 
         #endregion

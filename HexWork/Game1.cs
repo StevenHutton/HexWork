@@ -14,7 +14,7 @@ namespace HexWork
 	{
 		#region Attributes
 
-		GraphicsDeviceManager _graphics;
+		public GraphicsDeviceManager Graphics;
 
 		public readonly int ScreenHeight = 864;
 		public readonly int ScreenWidth = 1536;
@@ -24,13 +24,7 @@ namespace HexWork
 
         #region Gameplay
 
-        private const int MonsterCount = 8;
-
 		#endregion
-
-		private Vector2 _screenCenterVector;
-
-		private readonly float _sqrt3 = (float) Math.Sqrt(3.0);
 
 		#endregion
 		
@@ -40,13 +34,11 @@ namespace HexWork
 
 		public HexWork()
 		{
-			_graphics = new GraphicsDeviceManager(this)
+			Graphics = new GraphicsDeviceManager(this)
 			{
 				PreferredBackBufferWidth = ScreenWidth,
 				PreferredBackBufferHeight = ScreenHeight
-            };
-           // _graphics.IsFullScreen = true;
-			_screenCenterVector = new Vector2((float) ScreenWidth / 2, (float) ScreenHeight / 2);
+            };			
 
             _screenManager = new ScreenManager(this);
 			_inputManager = new InputManager(this);
@@ -68,7 +60,7 @@ namespace HexWork
 			this.IsMouseVisible = true;
 			base.Initialize();
 
-            _screenManager.AddScreen(new BattleScreen(_screenManager, 1));
+            _screenManager.AddScreen(new MainMenuScreen(_screenManager));
         }
 
 		/// <summary>

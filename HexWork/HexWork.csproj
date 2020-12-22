@@ -80,7 +80,6 @@
     <Compile Include="Interfaces\IScreen.cs" />
     <Compile Include="Interfaces\IScreenManager.cs" />
     <Compile Include="Menu\MenuEntry.cs" />
-    <Compile Include="Menu\PlayerIndexEventArgs.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScreenManager.cs" />

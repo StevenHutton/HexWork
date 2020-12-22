@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using HexWork.Interfaces;
+using System;
 
 namespace HexWork.Screens
 {
@@ -14,11 +15,11 @@ namespace HexWork.Screens
 		#region Methods
 
 		#region Initialisation
-        public TitleScreen(IScreenManager _screenManager, PlayerIndex? _controllingPlayer = null)
-            : base(_screenManager, _controllingPlayer)
+        public TitleScreen(IScreenManager _screenManager)
+            : base(_screenManager)
         {
             MenuEntry pressStart = new MenuEntry("Press Start");
-            pressStart.selected += StartMenuSelected;
+            pressStart.Selected += StartMenuSelected;
             menu.Add(pressStart);
             position = GetPointOnScreen(0.5f,0.5f);
         }
@@ -37,13 +38,13 @@ namespace HexWork.Screens
 		#endregion
 
 		#region Private Methods
-        void StartMenuSelected(object sender, PlayerIndexEventArgs args)
+
+        void StartMenuSelected(object sender, EventArgs args)
         {
-            screenManager.InputManager.PlayerJoined(args.PlayerIndex);
-            controllingPlayer = args.PlayerIndex;
-            screenManager.AddScreen(new MainMenuScreen(screenManager, controllingPlayer.Value));
+            screenManager.AddScreen(new MainMenuScreen(screenManager));
             this.state = ScreenState.Deactivating;
         }
+
         #endregion
 
 		#region Public Methods

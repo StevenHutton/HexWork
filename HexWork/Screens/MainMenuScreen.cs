@@ -1,44 +1,25 @@
 ﻿using System;
-using Microsoft.Xna.Framework;
 using HexWork.Interfaces;
 using HexWork.UI;
 
 namespace HexWork.Screens
 {
-    class MainMenuScreen : MenuScreen
+    public class MainMenuScreen : MenuScreen
     {
-        #region Attributes
-        #endregion
-
-        #region Properties
-        #endregion
-
-        #region Methods
-
-        #region Initialisation
-        public MainMenuScreen(IScreenManager _screenManager, PlayerIndex? _controllingPlayer)
-            : base(_screenManager, _controllingPlayer)
+        public MainMenuScreen(IScreenManager _screenManager)
+            : base(_screenManager)
         {
             MenuEntry pressStart = new MenuEntry("Start Game");
             MenuEntry exit = new MenuEntry("Exit");
 
-            pressStart.selected += StartGame;
-            exit.selected += Exit;
+            pressStart.Selected += StartGame;
+            exit.Selected += Exit;
 
             menu.Add(pressStart);
             menu.Add(exit);
 
             position = GetPointOnScreen(0.5f, 0.5f);
         }
-        #endregion
-
-        #region Updating
-        #endregion
-
-        #region Drawing
-        #endregion
-
-        #region Private Methods
 
         private void StartGame(object sender, EventArgs args)
         {
@@ -50,12 +31,5 @@ namespace HexWork.Screens
         {
             screenManager.Game.Exit();
         }
-
-        #endregion
-
-        #region Public Methods
-        #endregion
-
-        #endregion
     }
 }
