@@ -773,7 +773,7 @@ namespace HexWork.Gameplay
                     //if we can't get through this tile, ok, give up
                     if (!IsTilePassable(state, oChar.MovementType, hexToCheck)) break;
 
-                    moveCost += (int)GetTileTotalMovementCost(state, hexToCheck) + RulesProvider.GetMoveSpeedCost(oChar.MovementSpeed, i) + basePotentialCost;
+                    moveCost = (int)GetTileTotalMovementCost(state, hexToCheck) + RulesProvider.GetMoveSpeedCost(oChar.MovementSpeed, i) + basePotentialCost;
 
                     if (IsWalkableAndEmpty(state, hexToCheck))
                         targets.Add(hexToCheck, moveCost);

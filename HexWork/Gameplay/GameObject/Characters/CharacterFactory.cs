@@ -14,7 +14,7 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         private static HexAction _moveAction = new MoveAction("Move", TargetType.Move) { Range = 0, PotentialCost = 0 };
         
-        private static PotentialGainAction _potentialGainAction = new PotentialGainAction("Charge Up (Ends Turn)", TargetType.Free, null, null, null) { PotentialCost = 0 };
+        private static PotentialGainAction _endTurnAction = new PotentialGainAction("Charge Up (Ends Turn)", TargetType.Free, null, null, null) { PotentialCost = 0 };
 
         private static HexAction _zombieGrab = new HexAction(name: "Zombie Grab",
             statusEffect: new ImmobalisedEffect { StatusEffectType = StatusEffectType.Rooted },
@@ -59,7 +59,6 @@ namespace HexWork.Gameplay.GameObject.Characters
         #region Status Effects
 
         private static DotEffect _fireStatus;
-        private static DotEffect _bleedingStatus;
         private static FreezeEffect _freezeEffect;
         private static ChargedEffect _electricStatusEffect;
         
@@ -88,7 +87,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 TileEffect = _fireEffect
             };
 
-            var exBurningBoltAction = new HexAction("Fire Wall!",
+            var fireWall = new HexAction("Fire Wall!",
                 TargetType.AxisAlignedIgnoreLos,
                 _fireStatus, null,
                 _rotatingLinePattern)
@@ -117,13 +116,13 @@ namespace HexWork.Gameplay.GameObject.Characters
                 StatusEffect = _electricStatusEffect
             };
 
-            //create majin hero            
+            //create majin hero
             majinCharacter.AddAction(_moveAction);
             majinCharacter.AddAction(burningBolt);
-            majinCharacter.AddAction(exBurningBoltAction);
-            majinCharacter.AddAction(ringofFire);
+            //majinCharacter.AddAction(fireWall);
+            //majinCharacter.AddAction(ringofFire);
             majinCharacter.AddAction(lightningBolt);
-            majinCharacter.AddAction(_potentialGainAction);
+            majinCharacter.AddAction(_endTurnAction);
 
             return majinCharacter;
         }
@@ -138,22 +137,25 @@ namespace HexWork.Gameplay.GameObject.Characters
                 PotentialCost = 1,
                 Power = 3,
                 Range = 2,
+                PushForce = 1,
+                PushFromCaster = true,
                 TileEffect = _windEffect
             };
 
             var shovingSnipeAction = new HexAction(name: "Shoving Snipe",
                 targetType: TargetType.AxisAligned,
-                combo: null)
+                combo: new DamageComboAction { Power = 3 })
             {
                 Power = 2,
                 Range = 5,
-                PushForce = 2
+                PushForce = 1,
+                TileEffect = _windEffect
             };
 
             var detonatingSnipeActionEx = new HexAction("Perfect Snipe!",
                 TargetType.AxisAligned,
                 null,
-                new DamageComboAction { Power = 5 })
+                new DamageComboAction { Power = 3 })
             {
                 PotentialCost = 2,
                 Power = 1,
@@ -170,34 +172,31 @@ namespace HexWork.Gameplay.GameObject.Characters
 
             gunnerCharacter.AddAction(_moveAction);
             gunnerCharacter.AddAction(shovingSnipeAction);
-            gunnerCharacter.AddAction(detonatingSnipeActionEx);
+            //gunnerCharacter.AddAction(detonatingSnipeActionEx);
             gunnerCharacter.AddAction(shotgunBlast);
-            gunnerCharacter.AddAction(_potentialGainAction);
+            gunnerCharacter.AddAction(_endTurnAction);
             return gunnerCharacter;
         }
 
         public static Character CreateNinja()
         {
-            var shurikenHailAction = new HexAction("Shuriken",
-                TargetType.Free,
-                _bleedingStatus)
-            {
-                Range = 2,
-                FollowUpAction = new FixedMoveAction("Shift", TargetType.FixedMove) { Range = 1, TileEffect = _windEffect }
-            };
-
             var shurikenPattern = new TargetPattern(new HexCoordinate(-1, 1), new HexCoordinate(0, -1),
                 new HexCoordinate(1, 0));
-            var shurikenHailActionEx = new HexAction("Shuriken Hail!",
-                TargetType.Free,
-                _bleedingStatus,
+            var shurikenHailAction = new HexAction("Shuriken Hail!",
+                TargetType.Free, null,
                 null, shurikenPattern)
             {
-                PotentialCost = 2,
+                PotentialCost = 1,
                 Range = 3
             };
 
-            var swapAction = new SwapAction("Swap Positions", TargetType.Free)
+            var ninpoDash = new DashAction("Ninpo Dash", TargetType.AxisAlignedFixedMove, null, null, null)
+            {
+                TileEffect = _windEffect,
+                Range = 3
+            };
+
+            var swapAction = new SwapAction("Swap Positions", TargetType.Free, null, new DamageComboAction())
             {
                 Power = 3,
                 AllySafe = false,
@@ -214,10 +213,10 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
             ninjaCharacter.MovementSpeed = MovementSpeed.Fast;
             ninjaCharacter.AddAction(_moveAction);
-            ninjaCharacter.AddAction(shurikenHailAction);
-            ninjaCharacter.AddAction(shurikenHailActionEx);
+            ninjaCharacter.AddAction(ninpoDash);
+            //ninjaCharacter.AddAction(shurikenHailAction);
             ninjaCharacter.AddAction(swapAction);
-            ninjaCharacter.AddAction(_potentialGainAction);
+            ninjaCharacter.AddAction(_endTurnAction);
 
             return ninjaCharacter;
         }
@@ -235,16 +234,16 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 Range = 1,
                 Power = 2,
-                PushForce = 2
+                PushForce = 3
             };
 
-            var charge = new ChargeAction("Charge", TargetType.AxisAlignedFixedMove) { Range = 2, Power = 2, PotentialCost = 1, PushForce = 1 };
+            var charge = new ChargeAction("Charge", TargetType.AxisAlignedFixedMove) { Range = 2, Power = 2, PotentialCost = 0, PushForce = 2 };
 
             var stomp = new HexAction("Stomp", TargetType.Free, new ImmobalisedEffect(), null,
                 _whirlWindTargetPattern)
             {
                 Power = 1,
-                PotentialCost = 1,
+                PotentialCost = 0,
                 Range = 0
             };
 
@@ -271,20 +270,26 @@ namespace HexWork.Gameplay.GameObject.Characters
                 CharacterType = CharacterType.IronSoul
             };
             ironSoulCharacter.AddAction(_moveAction);
-            ironSoulCharacter.AddAction(pushingFist);
+            //ironSoulCharacter.AddAction(pushingFist);
             ironSoulCharacter.AddAction(charge);
-            ironSoulCharacter.AddAction(stomp);
+            //ironSoulCharacter.AddAction(stomp);
             ironSoulCharacter.AddAction(exDetonatingSlash);
-            ironSoulCharacter.AddAction(_potentialGainAction);
+            ironSoulCharacter.AddAction(_endTurnAction);
             
             return ironSoulCharacter;
         }
 
         public static Character CreateBarbarian()
         {
-            var spreadStatusCombo = new SpreadStatusCombo { AllySafe = true, Power = 1 };
-            var detonatingSlash =
-              new HexAction("Detonating Strike!", TargetType.Free, null, spreadStatusCombo)
+            var spreadStatusCombo = new SpreadStatusCombo
+            { 
+                AllySafe = true,
+                Power = 1, 
+                Pattern = new TargetPattern(new HexCoordinate(1, -1),
+                    new HexCoordinate(2, -2), new HexCoordinate(3,-3))
+            };
+            var shockwavePunch =
+              new HexAction("Shockwave Punch", TargetType.Free, null, spreadStatusCombo)
               {
                   Range = 1,
                   PotentialCost = 1
@@ -315,15 +320,16 @@ namespace HexWork.Gameplay.GameObject.Characters
             {
                 IsHero = true,
                 MovementType = MovementType.MoveThroughHeroes,
+                MovementSpeed = MovementSpeed.Fast,
                 Power = 12,
                 CharacterType = CharacterType.Barbarian
             };
 
             barbarianCharacter.AddAction(_moveAction);
             barbarianCharacter.AddAction(earthQuakeStrike);
-            barbarianCharacter.AddAction(whirlwindAttack);
-            barbarianCharacter.AddAction(detonatingSlash);
-            barbarianCharacter.AddAction(_potentialGainAction);
+            //barbarianCharacter.AddAction(whirlwindAttack);
+            barbarianCharacter.AddAction(shockwavePunch);
+            barbarianCharacter.AddAction(_endTurnAction);
             
             return barbarianCharacter;
         }
@@ -366,6 +372,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             _fireEffect = new TileEffect
             {
                 Damage = 15,
+                Potential = 1,
                 Name = "Fire",
                 Health = 5,
                 MaxHealth = 5,
@@ -379,7 +386,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 MovementModifier = 100,
                 Health = 50,
                 MaxHealth = 50,
-                BlocksMovement = false,
+                BlocksMovement = true,
             };
 
             _electricityEffect = new TileEffect
@@ -396,6 +403,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             _windEffect = new TileEffect
             {
                 Damage = 0,
+                Potential = 1,
                 Name = "Wind",
                 MovementModifier = -1,
                 Health = 5,
@@ -404,13 +412,6 @@ namespace HexWork.Gameplay.GameObject.Characters
             };
 
             _fireStatus = new DotEffect { Name = "Fire", TileEffect = _fireEffect, Damage = 10};
-
-            _bleedingStatus = new DotEffect
-            {
-                Name = "Bleeding",
-                Damage = 5,
-                StatusEffectType = StatusEffectType.Bleeding
-            };
 
             _freezeEffect = new FreezeEffect
             {
@@ -421,8 +422,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             _electricStatusEffect = new ChargedEffect
             {
                 Name = "Electrified",
-                StatusEffectType = StatusEffectType.Electrified,
-
+                StatusEffectType = StatusEffectType.Electrified
             };
 
             _fireEffect.Effect = _fireStatus;

@@ -46,6 +46,7 @@
     <Compile Include="Gameplay\Actions\ChargeAction.cs" />
     <Compile Include="Gameplay\Actions\CommandAction.cs" />
     <Compile Include="Gameplay\Actions\Combos\ExploderCombo.cs" />
+    <Compile Include="Gameplay\Actions\DashAction.cs" />
     <Compile Include="Gameplay\Actions\FixedMoveAction.cs" />
     <Compile Include="Gameplay\Actions\Combos\HealingCombo.cs" />
     <Compile Include="Gameplay\Actions\LineAction.cs" />

@@ -9,7 +9,6 @@ namespace HexWork.Gameplay
 		Burning,
 		Frozen,
 		Rooted,
-		Bleeding,
         Electrified
     }
 
@@ -49,7 +48,7 @@ namespace HexWork.Gameplay
 		        Name = StatusEffectType.ToString();
         }
 
-        //creates an exact copy of this instance WITH IT'S OWN ID
+        //creates an exact copy of this instance WITH ITS OWN ID
         public virtual StatusEffect Clone()
         {
             return new StatusEffect()

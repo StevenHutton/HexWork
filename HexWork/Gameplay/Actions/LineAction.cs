@@ -11,7 +11,8 @@ namespace HexWork.Gameplay.Actions
         public LineAction(string name,
             TargetType targetType,
             StatusEffect statusEffect = null,
-            DamageComboAction combo = null, TargetPattern targetPattern = null) :
+            DamageComboAction combo = null, 
+            TargetPattern targetPattern = null) :
             base(name,
                 targetType,
                 statusEffect,
@@ -33,7 +34,6 @@ namespace HexWork.Gameplay.Actions
                 return state;
 
             //check validity
-            //check validity
             var validTargets = BoardState.GetValidTargets(newState, character, this, TargetType);
             if (!validTargets.ContainsKey(targetPosition))
                 return state;
@@ -41,7 +41,6 @@ namespace HexWork.Gameplay.Actions
             var potentialCost = validTargets[targetPosition];
             if (newState.Potential < potentialCost)
                 return state;
-
 
             newState = gameState.LosePotential(newState, PotentialCost);
 
