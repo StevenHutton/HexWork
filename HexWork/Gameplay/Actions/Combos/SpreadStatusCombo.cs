@@ -43,9 +43,13 @@ namespace HexWork.Gameplay.Actions
             }
 
             var targetCharacter = BoardState.GetEntityAtCoordinate(newState, targetPosition);
-            var statusEffect = targetCharacter?.StatusEffects.FirstOrDefault();
-            if (statusEffect != null)
+
+            if (targetCharacter == null)
+                return newState;
+                        
+            if (targetCharacter.HasStatus)
             {
+                var statusEffect = targetCharacter.StatusEffects.FirstOrDefault();
                 //the more status effects we detonate the more damage we add
                 int powerBonus = 0;
                 newState = gameState.ApplyCombo(newState, targetCharacter.Id, this, out powerBonus);
@@ -57,8 +61,7 @@ namespace HexWork.Gameplay.Actions
                     //if no one is there, next tile
                     if (newTargetCharacter == null)
                     {
-                        if (statusEffect.TileEffect != null)
-                            newState = gameState.CreateTileEffect(newState, statusEffect.TileEffect, targetTile);
+                        newState = gameState.CreateTileEffect(newState, statusEffect, targetTile);
                         continue;
                     }
 
@@ -89,7 +92,7 @@ namespace HexWork.Gameplay.Actions
                         continue;
 
                     newState = gameState.ApplyCombo(newState, targetCharacter.Id, this, out _);
-                    newState = gameState.ApplyStatus(newState, newTargetCharacter.Id, tileEffect.Effect);
+                    newState = gameState.ApplyStatus(newState, newTargetCharacter.Id, tileEffect.Element);
                     newState = gameState.ApplyDamage(newState, newTargetCharacter.Id, Power * character.Power);
                     
                     var dir = PushFromCaster ?
@@ -99,7 +102,7 @@ namespace HexWork.Gameplay.Actions
                     newState = gameState.ApplyPush(newState, newTargetCharacter.Id, dir, PushForce);
                 }
                 else
-                    newState = gameState.CreateTileEffect(newState, tileEffect, targetTile);
+                    newState = gameState.CreateTileEffect(newState, Element, targetTile);
             }
 
             newState = gameState.ApplyDamage(newState, targetCharacter.Id, Power * character.Power);

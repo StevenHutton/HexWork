@@ -11,11 +11,9 @@ namespace HexWork.Gameplay.Actions
     {
         public FixedMoveAction(string name,
             TargetType targetType,
-            StatusEffect statusEffect = null,
             DamageComboAction combo = null, TargetPattern targetPattern = null) :
             base(name,
                 targetType,
-                statusEffect,
                 combo, targetPattern)
         {
 
@@ -45,10 +43,8 @@ namespace HexWork.Gameplay.Actions
             if (newState.Potential < potentialCost)
                 return state;
 
-            newState = gameState.MoveEntity(newState, characterId, new List<HexCoordinate>{ targetPosition });
-
-            if (TileEffect != null)
-                newState = gameState.CreateTileEffect(newState, TileEffect, position);
+            newState = gameState.MoveEntity(newState, characterId, new List<HexCoordinate>{ targetPosition });            
+            newState = gameState.CreateTileEffect(newState, Element, position);
 
             return newState;
         }        

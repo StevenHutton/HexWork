@@ -167,7 +167,7 @@ namespace HexWork.UI
                 case TerrainType.Water:
                     break;
                 case TerrainType.Lava:
-                    ApplyStatus(state, entity.Id, new StatusEffect{StatusEffectType = StatusEffectType.Burning});
+                    ApplyStatus(state, entity.Id, Element.Fire);
                     break;
                 case TerrainType.Ice:
                     break;
@@ -211,43 +211,38 @@ namespace HexWork.UI
             return state;
         }
 
-        public BoardState ApplyStatus(BoardState state, Guid entityId, StatusEffect effect)
+        public BoardState ApplyStatus(BoardState state, Guid entityId, Element effect)
         {
-            if (effect == null) return state;
-
             var entity = state.GetEntityById(entityId);
 
             Texture2D statusTexture;
-            switch (effect.StatusEffectType)
+            switch (effect)
             {
-                case StatusEffectType.Burning:
+                case Element.Fire:
                     statusTexture = _fireIconTexture;
                     break;
-                case StatusEffectType.Frozen:
+                case Element.Ice:
                     statusTexture = _hexGame.Content.Load<Texture2D>("FrozenIcon");
                     break;
-                case StatusEffectType.Rooted:
+                case Element.Earth:
                     statusTexture = _hexGame.Content.Load<Texture2D>("StopIcon");
-                    break;
-                case StatusEffectType.Bleeding:
-                    statusTexture = _hexGame.Content.Load<Texture2D>("Blood");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
 
-	        var position = GetHexScreenPosition(entity.Position);
-	        _spriteBatch.Draw(statusTexture, 
-		        position,
-		        null,
-		        Color.White,
-		        0.0f,
-		        _iconOrigin, 
-		        new Vector2(0.3f), 
-		        SpriteEffects.None, 
-		        0.0f);
+            var position = GetHexScreenPosition(entity.Position);
+            _spriteBatch.Draw(statusTexture,
+                position,
+                null,
+                Color.White,
+                0.0f,
+                _iconOrigin,
+                new Vector2(0.3f),
+                SpriteEffects.None,
+                0.0f);
             return state;
-		}
+        }
 
         public BoardState CreateTileEffect(BoardState state, TileEffect effect, HexCoordinate location)
         {
@@ -270,6 +265,33 @@ namespace HexWork.UI
                 0.0f,
                 origin,
                 new Vector2(scaleFactor), 
+                SpriteEffects.None,
+                0.0f);
+
+            return state;
+        }
+
+        public BoardState CreateTileEffect(BoardState state, Element effect, HexCoordinate location)
+        {
+            Texture2D statusTexture = _hexGame.Content.Load<Texture2D>(effect.ToString());
+
+            if (statusTexture == null)
+                return state;
+
+            var position = GetHexScreenPosition(location);
+
+            var width = (float)statusTexture.Width;
+            var height = (float)statusTexture.Height;
+            var scaleFactor = 256.0f / height * 0.35f;
+
+            var origin = new Vector2(width / 2, height - (width / 2));
+            _spriteBatch.Draw(statusTexture,
+                position,
+                null,
+                Color.White,
+                0.0f,
+                origin,
+                new Vector2(scaleFactor),
                 SpriteEffects.None,
                 0.0f);
 

@@ -7,7 +7,7 @@ namespace HexWork.Gameplay.Actions
 {
     public class StatusCombo : DamageComboAction
     {
-        public StatusEffect Effect = null;
+        public Element Element = Element.None;
 
         public StatusCombo()
         {
@@ -35,7 +35,7 @@ namespace HexWork.Gameplay.Actions
 
             int powerBonus = 0;
             newState = gameState.ApplyCombo(newState, targetCharacter.Id, this, out powerBonus);
-            newState = gameState.ApplyStatus(newState, targetCharacter.Id, Effect);
+            newState = gameState.ApplyStatus(newState, targetCharacter.Id, Element);
             newState = gameState.ApplyDamage(newState, targetCharacter.Id, (Power + powerBonus) * character.Power);
             return newState;
         }

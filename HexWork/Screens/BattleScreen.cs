@@ -8,6 +8,7 @@ using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
+using HexWork.Gameplay.Interfaces;
 using HexWork.GameplayEvents;
 using HexWork.Interfaces;
 using HexWork.Screens;
@@ -1020,39 +1021,35 @@ namespace HexWork.UI
         private void OnStatusEffectApplied(object sender, StatusEventArgs e)
         {
             var character = _gameObjectDictionary[e.TargetCharacterId];
-	        var statusEffect = e.StatusEffect;
 
             var action = new UiAction
             {
                 Sprite = character
             };
-            action.Effect = new TextEffect(statusEffect.Name, _damageFont)
+            action.Effect = new TextEffect(e.StatusEffectType.ToString(), _damageFont)
             {
                 Position = character.Position + new Vector2(20.0f, -30.0f)
             };
 
 	        Texture2D statusTexture;
-	        switch (statusEffect.StatusEffectType)
+	        switch (e.StatusEffectType)
 	        {
-		        case StatusEffectType.Burning:
+		        case Element.Fire:
 			        statusTexture = _hexGame.Content.Load<Texture2D>("FireIcon");
 					break;
-		        case StatusEffectType.Frozen:
+		        case Element.Ice:
 			        statusTexture = _hexGame.Content.Load<Texture2D>("FrozenIcon");
 					break;
-		        case StatusEffectType.Rooted:
+		        case Element.Earth:
 			        statusTexture = _hexGame.Content.Load<Texture2D>("StopIcon");
 					break;
-		        case StatusEffectType.Bleeding:
-			        statusTexture = _hexGame.Content.Load<Texture2D>("Blood");
-					break;
-                case StatusEffectType.Electrified:
+                case Element.Lightning:
                     statusTexture = _hexGame.Content.Load<Texture2D>("LightningIcon");
                     break;
                 default:
 			        throw new ArgumentOutOfRangeException();
 	        }
-			var status = new UiStatusEffect(statusTexture, statusEffect.Id);
+			var status = new UiStatusEffect(statusTexture, e.StatusEffectType);
 			
 			action.ActionCompleteCallback += () =>
             {
@@ -1068,7 +1065,7 @@ namespace HexWork.UI
 
             var action = new UiAction
             {
-                Effect = new TextEffect("- " + e.StatusEffect.Name, _damageFont)
+                Effect = new TextEffect("- " + e.StatusEffectType.ToString(), _damageFont)
                 {
                     Position = character.Position + new Vector2(10.0f, -25.0f),
                     BaseColour = Color.White
@@ -1078,7 +1075,7 @@ namespace HexWork.UI
             action.ActionCompleteCallback += () =>
             {
                 character.Colour = Color.White;
-	            character.RemoveStatus(e.StatusEffect.Id);
+	            character.RemoveStatus(e.StatusEffectType);
             };
 
             _uiActions.Add(action);

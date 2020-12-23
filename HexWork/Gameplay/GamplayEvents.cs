@@ -4,6 +4,7 @@ using HexWork.Gameplay;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
+using HexWork.Gameplay.Interfaces;
 
 namespace HexWork.GameplayEvents
 {
@@ -72,12 +73,12 @@ namespace HexWork.GameplayEvents
     {
         public Guid TargetCharacterId;
 
-        public StatusEffect StatusEffect;
+        public Element StatusEffectType;
 
-        public StatusEventArgs(Guid targetId, StatusEffect effect)
+        public StatusEventArgs(Guid targetId, Element effectType)
         {
             TargetCharacterId = targetId;
-            StatusEffect = effect;
+            StatusEffectType = effectType;
         }
     }
 

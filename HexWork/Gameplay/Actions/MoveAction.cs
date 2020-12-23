@@ -15,12 +15,10 @@ namespace HexWork.Gameplay.Actions
 
         public MoveAction(string name,
 			TargetType targetType,
-			StatusEffect statusEffect = null,
 			DamageComboAction combo = null, 
             TargetPattern targetPattern = null) :
 			base(name,
 				targetType,
-				statusEffect,
 				combo, targetPattern)
 		{ }
 
@@ -45,12 +43,8 @@ namespace HexWork.Gameplay.Actions
                 newState = gameState.MoveEntity(newState, characterId, path);
             }
 
-            if (TileEffect != null)
-                return gameState.CreateTileEffect(newState, TileEffect, position);
-
             newState.ActiveCharacterHasMoved = true;
-
-            return newState;
+            return gameState.CreateTileEffect(newState, Element, position);
         }
 	}
 }

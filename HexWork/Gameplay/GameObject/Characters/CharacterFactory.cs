@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.Interfaces;
-using HexWork.Gameplay.StatusEffects;
 using HexWork.UI;
 
 namespace HexWork.Gameplay.GameObject.Characters
@@ -14,12 +13,11 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         private static HexAction _moveAction = new MoveAction("Move", TargetType.Move) { Range = 0, PotentialCost = 0 };
         
-        private static PotentialGainAction _endTurnAction = new PotentialGainAction("Charge Up (Ends Turn)", TargetType.Free, null, null, null) { PotentialCost = 0 };
+        private static PotentialGainAction _endTurnAction = new PotentialGainAction("Charge Up (Ends Turn)", TargetType.Free, null, null) { PotentialCost = 0 };
 
-        private static HexAction _zombieGrab = new HexAction(name: "Zombie Grab",
-            statusEffect: new ImmobalisedEffect { StatusEffectType = StatusEffectType.Rooted },
+        private static HexAction _zombieGrab = new HexAction(name: "Zombie Grab",            
             combo: null,
-            targetType: TargetType.Free) { Range = 1, Power = 2 };
+            targetType: TargetType.Free) { Range = 1, Power = 2, Element = Element.Earth, };
 
         private static HexAction _zombieBite = new HexAction(name: "Zombie Bite",
             combo: new DamageComboAction() { Power = 2 },
@@ -56,14 +54,6 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         #endregion
 
-        #region Status Effects
-
-        private static DotEffect _fireStatus;
-        private static FreezeEffect _freezeEffect;
-        private static ChargedEffect _electricStatusEffect;
-        
-        #endregion
-
         #endregion
 
         #region Create Characters
@@ -81,39 +71,36 @@ namespace HexWork.Gameplay.GameObject.Characters
                 TargetType.AxisAligned)
             {
                 Range = 3,
-                StatusEffect = _fireStatus,
+                Element = Element.Fire,
                 PushForce = 1,
-                PushFromCaster = true,
-                TileEffect = _fireEffect
+                PushFromCaster = true
             };
 
             var fireWall = new HexAction("Fire Wall!",
                 TargetType.AxisAlignedIgnoreLos,
-                _fireStatus, null,
+                null,
                 _rotatingLinePattern)
             {
                 PotentialCost = 1,
                 Range = 3,
-                TileEffect = _fireEffect
+                Element = Element.Fire,
             };
 
             var ringofFire = new HexAction("Ring of Fire!",
-                TargetType.AxisAlignedIgnoreLos,
-                _fireStatus, null,
+                TargetType.AxisAlignedIgnoreLos, null,
                 _whirlWindTargetPattern)
             {
                 PotentialCost = 2,
                 Range = 3,
-                TileEffect = _fireEffect
+                Element = Element.Fire
             };
 
-            var lightningBolt = new HexAction("Lightning Bolt", TargetType.FreeIgnoreUnits, null, new SpreadStatusCombo() { PushForce = 1, PushFromCaster = false})
+            var lightningBolt = new HexAction("Lightning Bolt", TargetType.FreeIgnoreUnits, new SpreadStatusCombo() { PushForce = 1, PushFromCaster = false})
             {
                 Range = 3,
                 Power = 2,
                 PotentialCost = 0,
-                TileEffect = _electricityEffect,
-                StatusEffect = _electricStatusEffect
+                Element = Element.Lightning,
             };
 
             //create majin hero
@@ -131,7 +118,7 @@ namespace HexWork.Gameplay.GameObject.Characters
         {
             var shotgunBlast = new LineAction("Shotgun Blast!",
                 TargetType.Free,
-                null, new DamageComboAction(),
+                new DamageComboAction(),
                 _cornerPattern)
             {
                 PotentialCost = 1,
@@ -139,7 +126,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 Range = 2,
                 PushForce = 1,
                 PushFromCaster = true,
-                TileEffect = _windEffect
+                Element = Element.Wind
             };
 
             var shovingSnipeAction = new HexAction(name: "Shoving Snipe",
@@ -149,12 +136,11 @@ namespace HexWork.Gameplay.GameObject.Characters
                 Power = 2,
                 Range = 5,
                 PushForce = 1,
-                TileEffect = _windEffect
+                Element = Element.Wind
             };
 
             var detonatingSnipeActionEx = new HexAction("Perfect Snipe!",
                 TargetType.AxisAligned,
-                null,
                 new DamageComboAction { Power = 3 })
             {
                 PotentialCost = 2,
@@ -182,21 +168,22 @@ namespace HexWork.Gameplay.GameObject.Characters
         {
             var shurikenPattern = new TargetPattern(new HexCoordinate(-1, 1), new HexCoordinate(0, -1),
                 new HexCoordinate(1, 0));
+            
             var shurikenHailAction = new HexAction("Shuriken Hail!",
-                TargetType.Free, null,
+                TargetType.Free, 
                 null, shurikenPattern)
             {
                 PotentialCost = 1,
                 Range = 3
             };
 
-            var ninpoDash = new DashAction("Ninpo Dash", TargetType.AxisAlignedFixedMove, null, null, null)
+            var ninpoDash = new DashAction("Ninpo Dash", TargetType.AxisAlignedFixedMove, null, null)
             {
-                TileEffect = _windEffect,
+                Element = Element.Wind,
                 Range = 3
             };
 
-            var swapAction = new SwapAction("Swap Positions", TargetType.Free, null, new DamageComboAction())
+            var swapAction = new SwapAction("Swap Positions", TargetType.Free, new DamageComboAction())
             {
                 Power = 3,
                 AllySafe = false,
@@ -223,13 +210,10 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public static Character CreateIronSoul()
         {
-            var pushingFist = new HexAction("Heavy Blow", TargetType.Free, null, new StatusCombo()
+            var pushingFist = new HexAction("Heavy Blow", TargetType.Free, new StatusCombo()
             {
                 Power = 2,
-                Effect = new ImmobalisedEffect()
-                {
-                    StatusEffectType = StatusEffectType.Rooted
-                }
+                Element = Element.Earth,
             })
             {
                 Range = 1,
@@ -239,16 +223,17 @@ namespace HexWork.Gameplay.GameObject.Characters
 
             var charge = new ChargeAction("Charge", TargetType.AxisAlignedFixedMove) { Range = 2, Power = 2, PotentialCost = 0, PushForce = 2 };
 
-            var stomp = new HexAction("Stomp", TargetType.Free, new ImmobalisedEffect(), null,
+            var stomp = new HexAction("Stomp", TargetType.Free, null,
                 _whirlWindTargetPattern)
             {
                 Power = 1,
                 PotentialCost = 0,
-                Range = 0
+                Range = 0,
+                Element = Element.Earth
             };
 
             var exDetonatingSlash =
-            new HexAction("Massive Detonation!", TargetType.Free, null,
+            new HexAction("Massive Detonation!", TargetType.Free, 
                 new ExploderCombo
                 {
                     Power = 2,
@@ -289,7 +274,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                     new HexCoordinate(2, -2), new HexCoordinate(3,-3))
             };
             var shockwavePunch =
-              new HexAction("Shockwave Punch", TargetType.Free, null, spreadStatusCombo)
+              new HexAction("Shockwave Punch", TargetType.Free, spreadStatusCombo)
               {
                   Range = 1,
                   PotentialCost = 1
@@ -297,15 +282,15 @@ namespace HexWork.Gameplay.GameObject.Characters
 
             var earthQuakeStrike = new LineAction("Earthquake Strike",
                 TargetType.Free,
-                new ImmobalisedEffect(),
                 null,
                 _xAxisLinePattern)
             {
                 Range = 1,
-                Power = 2
+                Power = 2,
+                Element = Element.Earth
             };
 
-            var whirlwindAttack = new HexAction("Spin Attack", TargetType.Free, null, new DamageComboAction(),
+            var whirlwindAttack = new HexAction("Spin Attack", TargetType.Free, new DamageComboAction(),
                 _whirlWindTargetPattern)
             {
                 Power = 2,
@@ -336,8 +321,6 @@ namespace HexWork.Gameplay.GameObject.Characters
 
         public static IEnumerable<Character> CreateHeroes()
         {
-            CreateActions();
-
             return new List<Character>
             {
                 CreateMajin(),
@@ -365,71 +348,6 @@ namespace HexWork.Gameplay.GameObject.Characters
             }
 
             return characters;
-        }
-
-        public static void CreateActions()
-        {
-            _fireEffect = new TileEffect
-            {
-                Damage = 15,
-                Potential = 1,
-                Name = "Fire",
-                Health = 5,
-                MaxHealth = 5,
-                BlocksMovement = false,
-            };
-
-            _iceEffect = new TileEffect
-            {
-                Damage = 0,
-                Name = "Ice",
-                MovementModifier = 100,
-                Health = 50,
-                MaxHealth = 50,
-                BlocksMovement = true,
-            };
-
-            _electricityEffect = new TileEffect
-            {
-                Damage = 0,
-                Name = "Electricity",
-                MovementModifier = 0,
-                Health = 5,
-                MaxHealth = 5,
-                Potential = 1,
-                BlocksMovement = false,
-            };
-
-            _windEffect = new TileEffect
-            {
-                Damage = 0,
-                Potential = 1,
-                Name = "Wind",
-                MovementModifier = -1,
-                Health = 5,
-                MaxHealth = 5,
-                BlocksMovement = false,
-            };
-
-            _fireStatus = new DotEffect { Name = "Fire", TileEffect = _fireEffect, Damage = 10};
-
-            _freezeEffect = new FreezeEffect
-            {
-                Name = "Freeze",
-                StatusEffectType = StatusEffectType.Frozen
-            };
-
-            _electricStatusEffect = new ChargedEffect
-            {
-                Name = "Electrified",
-                StatusEffectType = StatusEffectType.Electrified
-            };
-
-            _fireEffect.Effect = _fireStatus;
-            _fireStatus.TileEffect = _fireEffect;
-            _iceEffect.Effect = _freezeEffect;
-            _electricityEffect.Effect = _electricStatusEffect;
-            _electricStatusEffect.TileEffect = _electricityEffect;
         }
 
         private static Character CreateZombieKing()
@@ -492,7 +410,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                         && action.IsDetonator == closestHero.HasStatus)
                     {
                         newState = ruleProvider.ApplyDamage(newState, closestHero.Id, action.Power * character.Power);
-                        newState = ruleProvider.ApplyStatus(newState, closestHero.Id, action.StatusEffect);
+                        newState = ruleProvider.ApplyStatus(newState, closestHero.Id, action.Element);
                         if(action.Combo != null)
                             newState = action.Combo.TriggerAsync(newState, character.Id, new DummyInputProvider(closestHero.Position), ruleProvider).Result;
                         attacked = true;

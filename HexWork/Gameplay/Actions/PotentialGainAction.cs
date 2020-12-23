@@ -10,12 +10,10 @@ namespace HexWork.Gameplay.Actions
     {
         public PotentialGainAction(string name,
             TargetType targetType,
-            StatusEffect statusEffect = null,
             DamageComboAction combo = null, 
             TargetPattern targetPattern = null) :
         base(name,
             targetType,
-            statusEffect,
             combo, targetPattern)
         { }
 

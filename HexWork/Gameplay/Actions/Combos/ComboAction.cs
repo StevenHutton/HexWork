@@ -35,7 +35,7 @@ namespace HexWork.Gameplay.Actions
 
             int powerBonus = 0;
             newState = gameState.ApplyCombo(newState, targetCharacter.Id, this, out powerBonus);
-            newState = gameState.ApplyStatus(newState, targetCharacter.Id, this.StatusEffect);
+            newState = gameState.ApplyStatus(newState, targetCharacter.Id, this.Element);
             newState = gameState.ApplyDamage(newState, targetCharacter.Id, (Power + powerBonus) * character.Power);
             return newState;
         }

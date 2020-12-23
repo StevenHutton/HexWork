@@ -1,4 +1,6 @@
 ﻿using System;
+using HexWork.Gameplay;
+using HexWork.Gameplay.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -14,18 +16,18 @@ namespace HexWork.UI
 
 		public Color Color { get; set; } = Color.Red;
 
-		public Guid Id { get; set; }
+		public Element StatusType { get; set; }
 
 		public UiStatusEffect()
 		{
 
 		}
 
-		public UiStatusEffect(Texture2D texture, Guid id)
+		public UiStatusEffect(Texture2D texture, Element type)
 		{
 			Texture = texture;
 
-			Id = id;
+			StatusType = type;
 
 			var width = (float)Texture.Width;
 			var height = (float)Texture.Height;

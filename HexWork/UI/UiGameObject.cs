@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HexWork.Gameplay;
+using HexWork.Gameplay.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -62,11 +64,11 @@ namespace HexWork.UI
             StatusEffects.Add(uiSprite);
         }
 
-        public void RemoveStatus(Guid statusEffectId)
+        public void RemoveStatus(Element statusType)
         {
             UiStatusEffect effect;
 
-            if ((effect = StatusEffects.FirstOrDefault(data => data.Id == statusEffectId)) != null)
+            if ((effect = StatusEffects.FirstOrDefault(data => data.StatusType == statusType)) != null)
                 StatusEffects.Remove(effect);
         }
     }

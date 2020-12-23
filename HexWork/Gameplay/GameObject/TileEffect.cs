@@ -7,9 +7,9 @@ namespace HexWork.Gameplay.GameObject
     public class TileEffect : HexGameObject
     {
         public int Damage = 5;
-        public StatusEffect Effect;
         public float MovementModifier = 0.1f;
         public int Potential = 0;
+        public Element Element;
 
 	    public virtual async Task<BoardState> TriggerEffect(BoardState state, IRulesProvider gameState)
         {            
@@ -22,8 +22,7 @@ namespace HexWork.Gameplay.GameObject
 
             newState = gameState.ApplyDamage(newState, entity.Id, Damage);
             
-            if(Effect != null)
-                newState = gameState.ApplyStatus(newState, entity.Id, Effect);
+            newState = gameState.ApplyStatus(newState, entity.Id, Element);
 
             newState = gameState.GainPotential(newState, Potential);
 
@@ -47,7 +46,7 @@ namespace HexWork.Gameplay.GameObject
         {
             Position = effectToCopy.Position;
             Damage = effectToCopy.Damage;
-            Effect = effectToCopy.Effect;
+            Element = effectToCopy.Element;
             Name = effectToCopy.Name;
             Health = effectToCopy.Health;
             MaxHealth = effectToCopy.MaxHealth;

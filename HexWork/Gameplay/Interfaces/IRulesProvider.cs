@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.GameObject;
-using HexWork.Gameplay.GameObject.Characters;
 
 namespace HexWork.Gameplay.Interfaces
 {
@@ -15,6 +14,16 @@ namespace HexWork.Gameplay.Interfaces
 		Etheral,
 		Flying
 	}
+
+    public enum Element
+    {
+        Fire,
+        Ice,
+        Lightning,
+        Earth,
+        Wind,
+        None
+    }
 
     public enum TargetType
     {
@@ -46,7 +55,7 @@ namespace HexWork.Gameplay.Interfaces
 
         BoardState ApplyDamage(BoardState state, Guid entityId, int power);
 
-        BoardState ApplyStatus(BoardState state, Guid entityId, StatusEffect effect);
+        BoardState ApplyStatus(BoardState state, Guid entityId, Element effectType);
 
         BoardState ApplyCombo(BoardState state, Guid entityId, DamageComboAction combo, out int comboPower);
 
@@ -63,16 +72,14 @@ namespace HexWork.Gameplay.Interfaces
         BoardState CheckDied(BoardState state, Guid entityId);
 
         BoardState ResolveTileEffect(BoardState state, HexCoordinate location);
-
-        BoardState CreateTileEffect(BoardState state, TileEffect effect, HexCoordinate location);
-
+                
+        BoardState CreateTileEffect(BoardState state, Element effectType, HexCoordinate location);
+        
         BoardState RemoveTileEffect(BoardState state, Guid entityId);
 
         BoardState AddEntity(BoardState state, HexGameObject entity);
 
         BoardState CompleteAction(BoardState state, Guid characterId, HexAction action);
-
-        //bool IsValidTarget(BoardState state, Character subjectCharacter, HexCoordinate targetPosition, int range, TargetType targetType);
 
         #endregion
     }

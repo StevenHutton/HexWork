@@ -27,11 +27,9 @@ namespace HexWork.Gameplay.Actions
 
         public RepeatingAction(string name,
             TargetType targetType,
-            StatusEffect statusEffect = null,
             DamageComboAction combo = null, TargetPattern targetPattern = null) :
             base(name,
                 targetType,
-                statusEffect,
                 combo, targetPattern)
         { }
         
@@ -74,7 +72,7 @@ namespace HexWork.Gameplay.Actions
                     if (Combo != null)
                         newState = await Combo.TriggerAsync(newState, characterId, new DummyInputProvider(targetPosition), gameState);
                     newState = gameState.ApplyDamage(newState, targetCharacter.Id, Power * character.Power);
-                    newState = gameState.ApplyStatus(newState, targetCharacter.Id, StatusEffect);
+                    newState = gameState.ApplyStatus(newState, targetCharacter.Id, Element);
                 }
             }
                         

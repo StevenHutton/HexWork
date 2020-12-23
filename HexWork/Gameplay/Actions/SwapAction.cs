@@ -11,11 +11,9 @@ namespace HexWork.Gameplay.Actions
     {
         public SwapAction(string name,
             TargetType targetType,
-            StatusEffect statusEffect = null,
             DamageComboAction combo = null, TargetPattern targetPattern = null) :
             base(name,
                 targetType,
-                statusEffect,
                 combo, targetPattern)
         {
             CanRotateTargetting = false;
@@ -55,7 +53,7 @@ namespace HexWork.Gameplay.Actions
             if (Combo != null)
                 newState = await Combo.TriggerAsync(newState, characterId, new DummyInputProvider(characterPosition), gameState);
             newState = gameState.ApplyDamage(newState, target.Id, Power * character.Power);
-            newState = gameState.ApplyStatus(newState, target.Id, StatusEffect);
+            newState = gameState.ApplyStatus(newState, target.Id, Element);
 
             newState = gameState.CompleteAction(newState, characterId, this);
 

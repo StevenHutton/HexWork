@@ -84,7 +84,7 @@ namespace HexWork.Gameplay.Actions
                     newState = await tileEffect.TriggerEffect(newState, rulesProvider);
                 }
                 else
-                    newState = rulesProvider.CreateTileEffect(newState, tileEffect, targetTile);
+                    newState = rulesProvider.CreateTileEffect(newState, Element, targetTile);
             }
 
             newState = rulesProvider.ResolveTileEffect(newState, tileEffect.Position);

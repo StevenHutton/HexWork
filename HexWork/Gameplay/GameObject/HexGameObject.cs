@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HexWork.Gameplay.Interfaces;
+using System;
 using System.Collections.Generic;
 
 namespace HexWork.Gameplay.GameObject
@@ -13,7 +14,7 @@ namespace HexWork.Gameplay.GameObject
         public int MaxHealth;
         public bool IsHero = false;
         
-        public List<StatusEffect> StatusEffects = new List<StatusEffect>();
+        public List<Element> StatusEffects = new List<Element>();
         public bool HasStatus => StatusEffects.Count > 0;
 
         public HexGameObject()
@@ -29,9 +30,7 @@ namespace HexWork.Gameplay.GameObject
             Health = toCopy.Health;
             MaxHealth = toCopy.MaxHealth;
             IsHero = toCopy.IsHero;
-
-            foreach(var statusEffect in toCopy.StatusEffects)
-                StatusEffects.Add(statusEffect.Copy());
+            StatusEffects = toCopy.StatusEffects;
         }
 
         public HexGameObject(string name, int maxHealth)

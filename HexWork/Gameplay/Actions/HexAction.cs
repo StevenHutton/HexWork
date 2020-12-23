@@ -20,8 +20,7 @@ namespace HexWork.Gameplay.Actions
         public TargetPattern Pattern;
         public int PotentialCost = 1;
 
-        public StatusEffect StatusEffect = null;
-        public TileEffect TileEffect = null;
+        public Element Element = Element.None;
         public HexAction FollowUpAction = null;
         public HexAction Combo = null;
 
@@ -56,10 +55,8 @@ namespace HexWork.Gameplay.Actions
         
         public HexAction(string name, 
             TargetType targetType,
-            StatusEffect statusEffect = null,
             HexAction combo = null, TargetPattern targetPattern = null)
         {
-            StatusEffect = statusEffect;
             Combo = combo;
             Name = name;
             Pattern = targetPattern ?? new TargetPattern(new HexCoordinate(0,0));
@@ -141,7 +138,7 @@ namespace HexWork.Gameplay.Actions
                 if (!AllySafe || targetEntity.IsHero != character.IsHero)
                 {
                     newState = gameState.ApplyDamage(newState, targetEntity.Id, Power * character.Power);
-                    newState = gameState.ApplyStatus(newState, targetEntity.Id, StatusEffect);
+                    newState = gameState.ApplyStatus(newState, targetEntity.Id, Element);
                 }
 
                 //everyone gets pushed
@@ -150,8 +147,7 @@ namespace HexWork.Gameplay.Actions
             }
             else
             {
-                if (TileEffect != null)
-                    newState = gameState.CreateTileEffect(newState, TileEffect, targetTile);
+                newState = gameState.CreateTileEffect(newState, Element, targetTile);
             }
             return newState;
         }

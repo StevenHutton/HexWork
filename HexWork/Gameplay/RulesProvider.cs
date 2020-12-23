@@ -5,7 +5,6 @@ using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
-using HexWork.Gameplay.StatusEffects;
 using HexWork.GameplayEvents;
 
 namespace HexWork.Gameplay
@@ -182,11 +181,51 @@ namespace HexWork.Gameplay
             //apply any status effects for the new active character that trigger at the start of thier turn.
             foreach (var statusEffect in activeCharacter.StatusEffects.ToList())
             {
-                newState = statusEffect.StartTurn(newState, activeCharacterId, this);
+                newState = ResolveStatusEffect(newState, activeCharacterId, statusEffect);
             }
 
             EndTurnEvent?.Invoke(this, new EndTurnEventArgs(BoardState.GetInitiativeList(newState).ToList()));
 
+            return newState;
+        }
+
+        private BoardState ResolveStatusEffect(BoardState state, Guid characterId, Element statusEffect)
+        {
+            var newState = state.Copy();
+            Character character = newState.GetCharacterById(characterId);
+            if (character == null)
+                return state;
+
+            switch (statusEffect)
+            {
+                case Element.Fire:
+                    newState = ApplyDamage(newState, character.Id, 15);
+                    break;
+                case Element.Ice:
+                    newState.ActiveCharacterHasMoved = true;
+                    newState.ActiveCharacterHasAttacked = true;
+                    break;
+                case Element.Earth:
+                    newState.ActiveCharacterHasMoved = true;
+                    character.StatusEffects.RemoveAll(d => d == Element.Earth);
+                    break;
+                case Element.Lightning:
+                    //apply damage to all adjacent charged entities.
+                    foreach (var nb in BoardState.GetNeighbours(character.Position))
+                    {
+                        var ent = BoardState.GetEntityAtCoordinate(state, nb);
+                        if (ent == null) continue;
+
+                        if (ent.StatusEffects.Any(d => d == Element.Lightning))
+                        {
+                            newState = ApplyDamage(newState, ent.Id, 5);
+                            newState = ApplyDamage(newState, characterId, 5);
+                        }
+                    }
+                    break;
+                case Element.Wind:
+                    break;
+            }
             return newState;
         }
 
@@ -292,13 +331,7 @@ namespace HexWork.Gameplay
                 case TerrainType.Water:
                     break;
                 case TerrainType.Lava:
-                    newState = ApplyStatus(newState, character.Id,
-                        new DotEffect
-                        {
-                            Damage = 5,
-                            Name = "Fire",
-                            StatusEffectType = StatusEffectType.Burning
-                        });
+                    newState = ApplyStatus(newState, character.Id, Element.Fire);
                     break;
                 case TerrainType.Ice:
                     break;
@@ -373,28 +406,24 @@ namespace HexWork.Gameplay
             return state;
         }
 
-        public BoardState ApplyStatus(BoardState state, Guid entityId, StatusEffect effect)
+        public BoardState ApplyStatus(BoardState state, Guid entityId, Element effectType)
         {
             //todo - apply status effects based on status damage
             //for now we just always apply any relevant status effects
-            if (effect == null) return state;
-
             var newState = state.Copy();
 
             var entity = newState.GetEntityById(entityId);
             if (entity == null)
                 return state;
 
-            var effectToApply = effect.Clone();
-            entity.StatusEffects.Add(effectToApply);
+            entity.StatusEffects.Add(effectType);
 
-            StatusAppliedEvent?.Invoke(this, new StatusEventArgs(entity.Id, effectToApply));
+            StatusAppliedEvent?.Invoke(this, new StatusEventArgs(entity.Id, effectType));
             return newState;
         }
 
         /// <summary>
         /// Apply a combo effect to a target character if they're currently suffering a status effect.
-        /// todo - Remove the current status effect from the character.
         /// </summary>
         /// <param name="targetCharacter"></param>
         /// <param name="combo"></param>
@@ -418,10 +447,9 @@ namespace HexWork.Gameplay
 
             var status = entity.StatusEffects.First();
 
-            damage = entity.StatusEffects.Count(e => e.StatusEffectType == status.StatusEffectType);
-
+            damage = entity.StatusEffects.Count(e => e == status);
             foreach (var statusEffect in entity.StatusEffects.Where(s =>
-                s.StatusEffectType == status.StatusEffectType).ToList())
+                s == status).ToList())
             {
                 entity.StatusEffects.Remove(statusEffect);
                 StatusRemovedEvent?.Invoke(this, new StatusEventArgs(targetEntid, statusEffect));
@@ -496,7 +524,7 @@ namespace HexWork.Gameplay
             return state;
         }
 
-        public BoardState CreateTileEffect(BoardState state, TileEffect effect, HexCoordinate location)
+        public BoardState CreateTileEffect(BoardState state, Element effectType, HexCoordinate location)
         {
             if (!BoardState.IsHexInMap(location))
                 return state;
@@ -507,7 +535,10 @@ namespace HexWork.Gameplay
 
             var newState = state.Copy();
 
-            var tileEffect = new TileEffect(effect);
+            var tileEffect = CreateTileEffect(effectType);
+            if (tileEffect == null)
+                return state;
+
             tileEffect.Position = location;
             newState.Entities.Add(tileEffect);
 
@@ -517,6 +548,62 @@ namespace HexWork.Gameplay
             });
 
             return newState;
+        }
+
+        public TileEffect CreateTileEffect(Element effectType)
+        {
+            switch (effectType)
+            {
+                case Element.Fire:
+                    return new TileEffect
+                    {
+                        Damage = 15,
+                        Potential = 1,
+                        Name = "Fire",
+                        Health = 5,
+                        MaxHealth = 5,
+                        BlocksMovement = false,
+                        Element = Element.Fire,
+                    };
+                case Element.Ice:
+                    return new TileEffect
+                    {
+                        Damage = 0,
+                        Name = "Ice",
+                        MovementModifier = 100,
+                        Health = 50,
+                        MaxHealth = 50,
+                        BlocksMovement = true,
+                        Element = Element.Ice,
+                    };
+                case Element.Earth:
+                    break;
+                case Element.Wind:
+                    return new TileEffect
+                    {
+                        Damage = 0,
+                        Potential = 1,
+                        Name = "Wind",
+                        MovementModifier = -1,
+                        Element = Element.Wind,
+                        Health = 5,
+                        MaxHealth = 5,
+                        BlocksMovement = false,
+                    };
+                case Element.Lightning:
+                    return new TileEffect
+                    {
+                        Damage = 0,
+                        Name = "Electricity",
+                        MovementModifier = 0,
+                        Health = 5,
+                        MaxHealth = 5,
+                        Potential = 1,
+                        BlocksMovement = false,
+                        Element = Element.Lightning,
+                    };
+            }
+            return null;
         }
 
         public BoardState CompleteAction(BoardState state, Guid id, HexAction action)
