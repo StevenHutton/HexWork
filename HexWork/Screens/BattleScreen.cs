@@ -1046,8 +1046,11 @@ namespace HexWork.UI
                 case Element.Lightning:
                     statusTexture = _hexGame.Content.Load<Texture2D>("LightningIcon");
                     break;
+                case Element.Wind:
+                    statusTexture = _hexGame.Content.Load<Texture2D>("Wind");
+                    break;
                 default:
-			        throw new ArgumentOutOfRangeException();
+			        throw new ArgumentOutOfRangeException("element not declared");
 	        }
 			var status = new UiStatusEffect(statusTexture, e.StatusEffectType);
 			

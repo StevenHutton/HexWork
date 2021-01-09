@@ -408,6 +408,9 @@ namespace HexWork.Gameplay
 
         public BoardState ApplyStatus(BoardState state, Guid entityId, Element effectType)
         {
+            if (effectType == Element.None)
+                return state;
+
             //todo - apply status effects based on status damage
             //for now we just always apply any relevant status effects
             var newState = state.Copy();

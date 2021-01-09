@@ -213,6 +213,9 @@ namespace HexWork.UI
 
         public BoardState ApplyStatus(BoardState state, Guid entityId, Element effect)
         {
+            if (effect == Element.None)
+                return state;
+
             var entity = state.GetEntityById(entityId);
 
             Texture2D statusTexture;
