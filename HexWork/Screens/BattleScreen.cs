@@ -1032,27 +1032,30 @@ namespace HexWork.UI
             };
 
 	        Texture2D statusTexture;
-	        switch (e.StatusEffectType)
-	        {
-		        case Element.Fire:
-			        statusTexture = _hexGame.Content.Load<Texture2D>("FireIcon");
-					break;
-		        case Element.Ice:
-			        statusTexture = _hexGame.Content.Load<Texture2D>("FrozenIcon");
-					break;
-		        case Element.Earth:
-			        statusTexture = _hexGame.Content.Load<Texture2D>("StopIcon");
-					break;
+            switch (e.StatusEffectType)
+            {
+                case Element.Fire:
+                    statusTexture = _hexGame.Content.Load<Texture2D>("FireIcon");
+                    break;
+                case Element.Ice:
+                    statusTexture = _hexGame.Content.Load<Texture2D>("FrozenIcon");
+                    break;
+                case Element.Earth:
+                    statusTexture = _hexGame.Content.Load<Texture2D>("StopIcon");
+                    break;
                 case Element.Lightning:
                     statusTexture = _hexGame.Content.Load<Texture2D>("LightningIcon");
                     break;
                 case Element.Wind:
                     statusTexture = _hexGame.Content.Load<Texture2D>("Wind");
                     break;
+                case Element.None:
+                    statusTexture = _hexGame.Content.Load<Texture2D>("Cross");
+                    break;
                 default:
-			        throw new ArgumentOutOfRangeException("element not declared");
-	        }
-			var status = new UiStatusEffect(statusTexture, e.StatusEffectType);
+                    throw new ArgumentOutOfRangeException("element not declared");
+            }
+            var status = new UiStatusEffect(statusTexture, e.StatusEffectType);
 			
 			action.ActionCompleteCallback += () =>
             {

@@ -72,7 +72,9 @@ namespace HexWork.Gameplay.Interfaces
         BoardState CheckDied(BoardState state, Guid entityId);
 
         BoardState ResolveTileEffect(BoardState state, HexCoordinate location);
-                
+
+        BoardState ResolveTerrainEffect(BoardState state, HexCoordinate location);
+
         BoardState CreateTileEffect(BoardState state, Element effectType, HexCoordinate location);
         
         BoardState RemoveTileEffect(BoardState state, Guid entityId);

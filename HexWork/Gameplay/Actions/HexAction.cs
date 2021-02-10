@@ -128,9 +128,12 @@ namespace HexWork.Gameplay.Actions
 
             var targetEntity = BoardState.GetEntityAtCoordinate(newState, targetTile);
 
-            //if no one is there
+            //if there's an enemy
             if (targetEntity != null)
             {
+                if (direction != null)
+                    newState = gameState.ApplyPush(newState, targetEntity.Id, direction, PushForce);
+
                 if (Combo != null)
                     newState = await Combo.TriggerAsync(newState, characterId, new DummyInputProvider(targetTile), gameState);
 
@@ -139,13 +142,9 @@ namespace HexWork.Gameplay.Actions
                 {
                     newState = gameState.ApplyDamage(newState, targetEntity.Id, Power * character.Power);
                     newState = gameState.ApplyStatus(newState, targetEntity.Id, Element);
-                }
-
-                //everyone gets pushed
-                if (direction != null)
-                    newState = gameState.ApplyPush(newState, targetEntity.Id, direction, PushForce);
+                }                
             }
-            else
+            else //if no one is there
             {
                 newState = gameState.CreateTileEffect(newState, Element, targetTile);
             }

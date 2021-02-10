@@ -49,7 +49,11 @@ namespace HexWork.Gameplay.Actions
             var targetTiles = GetTargetTiles(targetPosition);
             foreach (var targetTile in targetTiles)
             {
-                newState = await ApplyToTile(newState, targetTile, gameState, characterId);
+                var pushDirection = PushFromCaster ?
+                    BoardState.GetPushDirection(character.Position, targetTile) :
+                    BoardState.GetPushDirection(targetPosition, targetTile);
+
+                newState = await ApplyToTile(newState, targetTile, gameState, characterId, pushDirection);
             }
 
             return gameState.CompleteAction(newState, characterId, this);

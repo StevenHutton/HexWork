@@ -40,6 +40,8 @@ namespace HexWork.Gameplay
         //convenient to have
         private static readonly float Sqrt3 = (float)Math.Sqrt(3.0);
 
+        private static readonly Random Random = new Random();
+
         #endregion
 
         #region Properties
@@ -328,6 +330,11 @@ namespace HexWork.Gameplay
             }
 
             return targets;
+        }
+
+        public static HexCoordinate GetRandomDirection()
+        {
+            return Directions[Random.Next(6)];
         }
 
         /// <summary>
@@ -982,10 +989,8 @@ namespace HexWork.Gameplay
 
         public static HexCoordinate GetRandomCoordinateInMap()
         {
-            Random rand = new Random();
-
-            var rowIndex = rand.Next(-MapHeight, MapHeight);
-            var columnIndex = rand.Next(-MapWidth, MapWidth);
+            var rowIndex = Random.Next(-MapHeight, MapHeight);
+            var columnIndex = Random.Next(-MapWidth, MapWidth);
 
             var x = columnIndex - (rowIndex - (rowIndex & 1)) / 2;
             var z = rowIndex;

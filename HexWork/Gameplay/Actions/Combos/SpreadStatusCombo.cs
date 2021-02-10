@@ -43,13 +43,10 @@ namespace HexWork.Gameplay.Actions
             }
 
             var targetCharacter = BoardState.GetEntityAtCoordinate(newState, targetPosition);
-
-            if (targetCharacter == null)
-                return newState;
-                        
-            if (targetCharacter.HasStatus)
+            if (targetCharacter != null && targetCharacter.HasStatus)
             {
                 var statusEffect = targetCharacter.StatusEffects.FirstOrDefault();
+
                 //the more status effects we detonate the more damage we add
                 int powerBonus = 0;
                 newState = gameState.ApplyCombo(newState, targetCharacter.Id, this, out powerBonus);
@@ -102,7 +99,7 @@ namespace HexWork.Gameplay.Actions
                     newState = gameState.ApplyPush(newState, newTargetCharacter.Id, dir, PushForce);
                 }
                 else
-                    newState = gameState.CreateTileEffect(newState, Element, targetTile);
+                    newState = gameState.CreateTileEffect(newState, tileEffect.Element, targetTile);
             }
 
             newState = gameState.ApplyDamage(newState, targetCharacter.Id, Power * character.Power);

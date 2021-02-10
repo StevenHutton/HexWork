@@ -180,7 +180,7 @@ namespace HexWork.Gameplay.GameObject.Characters
             var ninpoDash = new DashAction("Ninpo Dash", TargetType.AxisAlignedFixedMove, null, null)
             {
                 Element = Element.Wind,
-                Range = 3
+                Range = 2
             };
 
             var swapAction = new SwapAction("Swap Positions", TargetType.Free, new DamageComboAction())

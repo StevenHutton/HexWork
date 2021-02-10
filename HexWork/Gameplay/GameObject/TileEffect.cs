@@ -20,10 +20,8 @@ namespace HexWork.Gameplay.GameObject
 
             var newState = state.Copy();
 
-            newState = gameState.ApplyDamage(newState, entity.Id, Damage);
-            
+            newState = gameState.ApplyDamage(newState, entity.Id, Damage);            
             newState = gameState.ApplyStatus(newState, entity.Id, Element);
-
             newState = gameState.GainPotential(newState, Potential);
 
             return newState;

@@ -99,34 +99,26 @@ namespace HexWork.UI
                     Color.White, 0.0f, new Vector2(1.0f, 1.0f),
                     6.0f, SpriteEffects.None, 0.0f);
             }
+            var newState = state.Copy();
 
-            ResolveTileEffects(state, entityId, path);
-            ResolveTerrainEffects(state, entityId, path);
-            return state;
+            foreach (var coordinate in path)
+            {
+                var entity = newState.Entities.First(ent => ent.Id == entityId);
+                entity.MoveTo(coordinate);                
+
+                newState = ResolveTileEffect(newState, coordinate);
+                newState = ResolveTerrainEffect(newState, coordinate);
+            }
+
+            return newState;
         }
 
         public BoardState TeleportEntityTo(BoardState state, Guid entityId, HexCoordinate position)
         {
-	        ResolveTileEffects(state, entityId, new List<HexCoordinate> { position });
-			ResolveTerrainEffects(state, entityId, new List<HexCoordinate>{ position }); 
+	        ResolveTileEffect(state, position);
+			ResolveTerrainEffect(state, position); 
             return state;
         }
-
-	    private void ResolveTileEffects(BoardState state, Guid entityId, List<HexCoordinate> path)
-	    {
-            var entity = state.GetEntityById(entityId);
-
-            //don't count terrain effects from a tile you're standing. We don't punish players for e.g. leaving lava.
-            if (path.First() == entity.Position)
-		    {
-			    path.Remove(entity.Position);
-		    }
-
-		    foreach (var tile in path)
-            {
-                ResolveTileEffect(state, tile);
-            }
-		}
 
         public BoardState ResolveTileEffect(BoardState state, HexCoordinate position)
         {
@@ -138,27 +130,13 @@ namespace HexWork.UI
             return tileEffect.TriggerEffect(state, this).Result;
         }
 
-        private void ResolveTerrainEffects(BoardState state, Guid entityId, List<HexCoordinate> path)
+        public BoardState ResolveTerrainEffect(BoardState state, HexCoordinate position)
         {
-            var entity = state.GetEntityById(entityId);
+            var newState = state.Copy();
+            var character = newState.Characters.FirstOrDefault(ch => ch.Position == position);
+            if (character == null)
+                return state;
 
-            if (path == null || path.Count == 0)
-                return;
-
-	        //don't count terrain effects from a tile you're standing. We don't punish players for e.g. leaving lava.
-	        if (path.First() == entity.Position)
-	        {
-		        path.Remove(entity.Position);
-	        }
-
-			foreach (var position in path)
-            {
-                ResolveTerrainEffect(state, entity, position);
-            }
-        }
-
-        private void ResolveTerrainEffect(BoardState state, HexGameObject entity, HexCoordinate position)
-        {
             var tile = state[position];
             switch (tile.TerrainType)
             {
@@ -167,7 +145,7 @@ namespace HexWork.UI
                 case TerrainType.Water:
                     break;
                 case TerrainType.Lava:
-                    ApplyStatus(state, entity.Id, Element.Fire);
+                    ApplyStatus(state, character.Id, Element.Fire);
                     break;
                 case TerrainType.Ice:
                     break;
@@ -184,10 +162,13 @@ namespace HexWork.UI
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            return state;
         }
 
         public BoardState ApplyDamage(BoardState state, Guid entityId, int power)
         {
+            if (power == 0)
+                return state;
             var entity = state.GetEntityById(entityId);
             if (entity == null)
                 return state;
@@ -229,6 +210,9 @@ namespace HexWork.UI
                     break;
                 case Element.Earth:
                     statusTexture = _hexGame.Content.Load<Texture2D>("StopIcon");
+                    break;
+                case Element.Wind:
+                    statusTexture = _hexGame.Content.Load<Texture2D>("Wind");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

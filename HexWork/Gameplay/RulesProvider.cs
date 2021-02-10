@@ -122,7 +122,7 @@ namespace HexWork.Gameplay
 
         #endregion
 
-        #region Metegame
+        #region Metagame
 
         #endregion
 
@@ -158,7 +158,7 @@ namespace HexWork.Gameplay
             if (activeCharacter != null)
             {
                 newState = ResolveTileEffect(newState, activeCharacter.Position);
-                newState = ResolveTerrainEffects(newState, activeCharacter.Position);
+                newState = ResolveTerrainEffect(newState, activeCharacter.Position);
                 activeCharacter = newState.Characters.FirstOrDefault(data => data.Id == activeCharacterId);
 
                 var deltaTime = activeCharacter.TurnTimer;
@@ -208,6 +208,7 @@ namespace HexWork.Gameplay
                 case Element.Earth:
                     newState.ActiveCharacterHasMoved = true;
                     character.StatusEffects.RemoveAll(d => d == Element.Earth);
+                    StatusRemovedEvent?.Invoke(this, new StatusEventArgs(character.Id, Element.Earth));
                     break;
                 case Element.Lightning:
                     //apply damage to all adjacent charged entities.
@@ -224,6 +225,16 @@ namespace HexWork.Gameplay
                     }
                     break;
                 case Element.Wind:
+                    for(int i = 0; i < character.StatusEffects.Count(d => d == Element.Wind); i++)
+                    {
+                        var dir = BoardState.GetRandomDirection();
+                        newState = ApplyPush(newState, characterId, dir, 1);
+                        character = newState.GetCharacterById(characterId);
+                        if (character == null)
+                            return newState;
+                    }                   
+                    character.StatusEffects.RemoveAll(d => d == Element.Wind);
+                    StatusRemovedEvent?.Invoke(this, new StatusEventArgs(character.Id, Element.Wind));
                     break;
             }
             return newState;
@@ -262,7 +273,7 @@ namespace HexWork.Gameplay
                 });
 
                 newState = ResolveTileEffect(newState, coordinate);
-                newState = ResolveTerrainEffects(newState, coordinate);
+                newState = ResolveTerrainEffect(newState, coordinate);
             }
 
             return newState;
@@ -286,7 +297,7 @@ namespace HexWork.Gameplay
                 });
 
             newState = ResolveTileEffect(newState, position);
-            newState = ResolveTerrainEffects(newState, position);
+            newState = ResolveTerrainEffect(newState, position);
 
             return newState;
         }
@@ -317,7 +328,7 @@ namespace HexWork.Gameplay
         }
 
         //when a character moves into a tile check to see if there're any terrain effects for moving into that tile.
-        private BoardState ResolveTerrainEffects(BoardState state, HexCoordinate position)
+        public BoardState ResolveTerrainEffect(BoardState state, HexCoordinate position)
         {
             var newState = state.Copy();
             var character = newState.Characters.FirstOrDefault(ch => ch.Position == position);
@@ -355,6 +366,8 @@ namespace HexWork.Gameplay
         public BoardState ApplyDamage(BoardState state, Guid entityId, int damage)
         {
             var newState = state.Copy();
+            if (damage == 0)
+                return state;
 
             var entity = newState.Entities.FirstOrDefault(ent => ent.Id == entityId);
             if (entity == null)
@@ -625,21 +638,7 @@ namespace HexWork.Gameplay
 
         #endregion
 
-        #region Public Accessor Methods
-
-        //public bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, int range, TargetType targetType)
-        //{
-        //    return BoardState.IsValidTarget(state, objectCharacter, targetPosition, range, targetType);
-        //}
-
-        #endregion
-
         #region Private Helper Methods
-
-        private void SendMessage(string message, HexGameObject targetCharacter)
-        {
-            MessageEvent?.Invoke(this, new MessageEventArgs(message, targetCharacter));
-        }
 
         private bool IsInEnemySpawnArea(HexCoordinate coord)
         {
