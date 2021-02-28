@@ -582,41 +582,7 @@ namespace HexWork.Gameplay
                     movementCost + movementCostToCoord,
                     searchDepth + 1, availableMovement, basePotentialCost);
             }
-        }
-
-        public static bool IsValidTarget(BoardState state, Character objectCharacter, HexCoordinate targetPosition, HexAction action, TargetType targetType)
-        {
-            return GetValidTargets(state, objectCharacter, action, targetType).Keys.Contains(targetPosition);
-        }
-
-        public static Dictionary<HexCoordinate, int> GetValidTargets(BoardState state, Character objectCharacter, HexAction action, TargetType targetType)
-        {
-            var position = objectCharacter.Position;
-
-            switch (targetType)
-            {
-                case TargetType.Free:
-                    return GetVisibleTilesInRange(state, position, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
-                case TargetType.FreeIgnoreUnits:
-                    return GetVisibleTilesInRangeIgnoreUnits(state, position, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
-                case TargetType.FreeIgnoreLos:
-                    return GetTilesInRange(state, position, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
-                case TargetType.AxisAligned:
-                    return GetVisibleAxisTilesInRange(state, position, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
-                case TargetType.AxisAlignedIgnoreUnits:
-                    return GetVisibleAxisTilesInRangeIgnoreUnits(state, position, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
-                case TargetType.AxisAlignedIgnoreLos:
-                    return GetAxisTilesInRange(state, position, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
-                case TargetType.Move:
-                    return GetValidDestinations(state, position, objectCharacter, action.PotentialCost);
-                case TargetType.FixedMove:
-                    return GetWalkableAdjacentTiles(state, position, action.PotentialCost);
-                case TargetType.AxisAlignedFixedMove:
-                    return GetWalkableAxisTiles(state, position, objectCharacter, objectCharacter.RangeModifier + action.Range, action.PotentialCost);
-                default:
-                    return null;
-            }
-        }
+        }       
 
         public static List<HexCoordinate> FindShortestPath(BoardState state, HexCoordinate startPosition, HexCoordinate destination, int availableMovement,
             MovementType movementType = MovementType.NormalMove, MovementSpeed speed = MovementSpeed.Normal)
@@ -762,13 +728,13 @@ namespace HexWork.Gameplay
             return walkableNeighbours;
         }
 
-        public static Dictionary<HexCoordinate, int> GetWalkableAxisTiles(BoardState state, HexCoordinate position, Character oChar, int range, int basePotentialCost)
+        public static Dictionary<HexCoordinate, int> GetWalkableAxisTiles(BoardState state, HexCoordinate position, MovementType movementType, MovementSpeed movementSpeed, int range, int basePotentialCost)
         {
             var targets = new Dictionary<HexCoordinate, int>();
 
             foreach (var direction in Directions)
             {
-                int moveCost = 0;
+                int moveCost = basePotentialCost;
                 for (var i = 0; i < range; i++)
                 {
                     var hexToCheck = position + (direction * (i + 1));
@@ -778,9 +744,9 @@ namespace HexWork.Gameplay
                         break;
 
                     //if we can't get through this tile, ok, give up
-                    if (!IsTilePassable(state, oChar.MovementType, hexToCheck)) break;
+                    if (!IsTilePassable(state, movementType, hexToCheck)) break;
 
-                    moveCost = (int)GetTileTotalMovementCost(state, hexToCheck) + RulesProvider.GetMoveSpeedCost(oChar.MovementSpeed, i) + basePotentialCost;
+                    moveCost += (int)GetTileTotalMovementCost(state, hexToCheck) + RulesProvider.GetMoveSpeedCost(movementSpeed, i);
 
                     if (IsWalkableAndEmpty(state, hexToCheck))
                         targets.Add(hexToCheck, moveCost);

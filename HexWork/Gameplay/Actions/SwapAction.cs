@@ -31,7 +31,7 @@ namespace HexWork.Gameplay.Actions
                 return state;
 
             //check validity
-            var validTargets = BoardState.GetValidTargets(newState, character, this, TargetType);
+            var validTargets = GetValidTargets(newState, character, TargetType);
             if (!validTargets.ContainsKey(targetPosition))
                 return state;
 

@@ -32,7 +32,7 @@ namespace HexWork.Gameplay.Actions
             if (targetPosition == null)
                 return state;
 
-            var validTargets = BoardState.GetValidTargets(newState, character, this, TargetType);
+            var validTargets = GetValidTargets(newState, character, TargetType);
             if (!validTargets.ContainsKey(targetPosition))
                 return state;
 

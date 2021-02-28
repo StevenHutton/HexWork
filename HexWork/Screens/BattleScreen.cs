@@ -830,7 +830,7 @@ namespace HexWork.UI
 
             var selectedCharacter = BoardState.ActiveCharacter;
 
-            return BoardState.GetValidTargets(BoardState, selectedCharacter, SelectedHexAction, SelectedHexAction.TargetType);
+            return SelectedHexAction.GetValidTargets(BoardState, selectedCharacter, SelectedHexAction.TargetType);
 		}
 
 		private HexCoordinate GetHexCoordinate(float posX, float posY)

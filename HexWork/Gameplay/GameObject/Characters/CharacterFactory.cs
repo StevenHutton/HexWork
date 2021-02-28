@@ -406,7 +406,7 @@ namespace HexWork.Gameplay.GameObject.Characters
                 foreach (var action in character.Actions)
                 {
                     //if we can hit the hero, hit them now and end turn. - don't move.
-                    if (BoardState.IsValidTarget(newState, character, closestHero.Position, action, action.TargetType)
+                    if (action.IsValidTarget(newState, character, closestHero.Position, action.TargetType)
                         && action.IsDetonator == closestHero.HasStatus)
                     {
                         newState = ruleProvider.ApplyDamage(newState, closestHero.Id, action.Power * character.Power);

@@ -3,14 +3,14 @@ using HexWork.Gameplay.Interfaces;
 using HexWork.UI.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace HexWork.Gameplay.Actions
 {
     public class DashAction : HexAction
     {
+        public MovementType MovementType = MovementType.MoveThroughUnits;
+
         public DashAction(string name,
             TargetType targetType,
             DamageComboAction combo = null, TargetPattern targetPattern = null) :
@@ -33,7 +33,7 @@ namespace HexWork.Gameplay.Actions
                 return state;
 
             //check validity
-            var validTargets = BoardState.GetValidTargets(newState, character, this, TargetType);
+            var validTargets = GetValidTargets(newState, character, TargetType);
             if (!validTargets.ContainsKey(targetPosition))
                 return state;
 
@@ -56,6 +56,36 @@ namespace HexWork.Gameplay.Actions
             newState = rules.MoveEntity(newState, characterId, new List<HexCoordinate>() { targetPosition });
             newState = rules.CompleteAction(newState, characterId, this);
             return newState;
+        }
+
+        public override Dictionary<HexCoordinate, int> GetValidTargets(BoardState state,
+            Character objectCharacter, TargetType targetType)
+        {
+            var position = objectCharacter.Position;
+
+            switch (targetType)
+            {
+                case TargetType.Free:
+                    return BoardState.GetVisibleTilesInRange(state, position, objectCharacter.RangeModifier + Range, PotentialCost);
+                case TargetType.FreeIgnoreUnits:
+                    return BoardState.GetVisibleTilesInRangeIgnoreUnits(state, position, objectCharacter.RangeModifier + Range, PotentialCost);
+                case TargetType.FreeIgnoreLos:
+                    return BoardState.GetTilesInRange(state, position, objectCharacter.RangeModifier + Range, PotentialCost);
+                case TargetType.AxisAligned:
+                    return BoardState.GetVisibleAxisTilesInRange(state, position, objectCharacter.RangeModifier + Range, PotentialCost);
+                case TargetType.AxisAlignedIgnoreUnits:
+                    return BoardState.GetVisibleAxisTilesInRangeIgnoreUnits(state, position, objectCharacter.RangeModifier + Range, PotentialCost);
+                case TargetType.AxisAlignedIgnoreLos:
+                    return BoardState.GetAxisTilesInRange(state, position, objectCharacter.RangeModifier + Range, PotentialCost);
+                case TargetType.Move:
+                    return BoardState.GetValidDestinations(state, position, objectCharacter, PotentialCost);
+                case TargetType.FixedMove:
+                    return BoardState.GetWalkableAdjacentTiles(state, position, PotentialCost);
+                case TargetType.AxisAlignedFixedMove:
+                    return BoardState.GetWalkableAxisTiles(state, position, MovementType, objectCharacter.MovementSpeed, objectCharacter.RangeModifier + Range, PotentialCost);
+                default:
+                    return null;
+            }
         }
     }
 }
