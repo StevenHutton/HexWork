@@ -73,6 +73,8 @@ namespace HexWork.UI
         private readonly int _screenWidth;
         private readonly int _screenHeight;
         private readonly Vector2 _screenCenter;
+        private Vector2 _cameraPosition = Vector2.Zero;
+        private Matrix _cameraTransformMatrix = Matrix.Identity;
 
         private Effect _pixelOutlineEffect;
         private EffectParameter _outlineWidth;
@@ -159,7 +161,7 @@ namespace HexWork.UI
             _buttonFont = game.Content.Load<SpriteFont>("Nunito");
             _uiFont = game.Content.Load<SpriteFont>("Arial");
 
-            _damageFont = game.Content.Load<SpriteFont>("Nunito-Bold");
+            _damageFont = game.Content.Load<SpriteFont>("Nunito");
             _effectFont = game.Content.Load<SpriteFont>("MenuFont");
 
             _spriteBatch = new SpriteBatch(game.GraphicsDevice);
@@ -260,6 +262,25 @@ namespace HexWork.UI
                 SelectedHexAction?.RotateTargeting(_mouseState.ScrollWheelValue < _previousMouseState.ScrollWheelValue);
             }
 
+            if (_keyBoardState.IsKeyDown(Keys.W))
+            {
+                _cameraPosition.Y += 1.0f;
+            }
+            if (_keyBoardState.IsKeyDown(Keys.A))
+            {
+                _cameraPosition.X += 1.0f;
+            }
+            if (_keyBoardState.IsKeyDown(Keys.S))
+            {
+                _cameraPosition.Y -= 1.0f;
+            }
+            if (_keyBoardState.IsKeyDown(Keys.D))
+            {
+                _cameraPosition.X -= 1.0f;
+            }
+
+            _cameraTransformMatrix = Matrix.CreateTranslation(_cameraPosition.X, _cameraPosition.Y, 0.0f);
+
             //right click cancels UI state.
             if (_previousMouseState.RightButton == ButtonState.Pressed &&
                 _mouseState.RightButton == ButtonState.Released)
@@ -269,7 +290,7 @@ namespace HexWork.UI
                 _actionBarButtons.ForEach(b => b.IsMouseDown = false);
             }
 
-            var position = _mouseState.Position;
+            var position = _mouseState.Position - _cameraPosition.ToPoint();
 
             var mouseOffsetX = position.X - (_screenWidth / 2);
             var mouseOffsetY = position.Y - (_screenHeight / 2);
@@ -283,19 +304,19 @@ namespace HexWork.UI
 
         public override void Draw(GameTime _gameTime)
         {
-            DrawHud();
-            DrawActionBar();
-            DrawInitiativeTrack();
             DrawMapUi();
             DrawEntities();
             DrawUiEffects();
+            DrawHud();
+            DrawActionBar();
+            DrawInitiativeTrack();
 
-			//Draw Preview
-	        if (_cursorPosition != null)
+            //Draw Preview
+            if (_cursorPosition != null)
 	        {
 		        _RulesProviderProxy.rulesProvider = RulesProvider;
 
-				_RulesProviderProxy.SpriteBatchBegin();
+				_RulesProviderProxy.SpriteBatchBegin(_cameraTransformMatrix);
 
 		        SelectedHexAction?.TriggerAsync(BoardState, SelectedCharacter.Id,
 			        new DummyInputProvider(_cursorPosition), _RulesProviderProxy);
@@ -427,7 +448,7 @@ namespace HexWork.UI
 
         private void DrawMap()
         {
-            _spriteBatch.Begin();
+            _spriteBatch.Begin(transformMatrix: _cameraTransformMatrix);
             foreach (var kvp in BoardState)
             {
                 var coordinate = kvp.Key;
@@ -448,7 +469,7 @@ namespace HexWork.UI
 
         private void DrawHighlightedMap(Dictionary<HexCoordinate, int> highlightedTiles)
         {
-            _spriteBatch.Begin();
+            _spriteBatch.Begin(transformMatrix: _cameraTransformMatrix);
 
             foreach (var kvp in BoardState)
             {
@@ -473,7 +494,7 @@ namespace HexWork.UI
 
         private void DrawMapUi()
         {
-            _spriteBatch.Begin();
+            _spriteBatch.Begin(transformMatrix: _cameraTransformMatrix);
 
             //if we've selected a tile highlight it in purple
             if (_focusedTile != null)
@@ -499,7 +520,7 @@ namespace HexWork.UI
                 DrawMap();
             }
 
-            _spriteBatch.Begin();
+            _spriteBatch.Begin(transformMatrix: _cameraTransformMatrix);
             
             //If the cursor is within the map area the highlight the appropriate tile.
 	        if (_cursorPosition != null)
@@ -531,7 +552,7 @@ namespace HexWork.UI
             //draw highlighted elements
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend,
                 null, null,
-                null, _pixelOutlineEffect);
+                null, _pixelOutlineEffect, transformMatrix: _cameraTransformMatrix);
 
             _outlineWidth.SetValue(5);
             _outlineColour.SetValue(Color.TransparentBlack.ToVector4());
@@ -559,7 +580,7 @@ namespace HexWork.UI
 
 			_spriteBatch.End();
 
-            _spriteBatch.Begin();
+            _spriteBatch.Begin(transformMatrix: _cameraTransformMatrix);
 
             //draw health bars
             foreach (var character in _gameObjectDictionary.Values)
@@ -594,8 +615,7 @@ namespace HexWork.UI
 
             _spriteBatch.End();
 
-
-            _spriteBatch.Begin();
+            _spriteBatch.Begin(transformMatrix: _cameraTransformMatrix);
 
             var highlightedCoords = GetHighlightedCoordinates();
             if (highlightedCoords != null)
@@ -621,7 +641,7 @@ namespace HexWork.UI
 
             var effect = action.Effect;
             _spriteBatch.DrawString(effect.Font, effect.Text, effect.Position, 
-                effect.ColorToDraw, 0.0f, effect.Offset, effect.Scale, SpriteEffects.None, 0.0f);
+                effect.ColorToDraw, 0.0f, effect.Offset - _cameraPosition, effect.Scale, SpriteEffects.None, 0.0f);
             
             _outlineColour.SetValue(Color.TransparentBlack.ToVector4());
 
@@ -658,9 +678,7 @@ namespace HexWork.UI
         }
 
         #endregion
-
-        #region Private Methods
-		
+        		
         #region Private Handle Input Methods
 
         /// <summary>
@@ -1118,7 +1136,6 @@ namespace HexWork.UI
 
             _uiActions.Add(gameOver);
         }
-        #endregion
 
         #endregion
     }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using HexWork.Gameplay.Actions;
 using HexWork.Gameplay.GameObject;
 using HexWork.Gameplay.GameObject.Characters;
 using HexWork.Gameplay.Interfaces;
@@ -25,8 +24,8 @@ namespace HexWork.Gameplay
         public int MaxPotential = 9;
         public int Potential = 3;
 
-        public const int MapWidth = 6;
-        public const int MapHeight = 5;
+        public const int MapWidth = 12;
+        public const int MapHeight = 10;
 
         public static readonly HexCoordinate[] Directions = {
             new HexCoordinate(+1, -1, 0),

@@ -47,8 +47,6 @@ namespace HexWork.Gameplay.Interfaces
 
 	public interface IRulesProvider
     {
-        #region Transforms
-
         BoardState MoveEntity(BoardState state, Guid entityId, List<HexCoordinate> path);
 
 		BoardState TeleportEntityTo(BoardState state, Guid entityId, HexCoordinate position);
@@ -82,7 +80,5 @@ namespace HexWork.Gameplay.Interfaces
         BoardState AddEntity(BoardState state, HexGameObject entity);
 
         BoardState CompleteAction(BoardState state, Guid characterId, HexAction action);
-
-        #endregion
     }
 }

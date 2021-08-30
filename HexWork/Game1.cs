@@ -22,10 +22,6 @@ namespace HexWork
 		private IScreenManager _screenManager;
 		private IInputManager _inputManager;
 
-        #region Gameplay
-
-		#endregion
-
 		#endregion
 		
 		#region Methods

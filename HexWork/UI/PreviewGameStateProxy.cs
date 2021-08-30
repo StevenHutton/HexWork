@@ -43,10 +43,10 @@ namespace HexWork.UI
         private readonly Vector2 _iconOrigin;
 
         private HexWork _hexGame;
-
-	    public void SpriteBatchBegin()
+        
+        public void SpriteBatchBegin(Matrix cameraTransformMatrix)
 	    {
-			_spriteBatch.Begin();
+			_spriteBatch.Begin(transformMatrix: cameraTransformMatrix);
 	    }
 	    public void SpriteBatchEnd()
 	    {
@@ -73,7 +73,7 @@ namespace HexWork.UI
 	        _fireIconTexture = game.Content.Load<Texture2D>("FireIcon");
             _iconOrigin = new Vector2(_fireIconTexture.Width/2, _fireIconTexture.Height/2);
             
-            _font = game.Content.Load<SpriteFont>("Nunito-Bold");
+            _font = game.Content.Load<SpriteFont>("Nunito");
 
             var data = new[] { Color.White, Color.White, Color.White, Color.White };
 			_blankTexture = new Texture2D(game.GraphicsDevice, 2, 2);

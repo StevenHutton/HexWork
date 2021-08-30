@@ -228,7 +228,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:IronSoul.png;Iron Soul.png
+/build:IronSoul.png
 
 #begin IronSoulPortrait.png
 /importer:TextureImporter
@@ -240,7 +240,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:IronSoulPortrait.png;Iron SoulPortrait.png
+/build:IronSoulPortrait.png
 
 #begin LightningIcon.png
 /importer:TextureImporter

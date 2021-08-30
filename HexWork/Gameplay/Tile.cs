@@ -16,7 +16,6 @@ namespace HexWork.Gameplay
         Wall
     }
 
-
     public class Tile
     {
         public TerrainType TerrainType = TerrainType.Ground;
